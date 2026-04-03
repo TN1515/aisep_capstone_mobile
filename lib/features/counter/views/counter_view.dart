@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../view_models/counter_view_model.dart';
-import '../../../core/constants/app_strings.dart';
+import 'package:aisep_capstone_mobile/features/counter/view_models/counter_view_model.dart';
+import 'package:aisep_capstone_mobile/core/constants/app_strings.dart';
 
 class CounterView extends StatefulWidget {
   const CounterView({super.key});
