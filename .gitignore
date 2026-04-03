@@ -12,16 +12,27 @@
 .swiftpm/
 migrate_working_dir/
 
+# AI & Agent local data (PRIVATE)
+.agent/
+.gemini/
+.antigravity/
+brain/
+/design-system/
+AISEP_Startup_Mobile_UI_Flow_Antigravity.md
+
+# Scripts & Temporary tools
+*.py
+*.ps1
+/tmp/
+
 # IntelliJ related
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code related
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -32,6 +43,8 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+.packages
+.metadata
 
 # Symbolication related
 app.*.symbols
@@ -39,7 +52,13 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android/iOS Sensitive & Build
 /android/app/debug
 /android/app/profile
 /android/app/release
+android/local.properties
+android/key.properties
+*.keystore
+*.jks
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
