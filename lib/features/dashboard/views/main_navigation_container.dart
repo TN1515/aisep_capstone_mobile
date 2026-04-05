@@ -4,6 +4,12 @@ import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/widgets/startup_bottom_nav_bar.dart';
 import 'package:aisep_capstone_mobile/features/profile/views/startup_profile_view.dart';
+import 'package:aisep_capstone_mobile/features/kyc/views/kyc_form_view.dart';
+import 'package:aisep_capstone_mobile/features/documents/views/document_list_view.dart';
+import 'package:aisep_capstone_mobile/features/connections/views/connections_view.dart';
+import 'package:aisep_capstone_mobile/features/consulting/views/consulting_dashboard_view.dart';
+import 'package:aisep_capstone_mobile/features/consulting/views/advisor_discovery_view.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class MainNavigationContainer extends StatefulWidget {
   const MainNavigationContainer({Key? key}) : super(key: key);
@@ -15,12 +21,7 @@ class MainNavigationContainer extends StatefulWidget {
 class _MainNavigationContainerState extends State<MainNavigationContainer> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardView(),
-    const PlaceholderScreen(title: 'Tài liệu', icon: Icons.article_rounded),
-    const PlaceholderScreen(title: 'Kết nối', icon: Icons.people_alt_rounded),
-    const StartupProfileView(), // Index 3: Profile Screen
-  ];
+
 
   void _onTabTapped(int index) {
     setState(() {
@@ -35,24 +36,52 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
       // The body is wrapped in IndexedStack to preserve state between tabs
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
-      ),
-      floatingActionButton: Container(
-        height: 64,
-        width: 64,
-        margin: const EdgeInsets.only(top: 10),
-        child: FloatingActionButton(
-          onPressed: () {},
-          backgroundColor: StartupOnboardingTheme.navyBg,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: const Icon(
-            Icons.add,
-            color: StartupOnboardingTheme.goldAccent,
-            size: 32,
+        children: [
+          const ConnectionsView(), // Index 0: Updated from Placeholder
+          const ConsultingDashboardView(), // Index 1: Redesigned
+          const DashboardView(), // Index 2: Primary Screen
+          const DocumentListView(), // Index 3: Updated from Placeholder
+          KycFormView(
+            isIncorporated: true,
+            onBack: () => _onTabTapped(2),
           ),
-        ),
+        ],
       ),
+      floatingActionButton: _currentIndex == 1
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdvisorDiscoveryView()),
+                  );
+                },
+                backgroundColor: StartupOnboardingTheme.goldAccent,
+                foregroundColor: StartupOnboardingTheme.navyBg,
+                icon: const Icon(LucideIcons.search),
+                label: Text(
+                  'Tìm Cố vấn',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                ),
+              ),
+            )
+          : Container(
+              height: 64,
+              width: 64,
+              margin: const EdgeInsets.only(top: 10),
+              child: FloatingActionButton(
+                onPressed: () => _onTabTapped(2),
+                backgroundColor: _currentIndex == 2 ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+                elevation: 4,
+                shape: const CircleBorder(),
+                child: Icon(
+                  Icons.home_rounded,
+                  color: _currentIndex == 2 ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.goldAccent,
+                  size: 32,
+                ),
+              ),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       // Fixed Bottom Navigation Bar
       bottomNavigationBar: StartupBottomNavBar(

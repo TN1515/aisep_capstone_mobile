@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart'; // NEW
 
 class DashboardHeader extends StatelessWidget {
   final String greeting;
   final String userName;
   final String startupName;
+  final int unreadCount;
   final VoidCallback onNotificationTap;
+  final VoidCallback onMessageTap; // NEW
   final VoidCallback onProfileTap;
 
   const DashboardHeader({
@@ -14,7 +17,9 @@ class DashboardHeader extends StatelessWidget {
     required this.greeting,
     required this.userName,
     required this.startupName,
+    required this.unreadCount,
     required this.onNotificationTap,
+    required this.onMessageTap, // NEW
     required this.onProfileTap,
   });
 
@@ -49,6 +54,14 @@ class DashboardHeader extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            onPressed: onMessageTap,
+            icon: const Icon(
+              LucideIcons.messageSquare,
+              color: StartupOnboardingTheme.softIvory,
+              size: 22,
+            ),
+          ),
           Stack(
             children: [
               IconButton(
@@ -58,18 +71,31 @@ class DashboardHeader extends StatelessWidget {
                   color: StartupOnboardingTheme.softIvory,
                 ),
               ),
-              Positioned(
-                right: 10,
-                top: 10,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
+              if (unreadCount > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount > 9 ? '9+' : unreadCount.toString(),
+                      style: GoogleFonts.workSans(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           GestureDetector(

@@ -63,13 +63,13 @@ class DashboardViewModel extends BaseViewModel {
             progress: 0.82,
           ),
           DashboardTask(
-            title: 'Investor & Advisor',
+            title: 'Advisor & Tư vấn',
             description: 'Kết nối mạng lưới hỗ trợ',
             actionText: 'Khám phá',
-            onAction: () => debugPrint('Navigate to Connections'),
+            onAction: () => debugPrint('Navigate to Consulting'),
             date: DateTime(2026, 4, 3),
-            icon: Icons.handshake_rounded, // Shake hands for networking
-            category: 'Kết nối',
+            icon: Icons.chat_bubble_outline_rounded,
+            category: 'Tư vấn',
             progress: 0.24,
           ),
         ],

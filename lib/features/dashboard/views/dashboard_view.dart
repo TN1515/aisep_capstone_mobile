@@ -9,9 +9,18 @@ import 'package:aisep_capstone_mobile/features/dashboard/widgets/ongoing_project
 import 'package:aisep_capstone_mobile/features/dashboard/widgets/activity_item_tile.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/widgets/startup_bottom_nav_bar.dart';
 
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:aisep_capstone_mobile/features/profile/views/startup_profile_view.dart';
 import 'package:aisep_capstone_mobile/features/kyc/views/kyc_form_view.dart';
+import 'package:aisep_capstone_mobile/features/documents/views/document_list_view.dart';
+import 'package:aisep_capstone_mobile/features/connections/views/connections_view.dart';
+import 'package:aisep_capstone_mobile/features/consulting/views/consulting_dashboard_view.dart';
+import 'package:aisep_capstone_mobile/features/consulting/views/advisor_discovery_view.dart';
+import 'package:aisep_capstone_mobile/features/notifications/view_models/notification_view_model.dart'; // NEW
+import 'package:aisep_capstone_mobile/features/notifications/views/notifications_view.dart';       // NEW
+import 'package:aisep_capstone_mobile/features/messages/views/chat_list_view.dart';              // NEW
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart'; // NEW
 
 class DashboardView extends StatefulWidget {
   const DashboardView({Key? key}) : super(key: key);
@@ -47,6 +56,7 @@ class _DashboardViewState extends State<DashboardView> {
         onTap: _onTabTapped,
       ),
       // Integration: Floating Action Button in the Dashboard notch
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Container(
         height: 64,
         width: 64,
@@ -63,18 +73,17 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          _buildPlaceholder('Kết nối', Icons.people_alt_outlined),
+          const ConnectionsView(), // Index 0: Updated from Placeholder
+          const ConsultingDashboardView(), // Index 1: Redesigned
+          _buildDashboardContent(), // Center item: Trang chủ
+          const DocumentListView(), // Index 3: Updated from Placeholder
           KycFormView(
             isIncorporated: true, 
             onBack: () => _onTabTapped(2), // Move back to Home (Index 2)
           ), 
-          _buildDashboardContent(), // Center item
-          _buildPlaceholder('Tài liệu', Icons.description_outlined),
-          const StartupProfileView(),
         ],
       ),
     );
@@ -111,26 +120,50 @@ class _DashboardViewState extends State<DashboardView> {
           return const Center(child: Text('Không có dữ liệu', style: TextStyle(color: Colors.white70)));
         }
 
-        return RefreshIndicator(
-          onRefresh: _viewModel.fetchDashboardData,
-          color: StartupOnboardingTheme.goldAccent,
-          backgroundColor: StartupOnboardingTheme.navySurface,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Header is now part of the scrollable content inside the dashboard tab
-              SliverToBoxAdapter(
-                child: SafeArea(
-                  bottom: false,
-                  child: DashboardHeader(
-                    greeting: _viewModel.greeting,
-                    userName: _viewModel.userName,
-                    startupName: _viewModel.startupName,
-                    onNotificationTap: () {},
-                    onProfileTap: () {},
-                  ),
-                ),
-              ),
+        return ChangeNotifierProvider( // Wrap the dashboard content with NotificationViewModel
+          create: (_) => NotificationViewModel(),
+          child: Consumer<NotificationViewModel>(
+            builder: (context, notiViewModel, _) {
+              return RefreshIndicator(
+                onRefresh: () async {
+                  await _viewModel.fetchDashboardData();
+                  await notiViewModel.refresh();
+                },
+                color: StartupOnboardingTheme.goldAccent,
+                backgroundColor: StartupOnboardingTheme.navySurface,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    // Header is now part of the scrollable content inside the dashboard tab
+                    SliverToBoxAdapter(
+                      child: SafeArea(
+                        bottom: false,
+                        child: DashboardHeader(
+                          greeting: _viewModel.greeting,
+                          userName: _viewModel.userName,
+                          startupName: _viewModel.startupName,
+                          unreadCount: notiViewModel.unreadCount, // Dynamic unread count
+                          onNotificationTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const NotificationsView()),
+                            );
+                          },
+                          onMessageTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ChatListView()),
+                            );
+                          },
+                          onProfileTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const StartupProfileView()),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
 
               // 1. Summary Header Banner
               SliverToBoxAdapter(
@@ -140,7 +173,7 @@ class _DashboardViewState extends State<DashboardView> {
                     profileCompletion: stats.profileCompletion,
                     kycStatus: stats.kycStatus,
                     aiScore: stats.aiEvaluationScore,
-                    onKycTap: () => _onTabTapped(1), // Switch to KYC Tab
+                    onKycTap: () => _onTabTapped(4), // Switch to KYC Tab (Index 4)
                   ),
                 ),
               ),
@@ -165,9 +198,14 @@ class _DashboardViewState extends State<DashboardView> {
                         task: task,
                         onTap: () {
                           if (task.category == 'Hồ sơ') {
-                            _onTabTapped(4); // Switch to Profile tab
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const StartupProfileView()),
+                            );
                           } else if (task.category == 'Pháp lý' || task.title.contains('KYC')) {
-                            _onTabTapped(1); // Switch to Verification tab
+                            _onTabTapped(4); // Switch to Verification (Xác thực) tab
+                          } else if (task.category == 'Tư vấn') {
+                            _onTabTapped(1); // Switch to Consulting tab
                           } else {
                             task.onAction?.call();
                           }
@@ -192,9 +230,12 @@ class _DashboardViewState extends State<DashboardView> {
                 ),
               ),
 
-              // Footer spacing to account for FAB and Nav Bar
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+                    // Footer spacing to account for FAB and Nav Bar
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                ),
+              );
+            },
           ),
         );
       },
