@@ -40,17 +40,10 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+            icon: const Icon(LucideIcons.arrowLeft),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(
-            'Đổi mật khẩu',
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
-            ),
-          ),
+          title: const Text('Đổi mật khẩu'),
         ),
         body: Consumer<SettingsViewModel>(
           builder: (context, viewModel, child) {

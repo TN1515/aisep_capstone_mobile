@@ -15,6 +15,21 @@ class StartupOnboardingTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: navyBg,
       primaryColor: goldAccent,
+      cardColor: navySurface,
+      dividerColor: Colors.white10,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: softIvory),
+        actionsIconTheme: const IconThemeData(color: softIvory),
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: softIvory,
+        ),
+      ),
+      iconTheme: const IconThemeData(color: softIvory),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.outfit(
           fontSize: 32,
@@ -22,11 +37,20 @@ class StartupOnboardingTheme {
           color: softIvory,
           height: 1.2,
         ),
+        displayMedium: GoogleFonts.outfit(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: softIvory,
+        ),
         bodyLarge: GoogleFonts.workSans(
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.normal,
-          color: softIvory.withOpacity(0.8),
+          color: softIvory.withOpacity(0.9),
           height: 1.6,
+        ),
+        bodyMedium: GoogleFonts.workSans(
+          fontSize: 14,
+          color: softIvory.withOpacity(0.7),
         ),
         labelLarge: GoogleFonts.workSans(
           fontSize: 16,
@@ -38,24 +62,98 @@ class StartupOnboardingTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: goldAccent,
           foregroundColor: navyBg,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 8,
-          shadowColor: goldAccent.withOpacity(0.3),
-          textStyle: GoogleFonts.workSans(
-            fontSize: 18,
+          elevation: 0,
+          textStyle: GoogleFonts.outfit(
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: softIvory.withOpacity(0.7),
+          foregroundColor: goldAccent,
           textStyle: GoogleFonts.workSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData get lightTheme {
+    return ThemeData(
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: softIvory,
+      primaryColor: goldAccent,
+      cardColor: Colors.white,
+      dividerColor: Colors.black.withOpacity(0.05),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: navyBg),
+        actionsIconTheme: const IconThemeData(color: navyBg),
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: navyBg,
+        ),
+      ),
+      iconTheme: const IconThemeData(color: navyBg),
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.outfit(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: navyBg,
+          height: 1.2,
+        ),
+        displayMedium: GoogleFonts.outfit(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: navyBg,
+        ),
+        bodyLarge: GoogleFonts.workSans(
+          fontSize: 16,
+          fontWeight: FontWeight.normal,
+          color: navyBg.withOpacity(0.9),
+          height: 1.6,
+        ),
+        bodyMedium: GoogleFonts.workSans(
+          fontSize: 14,
+          color: navyBg.withOpacity(0.7),
+        ),
+        labelLarge: GoogleFonts.workSans(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: goldAccent,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          textStyle: GoogleFonts.outfit(
             fontSize: 16,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: goldAccent,
+          textStyle: GoogleFonts.workSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

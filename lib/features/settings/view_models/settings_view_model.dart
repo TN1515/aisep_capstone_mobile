@@ -44,6 +44,12 @@ class SettingsViewModel extends ChangeNotifier {
     await _saveSettings();
   }
 
+  Future<void> toggleDarkMode(bool value) async {
+    _settings = _settings.copyWith(isDarkMode: value);
+    notifyListeners();
+    await _saveSettings();
+  }
+
   Future<void> _saveSettings() async {
     // Mock save delay
     _isLoading = true;

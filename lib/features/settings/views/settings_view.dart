@@ -3,38 +3,28 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
-import '../view_models/settings_view_model.dart';
+import 'package:aisep_capstone_mobile/features/settings/view_models/settings_view_model.dart';
 import '../widgets/settings_widgets.dart';
 import 'change_password_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SettingsViewModel(),
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            'Cài đặt',
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
-            ),
-          ),
+    final viewModel = context.watch<SettingsViewModel>();
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: Consumer<SettingsViewModel>(
-          builder: (context, viewModel, child) {
-            return CustomScrollView(
+        title: const Text('Cài đặt'),
+      ),
+      body: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
@@ -120,6 +110,16 @@ class SettingsView extends StatelessWidget {
                         title: 'Hệ thống',
                         children: [
                           SettingsTile(
+                            icon: LucideIcons.moon,
+                            title: 'Giao diện tối',
+                            subtitle: 'Kích hoạt giao diện chế độ ban đêm',
+                            trailing: _buildSwitch(
+                              context,
+                              viewModel.settings.isDarkMode,
+                              viewModel.toggleDarkMode,
+                            ),
+                          ),
+                          SettingsTile(
                             icon: LucideIcons.logOut,
                             title: 'Đăng xuất',
                             isDestructive: true,
@@ -134,10 +134,7 @@ class SettingsView extends StatelessWidget {
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ),
+            ),
     );
   }
 

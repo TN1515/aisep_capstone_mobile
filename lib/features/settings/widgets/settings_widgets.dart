@@ -33,9 +33,9 @@ class SettingsSection extends StatelessWidget {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: StartupOnboardingTheme.navySurface,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(
             children: children,
@@ -83,13 +83,13 @@ class SettingsTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: (isDestructive ? Colors.red : AppColors.primary).withOpacity(0.1),
+                    color: (isDestructive ? Colors.red : Theme.of(context).primaryColor).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
                     size: 20,
-                    color: isDestructive ? Colors.redAccent : StartupOnboardingTheme.goldAccent,
+                    color: isDestructive ? Colors.redAccent : Theme.of(context).primaryColor,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -102,7 +102,7 @@ class SettingsTile extends StatelessWidget {
                         style: GoogleFonts.workSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: isDestructive ? Colors.redAccent : StartupOnboardingTheme.softIvory,
+                          color: isDestructive ? Colors.redAccent : Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       if (subtitle != null) ...[
@@ -111,7 +111,7 @@ class SettingsTile extends StatelessWidget {
                           subtitle!,
                           style: GoogleFonts.workSans(
                             fontSize: 12,
-                            color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                            color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -122,7 +122,7 @@ class SettingsTile extends StatelessWidget {
                 if (onTap != null && trailing == null)
                   Icon(
                     Icons.chevron_right_rounded,
-                    color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
                   ),
               ],
             ),
@@ -132,7 +132,7 @@ class SettingsTile extends StatelessWidget {
               height: 1,
               indent: 64,
               endIndent: 16,
-              color: Colors.white.withOpacity(0.05),
+              color: Theme.of(context).dividerColor,
             ),
         ],
       ),
