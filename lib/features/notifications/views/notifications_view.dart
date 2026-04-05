@@ -36,15 +36,18 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
       child: Consumer<NotificationViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               leading: IconButton(
-                icon: const Icon(LucideIcons.arrowLeft),
+                icon: Icon(LucideIcons.arrowLeft, color: Theme.of(context).iconTheme.color),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text('Thông báo'),
+              title: Text(
+                'Thông báo',
+                style: Theme.of(context).appBarTheme.titleTextStyle,
+              ),
               actions: [
                 if (viewModel.unreadCount > 0)
                   TextButton(
@@ -67,7 +70,7 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
                 controller: _tabController,
                 indicatorColor: StartupOnboardingTheme.goldAccent,
                 labelColor: StartupOnboardingTheme.goldAccent,
-                unselectedLabelColor: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
                 labelStyle: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 13),
                 tabs: const [
                   Tab(text: 'Tất cả'),
@@ -100,7 +103,7 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
     return RefreshIndicator(
       onRefresh: viewModel.refresh,
       color: StartupOnboardingTheme.goldAccent,
-      backgroundColor: StartupOnboardingTheme.navySurface,
+      backgroundColor: Theme.of(context).cardColor,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         itemCount: notifications.length,
@@ -128,7 +131,7 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
             ),
           ),
           const SizedBox(height: 8),
@@ -137,7 +140,7 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
             textAlign: TextAlign.center,
             style: GoogleFonts.workSans(
               fontSize: 14,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+              color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
             ),
           ),
         ],
@@ -148,7 +151,7 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
   void _showActionSheet(BuildContext context, NotificationViewModel viewModel, String id) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: StartupOnboardingTheme.navySurface,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(vertical: 24),
@@ -157,7 +160,7 @@ class _NotificationsViewState extends State<NotificationsView> with SingleTicker
           children: [
             ListTile(
               leading: const Icon(LucideIcons.checkCheck, color: StartupOnboardingTheme.goldAccent),
-              title: Text('Đánh dấu là đã đọc', style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory)),
+              title: Text('Đánh dấu là đã đọc', style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color)),
               onTap: () {
                 viewModel.markAsRead(id);
                 Navigator.pop(context);

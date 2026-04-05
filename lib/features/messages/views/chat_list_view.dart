@@ -15,21 +15,24 @@ class ChatListView extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => ChatViewModel(),
       child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft),
+            icon: Icon(LucideIcons.arrowLeft, color: Theme.of(context).iconTheme.color),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text('Tin nhắn'),
+          title: Text(
+            'Tin nhắn',
+            style: Theme.of(context).appBarTheme.titleTextStyle,
+          ),
         ),
         body: Consumer<ChatViewModel>(
           builder: (context, viewModel, child) {
             return Column(
               children: [
-                _buildSearchSection(viewModel),
+                _buildSearchSection(context, viewModel),
                 Expanded(
                   child: _buildChatList(context, viewModel),
                 ),
@@ -41,24 +44,24 @@ class ChatListView extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchSection(ChatViewModel viewModel) {
+  Widget _buildSearchSection(BuildContext context, ChatViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
       child: Container(
         height: 52, // Explicitly scaled height
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.navySurface.withOpacity(0.5),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
         ),
         child: TextField(
           onChanged: viewModel.updateSearchQuery,
-          style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory, fontSize: 14),
+          style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14),
           decoration: InputDecoration(
             icon: Icon(LucideIcons.search, color: StartupOnboardingTheme.goldAccent.withOpacity(0.5), size: 18),
             hintText: 'Tìm kiếm Investor...',
-            hintStyle: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.3), fontSize: 14),
+            hintStyle: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3), fontSize: 14),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 14),
           ),
@@ -73,13 +76,13 @@ class ChatListView extends StatelessWidget {
     }
 
     if (viewModel.chats.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
     return RefreshIndicator(
       onRefresh: viewModel.refresh,
       color: StartupOnboardingTheme.goldAccent,
-      backgroundColor: StartupOnboardingTheme.navySurface,
+      backgroundColor: Theme.of(context).cardColor,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         itemCount: viewModel.chats.length,
@@ -104,7 +107,7 @@ class ChatListView extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -116,7 +119,7 @@ class ChatListView extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
             ),
           ),
           const SizedBox(height: 8),
@@ -125,7 +128,7 @@ class ChatListView extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.workSans(
               fontSize: 14,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+              color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
             ),
           ),
         ],

@@ -28,12 +28,12 @@ class NotificationTile extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: notification.isRead 
-              ? Colors.white.withOpacity(0.02) 
-              : StartupOnboardingTheme.goldAccent.withOpacity(0.05),
+              ? Theme.of(context).cardColor 
+              : StartupOnboardingTheme.goldAccent.withOpacity(0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: notification.isRead 
-                ? Colors.white.withOpacity(0.05) 
+                ? Theme.of(context).dividerColor.withOpacity(0.1) 
                 : StartupOnboardingTheme.goldAccent.withOpacity(0.2),
           ),
           boxShadow: notification.isRead ? [] : [
@@ -47,7 +47,7 @@ class NotificationTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCategoryIcon(),
+            _buildCategoryIcon(context),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -63,8 +63,8 @@ class NotificationTile extends StatelessWidget {
                             fontSize: 15,
                             fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.bold,
                             color: notification.isRead 
-                                ? StartupOnboardingTheme.softIvory.withOpacity(0.9)
-                                : StartupOnboardingTheme.softIvory,
+                                ? Theme.of(context).textTheme.displayLarge?.color?.withOpacity(0.9)
+                                : Theme.of(context).textTheme.displayLarge?.color,
                           ),
                         ),
                       ),
@@ -85,7 +85,7 @@ class NotificationTile extends StatelessWidget {
                     style: GoogleFonts.workSans(
                       fontSize: 13,
                       height: 1.4,
-                      color: StartupOnboardingTheme.softIvory.withOpacity(notification.isRead ? 0.6 : 0.8),
+                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(notification.isRead ? 0.6 : 0.8),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -108,7 +108,7 @@ class NotificationTile extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryIcon() {
+  Widget _buildCategoryIcon(BuildContext context) {
     IconData icon;
     Color color;
 
@@ -131,7 +131,7 @@ class NotificationTile extends StatelessWidget {
         break;
       default:
         icon = LucideIcons.info;
-        color = StartupOnboardingTheme.softIvory;
+        color = Theme.of(context).textTheme.bodyLarge?.color ?? StartupOnboardingTheme.softIvory;
     }
 
     return Container(

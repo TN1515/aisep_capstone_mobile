@@ -16,15 +16,16 @@ class ChatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.navySurface.withOpacity(0.3),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.04)),
+          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
         ),
         child: Row(
           children: [
@@ -42,7 +43,7 @@ class ChatTile extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: StartupOnboardingTheme.softIvory,
+                          color: Theme.of(context).textTheme.displayLarge?.color,
                         ),
                       ),
                       Text(
@@ -50,7 +51,7 @@ class ChatTile extends StatelessWidget {
                         style: GoogleFonts.workSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+                          color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
                         ),
                       ),
                     ],
@@ -72,11 +73,11 @@ class ChatTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           chat.lastMessage,
-                          style: GoogleFonts.workSans(
+                           style: GoogleFonts.workSans(
                             fontSize: 13,
                             color: chat.unreadCount > 0 
-                                ? StartupOnboardingTheme.softIvory 
-                                : StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                                ? Theme.of(context).textTheme.displayLarge?.color 
+                                : Theme.of(context).textTheme.displayLarge?.color?.withOpacity(0.4),
                             fontWeight: chat.unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
                           ),
                           maxLines: 1,
@@ -96,7 +97,7 @@ class ChatTile extends StatelessWidget {
                             style: GoogleFonts.workSans(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: StartupOnboardingTheme.navyBg,
+                              color: isDarkMode ? StartupOnboardingTheme.navyBg : Colors.white,
                             ),
                           ),
                         ),

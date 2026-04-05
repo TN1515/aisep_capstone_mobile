@@ -40,11 +40,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: StartupOnboardingTheme.navySurface,
-        elevation: 0,
-        toolbarHeight: 60, // Compact height
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        elevation: 0.5,
+        toolbarHeight: 60,
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -63,7 +63,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     style: GoogleFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: StartupOnboardingTheme.softIvory,
+                      color: Theme.of(context).textTheme.displayLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 1),
@@ -150,7 +150,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             style: GoogleFonts.outfit(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+              color: Theme.of(context).textTheme.displayLarge?.color?.withOpacity(0.5),
             ),
           ),
           const SizedBox(height: 8),
@@ -158,7 +158,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             'Hãy gửi lời chào đầu tiên tới ${widget.chat.investorName}!',
             style: GoogleFonts.workSans(
               fontSize: 14,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+              color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
             ),
           ),
         ],
@@ -178,7 +178,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             margin: const EdgeInsets.only(bottom: 2),
             decoration: BoxDecoration(
-              color: isMe ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+              color: isMe ? StartupOnboardingTheme.goldAccent : Theme.of(context).cardColor,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -197,7 +197,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               msg.text,
               style: GoogleFonts.workSans(
                 fontSize: 14,
-                color: isMe ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.softIvory,
+                color: isMe ? Colors.black : Theme.of(context).textTheme.bodyLarge?.color,
                 height: 1.4,
               ),
             ),
@@ -209,7 +209,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               style: GoogleFonts.workSans(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.3),
               ),
             ),
           ),
@@ -223,8 +223,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
       ),
       child: Row(
         children: [
@@ -233,17 +233,17 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: StartupOnboardingTheme.navyBg.withOpacity(0.6),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
               ),
               child: Center(
                 child: TextField(
                   controller: _messageController,
-                  style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory, fontSize: 14),
+                  style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Nhập tin nhắn...',
-                    hintStyle: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.3), fontSize: 14),
+                    hintStyle: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3), fontSize: 14),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
@@ -269,7 +269,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 color: StartupOnboardingTheme.goldAccent,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.send, color: StartupOnboardingTheme.navyBg, size: 18),
+              child: const Icon(LucideIcons.send, color: Colors.black, size: 18),
             ),
           ),
         ],
