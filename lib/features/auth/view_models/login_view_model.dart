@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:aisep_capstone_mobile/core/view_models/base_view_model.dart';
-import 'package:aisep_capstone_mobile/features/dashboard/views/main_navigation_container.dart';
+import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
 
 class LoginViewModel extends BaseViewModel {
   final TextEditingController emailController = TextEditingController();
@@ -20,7 +20,7 @@ class LoginViewModel extends BaseViewModel {
       // For now, staying on screen or showing success
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const MainNavigationContainer()),
+          MaterialPageRoute(builder: (context) => const DashboardView()),
           (route) => false,
         );
       }

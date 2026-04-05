@@ -16,23 +16,23 @@ class AppTheme {
         onBackground: AppColors.text,
       ),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.spaceGrotesk(
+        displayLarge: GoogleFonts.outfit(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: AppColors.text,
           letterSpacing: -0.5,
         ),
-        displayMedium: GoogleFonts.spaceGrotesk(
+        displayMedium: GoogleFonts.outfit(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: AppColors.text,
         ),
-        bodyLarge: GoogleFonts.dmSans(
+        bodyLarge: GoogleFonts.workSans(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: AppColors.text,
         ),
-        bodyMedium: GoogleFonts.dmSans(
+        bodyMedium: GoogleFonts.workSans(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: AppColors.text,
@@ -55,7 +55,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: GoogleFonts.dmSans(
+          textStyle: GoogleFonts.workSans(
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
