@@ -7,6 +7,8 @@ import '../widgets/profile_section_card.dart';
 import '../widgets/profile_text_field.dart';
 import '../widgets/profile_dropdown_field.dart';
 import '../../kyc/views/kyc_form_view.dart';
+import '../../settings/views/settings_view.dart'; // NEW
+import '../../membership/views/membership_upgrade_view.dart'; // NEW
 
 class StartupProfileView extends StatefulWidget {
   const StartupProfileView({super.key});
@@ -17,15 +19,35 @@ class StartupProfileView extends StatefulWidget {
 
 class _StartupProfileViewState extends State<StartupProfileView> {
   late final StartupProfileViewModel _viewModel;
+  late final ScrollController _scrollController;
+  bool _isAtBottom = false;
 
   @override
   void initState() {
     super.initState();
     _viewModel = StartupProfileViewModel();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    
+    // Check if near enough to bottom to trigger docking
+    final isBottom = _scrollController.position.pixels >= 
+                     (_scrollController.position.maxScrollExtent - 20);
+                     
+    if (isBottom != _isAtBottom) {
+      setState(() {
+        _isAtBottom = isBottom;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -40,6 +62,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
           body: Stack(
             children: [
               CustomScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   // Unified Hero Section (Backdrop + Logo + Basic Info)
@@ -69,17 +92,67 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                     child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                 ),
+                
+              if (_viewModel.isEditMode)
+                _buildStickyFooter(),
             ],
           ),
-          floatingActionButton: _viewModel.isEditMode ? FloatingActionButton.extended(
-            onPressed: () => _viewModel.saveProfile(),
-            label: const Text('Lưu thay đổi', style: TextStyle(fontWeight: FontWeight.bold)),
-            icon: const Icon(Icons.check_rounded),
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.accent,
-          ) : null,
         );
       },
+    );
+  }
+
+  Widget _buildStickyFooter() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+        decoration: BoxDecoration(
+          // Transparent when at bottom, white-ish/blurred when sticky
+          color: _isAtBottom 
+              ? Colors.transparent 
+              : Colors.white,
+          boxShadow: _isAtBottom ? [] : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => _viewModel.toggleEditMode(),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12), // Reduced from 16
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Reduced from 16
+                ),
+                child: Text('Hủy bỏ', style: GoogleFonts.workSans(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 13)), // Added fontSize
+              ),
+            ),
+            const SizedBox(width: 12), // Reduced from 16
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _viewModel.saveProfile(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 12), // Reduced from 16
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Reduced from 16
+                  elevation: 0,
+                ),
+                child: Text('Lưu thay đổi', style: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 13)), // Added fontSize
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -112,14 +185,45 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 ),
               ),
               
+              // Backdrop Edit Button (Semi-transparent camera icon)
+              if (_viewModel.isEditMode)
+                Positioned(
+                  bottom: 15,
+                  right: 15,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 20),
+                  ),
+                ),
+              
               // Floating Buttons (Actions)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 16,
+                child: _buildFloatingActionCircle(Icons.arrow_back, () => Navigator.of(context).pop()),
+              ),
+
               Positioned(
                 top: MediaQuery.of(context).padding.top + 10,
                 right: 16,
                 child: Row(
                   children: [
                     if (!_viewModel.isEditMode)
-                      _buildFloatingActionCircle(Icons.share_outlined, () {}),
+                      _buildFloatingActionCircle(
+                        Icons.workspace_premium_rounded, 
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const MembershipUpgradeView()),
+                          );
+                        },
+                        iconColor: StartupOnboardingTheme.goldAccent,
+                      ),
                   ],
                 ),
               ),
@@ -151,42 +255,61 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     );
   }
 
-  Widget _buildFloatingActionCircle(IconData icon, VoidCallback onTap) {
+  Widget _buildFloatingActionCircle(IconData icon, VoidCallback onTap, {Color iconColor = Colors.white}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.black26,
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 20),
+        icon: Icon(icon, color: iconColor, size: 20),
         onPressed: onTap,
       ),
     );
   }
 
   Widget _buildProfileLogo() {
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: Image.network(
-          _viewModel.profile.logoUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.business, size: 50, color: AppColors.textMuted),
+          child: ClipOval(
+            child: Image.network(
+              _viewModel.profile.logoUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.business, size: 50, color: AppColors.textMuted),
+            ),
+          ),
         ),
-      ),
+        if (_viewModel.isEditMode)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 16),
+            ),
+          ),
+      ],
     );
   }
 
@@ -197,7 +320,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
         Text(
           _viewModel.profile.startupName,
             textAlign: TextAlign.center,
-            style: GoogleFonts.spaceGrotesk(
+            style: GoogleFonts.outfit(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.text,
@@ -210,7 +333,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             child: Text(
               _viewModel.profile.tagline,
               textAlign: TextAlign.center,
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.workSans(
                 fontSize: 15,
                 color: AppColors.textMuted,
                 fontWeight: FontWeight.w500,
@@ -255,69 +378,71 @@ class _StartupProfileViewState extends State<StartupProfileView> {
   }
 
   Widget _buildActionButtons() {
+    if (_viewModel.isEditMode) return const SizedBox.shrink();
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ElevatedButton.icon(
           onPressed: () => _viewModel.toggleEditMode(),
-          icon: Icon(_viewModel.isEditMode ? Icons.close_rounded : Icons.edit_rounded, size: 16),
-          label: Text(_viewModel.isEditMode ? 'Hủy bỏ' : 'Chỉnh sửa hồ sơ'),
+          icon: const Icon( Icons.edit_rounded, size: 16),
+          label: const Text('Chỉnh sửa hồ sơ'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _viewModel.isEditMode ? Colors.white : AppColors.accent,
-            foregroundColor: _viewModel.isEditMode ? AppColors.error : Colors.white,
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: _viewModel.isEditMode ? const BorderSide(color: AppColors.error) : BorderSide.none,
             ),
-            textStyle: GoogleFonts.dmSans(
+            textStyle: GoogleFonts.workSans(
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        if (!_viewModel.isEditMode) ...[
-          const SizedBox(width: 12),
-          ElevatedButton.icon(
+        const SizedBox(width: 12),
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const KycFormView(isIncorporated: true)),
+            );
+          },
+          icon: const Icon(Icons.verified_user_outlined, size: 16),
+          label: const Text('Xác thực'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+            foregroundColor: StartupOnboardingTheme.goldAccent,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1),
+            ),
+            textStyle: GoogleFonts.workSans(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const KycFormView(isIncorporated: true)),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsView()),
               );
             },
-            icon: const Icon(Icons.verified_user_outlined, size: 16),
-            label: const Text('Xác thực'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-              foregroundColor: StartupOnboardingTheme.goldAccent,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1),
-              ),
-              textStyle: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.accent, size: 20),
+            tooltip: 'Cài đặt',
           ),
-        ],
-        if (!_viewModel.isEditMode) ...[
-          const SizedBox(width: 12),
-          Container(
-            height: 42, // Match button height roughly
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.share_outlined, color: AppColors.accent, size: 20),
-              tooltip: 'Chia sẻ hồ sơ',
-            ),
-          ),
-        ],
+        ),
       ],
     );
   }
@@ -370,8 +495,8 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Sáng lập viên', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
-                        Text(_viewModel.profile.founderNames.replaceAll('\n', ', '), style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text, fontWeight: FontWeight.w600)),
+                        Text('Sáng lập viên', style: GoogleFonts.workSans(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
+                        Text(_viewModel.profile.founderNames.replaceAll('\n', ', '), style: GoogleFonts.workSans(fontSize: 14, color: AppColors.text, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -414,10 +539,10 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
+                Text(label, style: GoogleFonts.workSans(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
                 Text(
                   displayValue,
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.workSans(
                     fontSize: 14,
                     color: isLink && !isPlaceholder ? Colors.blue.shade700 : AppColors.text,
                     fontWeight: FontWeight.w600,
@@ -436,11 +561,11 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
+        Text(label, style: GoogleFonts.workSans(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
         Text(
           value.isEmpty ? 'Chưa cập nhật' : value,
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.workSans(
             fontSize: 14,
             color: AppColors.text,
             height: 1.5,
@@ -454,8 +579,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('CHỈNH SỬA HỒ SƠ', style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.text)),
-        const SizedBox(height: 16),
+        // Removed "CHỈNH SỬA HỒ SƠ" title
         
         ProfileSectionCard(
           title: 'ĐỊNH DANH STARTUP',
@@ -530,6 +654,8 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             ],
           ),
         ),
+
+        const SizedBox(height: 40),
       ],
     );
   }

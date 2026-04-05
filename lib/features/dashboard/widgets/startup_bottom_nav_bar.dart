@@ -33,8 +33,8 @@ class StartupBottomNavBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(Icons.people_alt_outlined, 'Kết nối', 0),
-                  _buildNavItem(Icons.verified_user_outlined, 'Xác thực', 1),
+                  _buildNavItem(LucideIcons.users, 'Kết nối', 0),
+                  _buildNavItem(LucideIcons.graduationCap, 'Tư vấn', 1),
                 ],
               ),
             ),
@@ -46,8 +46,8 @@ class StartupBottomNavBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(Icons.description_outlined, 'Tài liệu', 3),
-                  _buildNavItem(Icons.person_outline, 'Hồ sơ', 4),
+                  _buildNavItem(LucideIcons.fileText, 'Tài liệu', 3),
+                  _buildNavItem(LucideIcons.shieldCheck, 'Xác thực', 4),
                 ],
               ),
             ),
