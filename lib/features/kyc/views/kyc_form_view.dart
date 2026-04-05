@@ -21,6 +21,7 @@ class KycFormView extends StatefulWidget {
 
 class _KycFormViewState extends State<KycFormView> {
   late final KycViewModel _viewModel;
+  bool _showForm = false;
 
   @override
   void initState() {
@@ -66,6 +67,10 @@ class _KycFormViewState extends State<KycFormView> {
         body: ListenableBuilder(
           listenable: _viewModel,
           builder: (context, child) {
+            if (!_showForm) {
+              return _buildStatusDashboard();
+            }
+
             return Column(
               children: [
                 Expanded(
@@ -74,8 +79,6 @@ class _KycFormViewState extends State<KycFormView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
-                        _buildStatusBanner(),
                         const SizedBox(height: 16),
                         _buildIntroSection(),
                         const SizedBox(height: 32),
@@ -113,90 +116,185 @@ class _KycFormViewState extends State<KycFormView> {
     );
   }
 
-  Widget _buildStatusBanner() {
-    if (_viewModel.status == KycStatus.none) return const SizedBox.shrink();
+  Widget _buildStatusDashboard() {
+    final status = _viewModel.status;
 
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatusProgressHeader(status),
+          const SizedBox(height: 32),
+          Text(
+            'LỘ TRÌNH XÁC THỰC',
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildStepRow(1, 'Thông tin định danh', 'Cung cấp tên pháp lý và mã số doanh nghiệp.', status != KycStatus.none),
+          _buildStepDivider(status != KycStatus.none),
+          _buildStepRow(2, 'Tài liệu minh chứng', 'Tải lên Pitch deck hoặc Giấy phép kinh doanh.', status != KycStatus.none),
+          _buildStepDivider(status == KycStatus.verified || status == KycStatus.pending),
+          _buildStepRow(3, 'Thẩm định hồ sơ', 'Chuyên gia AISEP đánh giá và phê duyệt.', status == KycStatus.verified),
+          const SizedBox(height: 48),
+          _buildDashboardActions(status),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusProgressHeader(KycStatus status) {
     Color color;
     IconData icon;
     String title;
     String message;
 
-    switch (_viewModel.status) {
+    switch (status) {
       case KycStatus.pending:
         color = StartupOnboardingTheme.goldAccent;
         icon = Icons.hourglass_empty_rounded;
         title = 'Đang chờ duyệt';
-        message = 'Hồ sơ của bạn đang được chuyên gia thẩm định.';
+        message = 'Hồ sơ KYC của bạn đang được các chuyên gia AISEP thẩm định kỹ lưỡng.';
         break;
       case KycStatus.verified:
         color = Colors.greenAccent;
-        icon = Icons.check_circle_outline_rounded;
-        title = 'Đã xác thực';
-        message = 'Tài khoản của bạn đã được xác thực thành công.';
+        icon = Icons.verified_rounded;
+        title = 'Đã xác thực KYC';
+        message = 'Hồ sơ của bạn đã được xác thực chính thức. Bạn có thể sử dụng đầy đủ tính năng AI.';
         break;
       case KycStatus.rejected:
         color = Colors.redAccent;
-        icon = Icons.error_outline_rounded;
-        title = 'Từ chối xác thực';
-        message = _viewModel.rejectionReason ?? 'Hồ sơ không đạt yêu cầu. Vui lòng kiểm tra lại.';
-        break;
-      case KycStatus.infoRequired:
-        color = Colors.orangeAccent;
-        icon = Icons.info_outline_rounded;
-        title = 'Cần bổ sung thông tin';
-        message = 'Vui lòng cập nhật thêm tài liệu theo yêu cầu bên dưới.';
+        icon = Icons.report_problem_outlined;
+        title = 'Xác thực thất bại';
+        message = _viewModel.rejectionReason ?? 'Hồ sơ không đáp ứng tiêu chuẩn. Vui lòng cập nhật lại.';
         break;
       default:
-        return const SizedBox.shrink();
+        color = StartupOnboardingTheme.goldAccent;
+        icon = Icons.shield_outlined;
+        title = 'Chưa xác thực';
+        message = 'Xác thực hồ sơ KYC để mở khóa toàn bộ quyền lợi hỗ trợ từ mạng lưới nhà đầu tư.';
     }
 
     return FadeInDown(
-      duration: const Duration(milliseconds: 500),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: StartupOnboardingTheme.navySurface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
-        child: Row(
+        child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.workSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.verified_user_rounded, color: StartupOnboardingTheme.goldAccent, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'MÔ PHỎNG XÁC THỰC KYC',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                          color: StartupOnboardingTheme.goldAccent,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 40),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: color),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.workSans(
+                fontSize: 14,
+                color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                height: 1.5,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStepRow(int step, String title, String sub, bool isCompleted) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: isCompleted ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+            shape: BoxShape.circle,
+            border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.3)),
+          ),
+          child: Center(
+            child: isCompleted 
+              ? const Icon(Icons.check, size: 16, color: StartupOnboardingTheme.navyBg)
+              : Text('$step', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title, 
+                style: GoogleFonts.workSans(
+                  fontWeight: FontWeight.bold, 
+                  color: isCompleted ? StartupOnboardingTheme.softIvory : StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                  fontSize: 15,
+                ),
+              ),
+              Text(
+                sub, 
+                style: GoogleFonts.workSans(
+                  fontSize: 12, 
+                  color: StartupOnboardingTheme.slateGray.withOpacity(0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepDivider(bool isCompleted) {
+    return Container(
+      margin: const EdgeInsets.only(left: 15, top: 2, bottom: 2),
+      width: 2,
+      height: 30,
+      color: isCompleted ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+    );
+  }
+
+  Widget _buildDashboardActions(KycStatus status) {
+    String text = status == KycStatus.none ? 'Bắt đầu xác thực hồ sơ' : 'Cập nhật/Xem lại thông tin';
+    
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () => setState(() => _showForm = true),
+            child: Text(text),
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (status != KycStatus.none)
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Quay lại Dashboard',
+              style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.5)),
+            ),
+          ),
+      ],
     );
   }
 
@@ -219,7 +317,7 @@ class _KycFormViewState extends State<KycFormView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Xác thực nhanh (Light)',
+                    'Xác thực KYC',
                     style: GoogleFonts.workSans(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

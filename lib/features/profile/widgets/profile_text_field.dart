@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/startup_onboarding_theme.dart';
 
 class ProfileTextField extends StatelessWidget {
   final String label;
@@ -30,7 +30,7 @@ class ProfileTextField extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
             ),
           ),
         ),
@@ -39,33 +39,35 @@ class ProfileTextField extends StatelessWidget {
           keyboardType: keyboardType,
           maxLines: maxLines,
           validator: validator,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: StartupOnboardingTheme.softIvory,
+          ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
             ),
             filled: true,
-            fillColor: AppColors.background,
+            fillColor: StartupOnboardingTheme.navyBg,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1.5),
             ),
           ),
         ),
-        const SizedBox(height: AppColors.spaceMD),
+        const SizedBox(height: 16),
       ],
     );
   }

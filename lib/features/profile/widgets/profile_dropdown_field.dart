@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/startup_onboarding_theme.dart';
 
 class ProfileDropdownField extends StatelessWidget {
   final String label;
@@ -30,16 +30,22 @@ class ProfileDropdownField extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
             ),
           ),
         ),
         DropdownButtonFormField<String>(
           value: value,
+          dropdownColor: StartupOnboardingTheme.navySurface,
           items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
-                  child: Text(item, style: Theme.of(context).textTheme.bodyMedium),
+                  child: Text(
+                    item, 
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: StartupOnboardingTheme.softIvory,
+                    ),
+                  ),
                 );
               }).toList(),
           onChanged: onChanged,
@@ -47,22 +53,30 @@ class ProfileDropdownField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
             ),
             filled: true,
-            fillColor: AppColors.background,
+            fillColor: StartupOnboardingTheme.navyBg,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1.5),
             ),
           ),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.text),
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: StartupOnboardingTheme.goldAccent),
         ),
-        const SizedBox(height: AppColors.spaceMD),
+        const SizedBox(height: 16),
       ],
     );
   }

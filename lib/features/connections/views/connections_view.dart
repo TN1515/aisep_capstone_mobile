@@ -54,6 +54,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
               ],
               bottom: TabBar(
                 isScrollable: true,
+                tabAlignment: TabAlignment.center,
                 indicatorColor: StartupOnboardingTheme.goldAccent,
                 indicatorWeight: 3,
                 labelColor: StartupOnboardingTheme.goldAccent,
