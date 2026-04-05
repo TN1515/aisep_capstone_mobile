@@ -43,7 +43,7 @@ class KycFileUploadCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: StartupOnboardingTheme.navySurface,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: fileName != null 
@@ -77,7 +77,7 @@ class KycFileUploadCard extends StatelessWidget {
                                   style: GoogleFonts.workSans(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: StartupOnboardingTheme.softIvory,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -114,7 +114,7 @@ class KycFileUploadCard extends StatelessWidget {
                             style: GoogleFonts.workSans(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: StartupOnboardingTheme.softIvory,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                           const SizedBox(height: 4),

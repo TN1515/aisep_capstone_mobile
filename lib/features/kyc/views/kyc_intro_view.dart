@@ -9,18 +9,16 @@ class KycIntroView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: StartupOnboardingTheme.softIvory),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+      ),
         body: SafeArea(
           child: Column(
             children: [
@@ -50,7 +48,7 @@ class KycIntroView extends StatelessWidget {
                         child: Text(
                           'Xác thực Startup\ncủa bạn',
                           textAlign: TextAlign.center,
-                          style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge,
+                          style: Theme.of(context).textTheme.displayLarge,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -59,7 +57,7 @@ class KycIntroView extends StatelessWidget {
                         child: Text(
                           'Xác thực danh tính giúp tăng mức độ tin cậy và mở khóa toàn bộ tính năng hỗ trợ AI cho doanh nghiệp của bạn.',
                           textAlign: TextAlign.center,
-                          style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
                       const SizedBox(height: 48),
@@ -113,7 +111,7 @@ class KycIntroView extends StatelessWidget {
               text,
               style: GoogleFonts.workSans(
                 fontSize: 15,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.9),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.9),
                 fontWeight: FontWeight.w500,
               ),
             ),

@@ -37,31 +37,15 @@ class _KycFormViewState extends State<KycFormView> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            onPressed: () {
-              if (widget.onBack != null) {
-                widget.onBack!();
-              } else {
-                Navigator.of(context).pop();
-              }
-            },
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: StartupOnboardingTheme.softIvory),
-          ),
-          title: Text(
-            'Xác thực hồ sơ',
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: StartupOnboardingTheme.softIvory,
-            ),
-          ),
+          automaticallyImplyLeading: false,
+          title: const Text('Xác thực hồ sơ'),
           centerTitle: true,
         ),
         body: ListenableBuilder(
@@ -112,7 +96,6 @@ class _KycFormViewState extends State<KycFormView> {
             );
           },
         ),
-      ),
     );
   }
 
@@ -131,7 +114,7 @@ class _KycFormViewState extends State<KycFormView> {
             style: GoogleFonts.outfit(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+              color: Theme.of(context).primaryColor.withOpacity(0.5),
               letterSpacing: 1.2,
             ),
           ),
@@ -156,7 +139,7 @@ class _KycFormViewState extends State<KycFormView> {
 
     switch (status) {
       case KycStatus.pending:
-        color = StartupOnboardingTheme.goldAccent;
+        color = Theme.of(context).primaryColor;
         icon = Icons.hourglass_empty_rounded;
         title = 'Đang chờ duyệt';
         message = 'Hồ sơ KYC của bạn đang được các chuyên gia AISEP thẩm định kỹ lưỡng.';
@@ -174,7 +157,7 @@ class _KycFormViewState extends State<KycFormView> {
         message = _viewModel.rejectionReason ?? 'Hồ sơ không đáp ứng tiêu chuẩn. Vui lòng cập nhật lại.';
         break;
       default:
-        color = StartupOnboardingTheme.goldAccent;
+        color = Theme.of(context).primaryColor;
         icon = Icons.shield_outlined;
         title = 'Chưa xác thực';
         message = 'Xác thực hồ sơ KYC để mở khóa toàn bộ quyền lợi hỗ trợ từ mạng lưới nhà đầu tư.';
@@ -184,7 +167,7 @@ class _KycFormViewState extends State<KycFormView> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.navySurface,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: color.withOpacity(0.2)),
         ),
@@ -209,7 +192,7 @@ class _KycFormViewState extends State<KycFormView> {
               textAlign: TextAlign.center,
               style: GoogleFonts.workSans(
                 fontSize: 14,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
                 height: 1.5,
               ),
             ),
@@ -226,13 +209,13 @@ class _KycFormViewState extends State<KycFormView> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isCompleted ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+            color: isCompleted ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
             shape: BoxShape.circle,
-            border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.3)),
+            border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
           ),
           child: Center(
             child: isCompleted 
-              ? const Icon(Icons.check, size: 16, color: StartupOnboardingTheme.navyBg)
+              ? Icon(Icons.check, size: 16, color: Theme.of(context).scaffoldBackgroundColor)
               : Text('$step', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
           ),
         ),
@@ -245,7 +228,7 @@ class _KycFormViewState extends State<KycFormView> {
                 title, 
                 style: GoogleFonts.workSans(
                   fontWeight: FontWeight.bold, 
-                  color: isCompleted ? StartupOnboardingTheme.softIvory : StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                  color: isCompleted ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
                   fontSize: 15,
                 ),
               ),
@@ -253,7 +236,7 @@ class _KycFormViewState extends State<KycFormView> {
                 sub, 
                 style: GoogleFonts.workSans(
                   fontSize: 12, 
-                  color: StartupOnboardingTheme.slateGray.withOpacity(0.8),
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ],
@@ -268,7 +251,7 @@ class _KycFormViewState extends State<KycFormView> {
       margin: const EdgeInsets.only(left: 15, top: 2, bottom: 2),
       width: 2,
       height: 30,
-      color: isCompleted ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+      color: isCompleted ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
     );
   }
 
@@ -291,7 +274,7 @@ class _KycFormViewState extends State<KycFormView> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Quay lại Dashboard',
-              style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.5)),
+              style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5)),
             ),
           ),
       ],
@@ -304,13 +287,13 @@ class _KycFormViewState extends State<KycFormView> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.goldAccent.withOpacity(0.05),
+          color: Theme.of(context).primaryColor.withOpacity(0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+          border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.verified_user_rounded, color: StartupOnboardingTheme.goldAccent, size: 32),
+            Icon(Icons.verified_user_rounded, color: Theme.of(context).primaryColor, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -321,7 +304,7 @@ class _KycFormViewState extends State<KycFormView> {
                     style: GoogleFonts.workSans(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: StartupOnboardingTheme.goldAccent,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -329,7 +312,7 @@ class _KycFormViewState extends State<KycFormView> {
                     'Giúp startup của bạn được nhận diện và tăng độ tin cậy với các nhà đầu tư.',
                     style: GoogleFonts.workSans(
                       fontSize: 13,
-                      color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
                       height: 1.4,
                     ),
                   ),
@@ -351,7 +334,7 @@ class _KycFormViewState extends State<KycFormView> {
           style: GoogleFonts.workSans(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.8),
+            color: Theme.of(context).primaryColor.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 12),
@@ -385,14 +368,14 @@ class _KycFormViewState extends State<KycFormView> {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+          color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.goldAccent.withOpacity(0.2),
+            color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).primaryColor.withOpacity(0.2),
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.2),
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -404,7 +387,7 @@ class _KycFormViewState extends State<KycFormView> {
             style: GoogleFonts.workSans(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: isSelected ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.softIvory.withOpacity(0.7),
+              color: isSelected ? Theme.of(context).scaffoldBackgroundColor : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
             ),
           ),
         ),
@@ -419,7 +402,7 @@ class _KycFormViewState extends State<KycFormView> {
         fontSize: 12,
         letterSpacing: 1.2,
         fontWeight: FontWeight.w800,
-        color: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+        color: Theme.of(context).primaryColor.withOpacity(0.5),
       ),
     );
   }
@@ -462,7 +445,6 @@ class _KycFormViewState extends State<KycFormView> {
           controller: _viewModel.workEmailController,
           keyboardType: TextInputType.emailAddress,
         ),
-        const SizedBox(height: 20),
         const SizedBox(height: 20),
         StartupDropdownField(
           label: 'Vai trò của bạn',
@@ -512,10 +494,10 @@ class _KycFormViewState extends State<KycFormView> {
               child: Checkbox(
                 value: _viewModel.isCommitted,
                 onChanged: _viewModel.setCommitted,
-                activeColor: StartupOnboardingTheme.goldAccent,
-                checkColor: StartupOnboardingTheme.navyBg,
+                activeColor: Theme.of(context).primaryColor,
+                checkColor: Theme.of(context).scaffoldBackgroundColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                side: BorderSide(color: StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+                side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.5)),
               ),
             ),
             const SizedBox(width: 12),
@@ -524,7 +506,7 @@ class _KycFormViewState extends State<KycFormView> {
                 'Tôi cam kết các thông tin cung cấp trên là hoàn toàn trung thực và chịu trách nhiệm về tính pháp lý của các tài liệu đính kèm.',
                 style: GoogleFonts.workSans(
                   fontSize: 13,
-                  color: StartupOnboardingTheme.softIvory.withOpacity(0.8),
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8),
                   height: 1.5,
                 ),
               ),
@@ -542,10 +524,10 @@ class _KycFormViewState extends State<KycFormView> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navyBg,
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -558,15 +540,15 @@ class _KycFormViewState extends State<KycFormView> {
           child: ElevatedButton(
             onPressed: canSubmit ? () => _viewModel.submitKyc(context) : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDone ? Colors.grey.withOpacity(0.1) : StartupOnboardingTheme.goldAccent,
-              disabledBackgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-              disabledForegroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+              backgroundColor: isDone ? Colors.grey.withOpacity(0.1) : Theme.of(context).primaryColor,
+              disabledBackgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              disabledForegroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
             ),
             child: _viewModel.isLoading 
-              ? const SizedBox(
+              ? SizedBox(
                   height: 20, 
                   width: 20, 
-                  child: CircularProgressIndicator(strokeWidth: 2, color: StartupOnboardingTheme.navyBg)
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).scaffoldBackgroundColor)
                 )
               : Text(isDone ? 'Đang trong quá trình xét duyệt' : 'Gửi hồ sơ xác thực'),
           ),

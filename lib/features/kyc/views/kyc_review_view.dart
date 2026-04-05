@@ -21,101 +21,91 @@ class _KycReviewViewState extends State<KycReviewView> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            'Xem lại hồ sơ',
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: StartupOnboardingTheme.softIvory),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Xem lại hồ sơ'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        body: ListenableBuilder(
-          listenable: widget.viewModel,
-          builder: (context, child) {
-            return SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FadeInDown(
-                            child: _buildSection(
-                              'Thông tin Startup',
-                              [
-                                _buildInfoRow(widget.viewModel.isIncorporated ? 'Tên pháp lý' : 'Tên Dự án', widget.viewModel.nameController.text),
-                                _buildInfoRow(widget.viewModel.isIncorporated ? 'Mã số thuế' : 'Mô tả', widget.viewModel.taxOrDescriptionController.text),
-                              ],
-                            ),
+      ),
+      body: ListenableBuilder(
+        listenable: widget.viewModel,
+        builder: (context, child) {
+          return SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FadeInDown(
+                          child: _buildSection(
+                            'Thông tin Startup',
+                            [
+                              _buildInfoRow(widget.viewModel.isIncorporated ? 'Tên pháp lý' : 'Tên Dự án', widget.viewModel.nameController.text),
+                              _buildInfoRow(widget.viewModel.isIncorporated ? 'Mã số thuế' : 'Mô tả', widget.viewModel.taxOrDescriptionController.text),
+                            ],
                           ),
-                          const SizedBox(height: 24),
-                          FadeInDown(
-                            delay: const Duration(milliseconds: 100),
-                            child: _buildSection(
-                              'Người đại diện',
-                              [
-                                _buildInfoRow('Họ và tên', widget.viewModel.repNameController.text),
-                                _buildInfoRow('Email', widget.viewModel.workEmailController.text),
-                                _buildInfoRow('Vai trò', widget.viewModel.selectedRole),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          FadeInDown(
-                            delay: const Duration(milliseconds: 200),
-                            child: _buildSection(
-                              'Tài liệu & Liên kết',
-                              [
-                                _buildFileRow(widget.viewModel.isIncorporated ? 'Giấy đăng ký doanh nghiệp' : 'Minh chứng dự án', widget.viewModel.uploadedFileName),
-                                _buildInfoRow('Website / Link', widget.viewModel.linkController.text),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          FadeInUp(
-                            delay: const Duration(milliseconds: 300),
-                            child: _buildDeclaration(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  FadeInUp(
-                    delay: const Duration(milliseconds: 400),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isAgreed && !widget.viewModel.isLoading 
-                            ? () => widget.viewModel.submitKyc(context) 
-                            : null,
-                          child: widget.viewModel.isLoading
-                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: StartupOnboardingTheme.navyBg, strokeWidth: 2))
-                            : const Text('Gửi hồ sơ xác thực'),
                         ),
+                        const SizedBox(height: 24),
+                        FadeInDown(
+                          delay: const Duration(milliseconds: 100),
+                          child: _buildSection(
+                            'Người đại diện',
+                            [
+                              _buildInfoRow('Họ và tên', widget.viewModel.repNameController.text),
+                              _buildInfoRow('Email', widget.viewModel.workEmailController.text),
+                              _buildInfoRow('Vai trò', widget.viewModel.selectedRole),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FadeInDown(
+                          delay: const Duration(milliseconds: 200),
+                          child: _buildSection(
+                            'Tài liệu & Liên kết',
+                            [
+                              _buildFileRow(widget.viewModel.isIncorporated ? 'Giấy đăng ký doanh nghiệp' : 'Minh chứng dự án', widget.viewModel.uploadedFileName),
+                              _buildInfoRow('Website / Link', widget.viewModel.linkController.text),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        FadeInUp(
+                          delay: const Duration(milliseconds: 300),
+                          child: _buildDeclaration(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                FadeInUp(
+                  delay: const Duration(milliseconds: 400),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isAgreed && !widget.viewModel.isLoading 
+                          ? () => widget.viewModel.submitKyc(context) 
+                          : null,
+                        child: widget.viewModel.isLoading
+                          ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white, strokeWidth: 2))
+                          : const Text('Gửi hồ sơ xác thực'),
                       ),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -125,9 +115,9 @@ class _KycReviewViewState extends State<KycReviewView> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +157,7 @@ class _KycReviewViewState extends State<KycReviewView> {
             value.isEmpty ? 'N/A' : value,
             style: GoogleFonts.workSans(
               fontSize: 15,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -194,7 +184,7 @@ class _KycReviewViewState extends State<KycReviewView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: StartupOnboardingTheme.navyBg,
+              color: Theme.of(context).scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -232,7 +222,7 @@ class _KycReviewViewState extends State<KycReviewView> {
             value: _isAgreed,
             onChanged: (val) => setState(() => _isAgreed = val ?? false),
             activeColor: StartupOnboardingTheme.goldAccent,
-            checkColor: StartupOnboardingTheme.navyBg,
+            checkColor: Theme.of(context).scaffoldBackgroundColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           ),
         ),
@@ -245,7 +235,7 @@ class _KycReviewViewState extends State<KycReviewView> {
               style: GoogleFonts.workSans(
                 fontSize: 13,
                 height: 1.5,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ),
