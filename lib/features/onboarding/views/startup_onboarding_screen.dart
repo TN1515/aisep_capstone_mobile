@@ -29,52 +29,49 @@ class _StartupOnboardingScreenState extends State<StartupOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        body: ListenableBuilder(
-          listenable: _viewModel,
-          builder: (context, child) {
-            return SafeArea(
-              child: Column(
-                children: [
-                  // Page Indicator at top
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: SmoothPageIndicator(
-                      controller: _viewModel.pageController,
-                      count: _viewModel.pages.length,
-                      effect: const ExpandingDotsEffect(
-                        activeDotColor: StartupOnboardingTheme.goldAccent,
-                        dotColor: StartupOnboardingTheme.navySurface,
-                        dotHeight: 8,
-                        dotWidth: 8,
-                        expansionFactor: 4,
-                      ),
+    return Scaffold(
+      body: ListenableBuilder(
+        listenable: _viewModel,
+        builder: (context, child) {
+          return SafeArea(
+            child: Column(
+              children: [
+                // Page Indicator at top
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: SmoothPageIndicator(
+                    controller: _viewModel.pageController,
+                    count: _viewModel.pages.length,
+                    effect: ExpandingDotsEffect(
+                      activeDotColor: StartupOnboardingTheme.goldAccent,
+                      dotColor: Theme.of(context).dividerColor,
+                      dotHeight: 8,
+                      dotWidth: 8,
+                      expansionFactor: 4,
                     ),
                   ),
-                  // Page View
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _viewModel.pageController,
-                      onPageChanged: _viewModel.onPageChanged,
-                      itemCount: _viewModel.pages.length,
-                      itemBuilder: (context, index) {
-                        return OnboardingContentWidget(model: _viewModel.pages[index]);
-                      },
-                    ),
+                ),
+                // Page View
+                Expanded(
+                  child: PageView.builder(
+                    controller: _viewModel.pageController,
+                    onPageChanged: _viewModel.onPageChanged,
+                    itemCount: _viewModel.pages.length,
+                    itemBuilder: (context, index) {
+                      return OnboardingContentWidget(model: _viewModel.pages[index]);
+                    },
                   ),
-                  // Navigation Buttons
-                  OnboardingNavButtons(
-                    isLastPage: _viewModel.currentPage == _viewModel.pages.length - 1,
-                    onNext: () => _viewModel.next(context),
-                    onSkip: _viewModel.skip,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+                // Navigation Buttons
+                OnboardingNavButtons(
+                  isLastPage: _viewModel.currentPage == _viewModel.pages.length - 1,
+                  onNext: () => _viewModel.next(context),
+                  onSkip: _viewModel.skip,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

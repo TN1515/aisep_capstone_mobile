@@ -20,7 +20,7 @@ class StartupCard extends StatelessWidget {
     return Container(
       padding: padding ?? const EdgeInsets.all(AppColors.spaceLG),
       decoration: BoxDecoration(
-        color: color ?? Colors.white,
+        color: color ?? Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(borderRadius ?? 32),
         boxShadow: [
           BoxShadow(

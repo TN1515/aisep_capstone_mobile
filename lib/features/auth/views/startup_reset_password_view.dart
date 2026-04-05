@@ -29,18 +29,16 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: StartupOnboardingTheme.softIvory),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+      ),
         body: ListenableBuilder(
           listenable: _viewModel,
           builder: (context, child) {
@@ -58,7 +56,7 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: StartupOnboardingTheme.navySurface,
+                              color: Theme.of(context).cardColor,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -81,7 +79,7 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
                         duration: const Duration(milliseconds: 500),
                         child: Text(
                           'Đặt lại mật khẩu',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge,
+                          style: Theme.of(context).textTheme.displayLarge,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -90,7 +88,7 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
                         delay: const Duration(milliseconds: 100),
                         child: Text(
                           'Tạo mật khẩu mới mạnh mẽ để bảo vệ tài khoản của bạn',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
                       if (_viewModel.error != null)
@@ -151,10 +149,10 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
                           child: ElevatedButton(
                             onPressed: _viewModel.isLoading ? null : () => _viewModel.resetPassword(context, _formKey),
                             child: _viewModel.isLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(color: StartupOnboardingTheme.navyBg, strokeWidth: 2),
+                                    child: CircularProgressIndicator(color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white, strokeWidth: 2),
                                   )
                                 : const Text('Cập nhật mật khẩu'),
                           ),

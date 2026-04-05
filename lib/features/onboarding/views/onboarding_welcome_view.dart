@@ -12,11 +12,9 @@ class OnboardingWelcomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
           child: Column(
             children: [
               Expanded(
@@ -31,7 +29,7 @@ class OnboardingWelcomeView extends StatelessWidget {
                           child: StartupCard(
                             borderRadius: 40,
                             padding: const EdgeInsets.all(40),
-                            color: StartupOnboardingTheme.navySurface,
+                            color: Theme.of(context).cardColor,
                             child: const Icon(
                               Icons.rocket_launch,
                               size: 80,
@@ -45,7 +43,7 @@ class OnboardingWelcomeView extends StatelessWidget {
                           child: Text(
                             'Tiếp sức cho thế hệ\nStartup Công nghệ sinh học\ntiếp theo',
                             textAlign: TextAlign.center,
-                            style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge,
+                            style: Theme.of(context).textTheme.displayLarge,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -55,7 +53,7 @@ class OnboardingWelcomeView extends StatelessWidget {
                           child: Text(
                             'Nền tảng hỗ trợ AI để xây dựng, quản lý và\nmở rộng quy mô liên doanh công nghệ sinh học.',
                             textAlign: TextAlign.center,
-                            style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge,
+                            style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ),
                       ],

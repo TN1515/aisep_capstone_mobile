@@ -23,7 +23,7 @@ class DotIndicator extends StatelessWidget {
           height: 8,
           width: isActive ? 24 : 8,
           decoration: BoxDecoration(
-            color: isActive ? AppColors.accent : AppColors.secondary,
+            color: isActive ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
             borderRadius: BorderRadius.circular(4),
           ),
         );

@@ -40,11 +40,11 @@ class StartupDropdownField extends StatelessWidget {
           value: value?.isEmpty == true ? null : value,
           onChanged: onChanged,
           validator: validator,
-          dropdownColor: StartupOnboardingTheme.navySurface,
+          dropdownColor: Theme.of(context).cardColor,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: StartupOnboardingTheme.goldAccent),
           style: GoogleFonts.workSans(
             fontSize: 16,
-            color: StartupOnboardingTheme.softIvory,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
           decoration: InputDecoration(
             hintText: hint,
@@ -53,15 +53,15 @@ class StartupDropdownField extends StatelessWidget {
               color: StartupOnboardingTheme.slateGray.withOpacity(0.5),
             ),
             filled: true,
-            fillColor: StartupOnboardingTheme.navySurface,
+            fillColor: Theme.of(context).cardColor,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 18,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: StartupOnboardingTheme.navySurface,
+              borderSide: BorderSide(
+                color: Theme.of(context).dividerColor,
                 width: 1,
               ),
             ),

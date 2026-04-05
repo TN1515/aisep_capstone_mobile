@@ -28,7 +28,7 @@ class ChipSelector extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+              color: isSelected ? StartupOnboardingTheme.goldAccent : Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.goldAccent.withOpacity(0.1),
@@ -47,7 +47,7 @@ class ChipSelector extends StatelessWidget {
               style: GoogleFonts.workSans(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.softIvory.withOpacity(0.8),
+                color: isSelected ? Theme.of(context).scaffoldBackgroundColor : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8),
               ),
             ),
           ),

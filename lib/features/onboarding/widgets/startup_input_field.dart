@@ -45,7 +45,7 @@ class StartupInputField extends StatelessWidget {
           validator: validator,
           style: GoogleFonts.workSans(
             fontSize: 16,
-            color: StartupOnboardingTheme.softIvory,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
           decoration: InputDecoration(
             hintText: hint,
@@ -55,7 +55,7 @@ class StartupInputField extends StatelessWidget {
             ),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: StartupOnboardingTheme.navySurface,
+            fillColor: Theme.of(context).cardColor,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 18,
@@ -63,7 +63,7 @@ class StartupInputField extends StatelessWidget {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: StartupOnboardingTheme.navySurface,
+                color: Theme.of(context).dividerColor,
                 width: 1,
               ),
             ),

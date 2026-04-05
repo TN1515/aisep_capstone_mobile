@@ -43,11 +43,9 @@ class _OnboardingIdentityFormViewState extends State<OnboardingIdentityFormView>
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
           child: Column(
             children: [
               _buildHeader(),
@@ -124,7 +122,7 @@ class _OnboardingIdentityFormViewState extends State<OnboardingIdentityFormView>
             duration: const Duration(milliseconds: 400),
             child: Text(
               title,
-              style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge?.copyWith(
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
                 fontSize: 28,
               ),
             ),
@@ -135,8 +133,8 @@ class _OnboardingIdentityFormViewState extends State<OnboardingIdentityFormView>
             delay: const Duration(milliseconds: 100),
             child: Text(
               sub,
-              style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge?.copyWith(
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
               ),
             ),
           ),
@@ -170,7 +168,7 @@ class _OnboardingIdentityFormViewState extends State<OnboardingIdentityFormView>
                 } : null,
                 icon: Icon(
                   Icons.arrow_back,
-                  color: _currentStep > 0 ? StartupOnboardingTheme.softIvory : Colors.transparent,
+                  color: _currentStep > 0 ? Theme.of(context).iconTheme.color : Colors.transparent,
                 ),
               ),
               Text(

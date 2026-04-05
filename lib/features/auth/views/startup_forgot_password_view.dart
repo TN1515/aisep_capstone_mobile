@@ -29,18 +29,16 @@ class _StartupForgotPasswordViewState extends State<StartupForgotPasswordView> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: StartupOnboardingTheme.softIvory),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+      ),
         body: ListenableBuilder(
           listenable: _viewModel,
           builder: (context, child) {
@@ -58,7 +56,7 @@ class _StartupForgotPasswordViewState extends State<StartupForgotPasswordView> {
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: StartupOnboardingTheme.navySurface,
+                              color: Theme.of(context).cardColor,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -81,7 +79,7 @@ class _StartupForgotPasswordViewState extends State<StartupForgotPasswordView> {
                         duration: const Duration(milliseconds: 500),
                         child: Text(
                           'Quên mật khẩu?',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge,
+                          style: Theme.of(context).textTheme.displayLarge,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -90,7 +88,7 @@ class _StartupForgotPasswordViewState extends State<StartupForgotPasswordView> {
                         delay: const Duration(milliseconds: 100),
                         child: Text(
                           'Nhập email của bạn để nhận mã xác thực (OTP)',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
                       const SizedBox(height: 48),
@@ -123,10 +121,10 @@ class _StartupForgotPasswordViewState extends State<StartupForgotPasswordView> {
                           child: ElevatedButton(
                             onPressed: _viewModel.isLoading ? null : () => _viewModel.sendResetOtp(context, _formKey),
                             child: _viewModel.isLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(color: StartupOnboardingTheme.navyBg, strokeWidth: 2),
+                                    child: CircularProgressIndicator(color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white, strokeWidth: 2),
                                   )
                                 : const Text('Gửi mã xác thực'),
                           ),

@@ -33,23 +33,21 @@ class _StartupLoginViewState extends State<StartupLoginView> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: StartupOnboardingTheme.softIvory),
-            onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const StartupOnboardingScreen()),
-                (route) => false,
-              );
-            },
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const StartupOnboardingScreen()),
+              (route) => false,
+            );
+          },
         ),
+      ),
         body: ListenableBuilder(
           listenable: _viewModel,
           builder: (context, child) {
@@ -68,7 +66,7 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: StartupOnboardingTheme.navySurface,
+                              color: Theme.of(context).cardColor,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -91,7 +89,7 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                         duration: const Duration(milliseconds: 500),
                         child: Text(
                           'Chào mừng trở lại',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge,
+                          style: Theme.of(context).textTheme.displayLarge,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -100,7 +98,7 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                         delay: const Duration(milliseconds: 100),
                         child: Text(
                           'Đăng nhập để tiếp tục hành trình AISEP của bạn',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
                       const SizedBox(height: 48),
@@ -170,10 +168,10 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                           child: ElevatedButton(
                             onPressed: _viewModel.isLoading ? null : () => _viewModel.login(context, _formKey),
                             child: _viewModel.isLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(color: StartupOnboardingTheme.navyBg, strokeWidth: 2),
+                                    child: CircularProgressIndicator(color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white, strokeWidth: 2),
                                   )
                                 : const Text('Đăng nhập'),
                           ),
@@ -189,7 +187,7 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                               Text(
                                 'Bạn chưa có tài khoản?',
                                 style: GoogleFonts.workSans(
-                                  color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
                                   fontSize: 14,
                                 ),
                               ),

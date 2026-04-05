@@ -65,7 +65,7 @@ class _StartupAuthTextFieldState extends State<StartupAuthTextField> {
             validator: widget.validator,
             style: GoogleFonts.workSans(
               fontSize: 16,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
             decoration: InputDecoration(
               hintText: widget.hint,
@@ -95,7 +95,7 @@ class _StartupAuthTextFieldState extends State<StartupAuthTextField> {
                     )
                   : null,
               filled: true,
-              fillColor: StartupOnboardingTheme.navySurface,
+              fillColor: Theme.of(context).cardColor,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 18,
@@ -103,7 +103,7 @@ class _StartupAuthTextFieldState extends State<StartupAuthTextField> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
-                  color: StartupOnboardingTheme.navySurface,
+                  color: Theme.of(context).dividerColor,
                   width: 1,
                 ),
               ),
