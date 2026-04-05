@@ -40,17 +40,19 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
   Widget build(BuildContext context) {
     final viewModel = ConnectionViewModel();
     final isUpdating = widget.requestId != null;
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: StartupOnboardingTheme.navyBg,
+          backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(LucideIcons.x, color: StartupOnboardingTheme.softIvory),
+              icon: Icon(LucideIcons.x, color: textColor),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
@@ -58,7 +60,7 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: textColor,
               ),
             ),
           ),
@@ -67,7 +69,7 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInvestorHeader(),
+                _buildInvestorHeader(context),
                 const SizedBox(height: 32),
                 Text(
                   'GỬI LỜI CHÀO/LÝ DO KẾT NỐI',
@@ -75,24 +77,24 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
-                    color: StartupOnboardingTheme.goldAccent,
+                    color: theme.primaryColor,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: StartupOnboardingTheme.navySurface,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(color: theme.dividerColor),
                   ),
                   child: TextFormField(
                     controller: _messageController,
                     maxLines: 6,
-                    style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory, fontSize: 14),
+                    style: GoogleFonts.workSans(color: textColor, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Nhập nội dung tin nhắn gửi đến ${widget.investor.name}...',
                       hintStyle: GoogleFonts.workSans(
-                        color: StartupOnboardingTheme.softIvory.withOpacity(0.2),
+                        color: textColor.withOpacity(0.3),
                         fontSize: 14,
                       ),
                       border: InputBorder.none,
@@ -105,7 +107,7 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
                   'Gợi ý: Hãy nêu ngắn gọn cách Startup của bạn giải quyết vấn đề và tại sao bạn nghĩ ${widget.investor.organization ?? 'họ'} là đối tác phù hợp.',
                   style: GoogleFonts.workSans(
                     fontSize: 12,
-                    color: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                    color: textColor.withOpacity(0.4),
                     height: 1.5,
                   ),
                 ),
@@ -116,15 +118,15 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
                   child: ElevatedButton(
                     onPressed: viewModel.isLoading ? null : () => _submitRequest(viewModel),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: StartupOnboardingTheme.goldAccent,
-                      foregroundColor: StartupOnboardingTheme.navyBg,
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
                     ),
                     child: viewModel.isLoading 
-                      ? const CircularProgressIndicator(color: StartupOnboardingTheme.navyBg)
+                      ? CircularProgressIndicator(color: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white)
                       : Text(
                           isUpdating ? 'Cập nhật ngay' : 'Xác nhận gửi',
                           style: GoogleFonts.outfit(
@@ -142,13 +144,16 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
     );
   }
 
-  Widget _buildInvestorHeader() {
+  Widget _buildInvestorHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Row(
       children: [
         CircleAvatar(
           radius: 24,
-          backgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-          child: const Icon(LucideIcons.user, color: StartupOnboardingTheme.goldAccent, size: 20),
+          backgroundColor: theme.primaryColor.withOpacity(0.1),
+          child: Icon(LucideIcons.user, color: theme.primaryColor, size: 20),
         ),
         const SizedBox(width: 16),
         Column(
@@ -159,14 +164,14 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: textColor,
               ),
             ),
             Text(
               widget.investor.organization ?? 'Quỹ đầu tư',
               style: GoogleFonts.workSans(
                 fontSize: 12,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.6),
+                color: textColor.withOpacity(0.6),
               ),
             ),
           ],

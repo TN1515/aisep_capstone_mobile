@@ -18,18 +18,18 @@ class OngoingProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Always use the dark premium surface in black-navy theme
-    final Color bgColor = StartupOnboardingTheme.navySurface;
-    final Color primaryTextColor = StartupOnboardingTheme.softIvory;
-    final Color secondaryTextColor = StartupOnboardingTheme.softIvory.withOpacity(0.6);
-    final Color accentColor = StartupOnboardingTheme.goldAccent;
+    final theme = Theme.of(context);
+    final Color bgColor = theme.cardColor;
+    final Color primaryTextColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+    final Color secondaryTextColor = primaryTextColor.withOpacity(0.6);
+    final Color accentColor = theme.primaryColor;
 
     return Container(
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: theme.dividerColor,
           width: 1,
         ),
       ),
@@ -69,7 +69,7 @@ class OngoingProjectCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: theme.dividerColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -123,7 +123,7 @@ class OngoingProjectCard extends StatelessWidget {
                       height: 4,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
+                        color: theme.dividerColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),

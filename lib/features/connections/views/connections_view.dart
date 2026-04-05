@@ -29,19 +29,12 @@ class _ConnectionsViewState extends State<ConnectionsView> {
         animation: viewModel,
         builder: (context, child) {
           return Scaffold(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: AppBar(
-              backgroundColor: StartupOnboardingTheme.navyBg,
+              backgroundColor: Colors.transparent,
               elevation: 0,
               centerTitle: false,
-              title: Text(
-                'Kết nối',
-                style: GoogleFonts.outfit(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.softIvory,
-                ),
-              ),
+              title: const Text('Kết nối'),
               actions: [
                 IconButton(
                   icon: const Icon(LucideIcons.heart, color: const Color(0xFFEF4444)),
@@ -55,10 +48,10 @@ class _ConnectionsViewState extends State<ConnectionsView> {
               bottom: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.center,
-                indicatorColor: StartupOnboardingTheme.goldAccent,
+                indicatorColor: Theme.of(context).primaryColor,
                 indicatorWeight: 3,
-                labelColor: StartupOnboardingTheme.goldAccent,
-                unselectedLabelColor: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                labelColor: Theme.of(context).primaryColor,
+                unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
                 labelStyle: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 13),
                 tabs: const [
                   Tab(text: 'Khám phá'),
@@ -94,17 +87,22 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: StartupOnboardingTheme.navySurface,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
                   child: TextField(
-                    style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory, fontSize: 13),
+                    style: GoogleFonts.workSans(
+                      color: Theme.of(context).textTheme.bodyLarge?.color, 
+                      fontSize: 13,
+                    ),
                     onChanged: vm.setSearchQuery,
                     decoration: InputDecoration(
-                      icon: const Icon(LucideIcons.search, size: 18, color: StartupOnboardingTheme.goldAccent),
+                      icon: Icon(LucideIcons.search, size: 18, color: Theme.of(context).primaryColor),
                       hintText: 'Tìm nhà đầu tư...',
-                      hintStyle: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.2)),
+                      hintStyle: GoogleFonts.workSans(
+                        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -117,10 +115,11 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: StartupOnboardingTheme.navySurface,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
-                  child: const Icon(LucideIcons.sliders, color: StartupOnboardingTheme.goldAccent, size: 18),
+                  child: Icon(LucideIcons.sliders, color: Theme.of(context).primaryColor, size: 18),
                 ),
               ),
             ],
@@ -197,8 +196,10 @@ class _ConnectionsViewState extends State<ConnectionsView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: StartupOnboardingTheme.navyBg,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
       builder: (_) => AnimatedBuilder(
         animation: vm,
         builder: (context, _) => Container(
@@ -213,11 +214,11 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                   children: [
                     Text(
                       'Bộ lọc nâng cao',
-                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory),
+                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.displayLarge?.color),
                     ),
                     TextButton(
                       onPressed: () => vm.resetFilters(),
-                      child: Text('Thiết lập lại', style: GoogleFonts.workSans(color: StartupOnboardingTheme.goldAccent)),
+                      child: Text('Thiết lập lại', style: GoogleFonts.workSans(color: Theme.of(context).primaryColor)),
                     ),
                   ],
                 ),
@@ -266,10 +267,10 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: StartupOnboardingTheme.goldAccent,
+                      backgroundColor: Theme.of(context).primaryColor,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: Text('Áp dụng bộ lọc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: StartupOnboardingTheme.navyBg)),
+                    child: Text('Áp dụng bộ lọc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white)),
                   ),
                 ),
               ],
@@ -283,7 +284,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
   Widget _buildFilterLabel(String label) {
     return Text(
       label,
-      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1, color: StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1, color: Theme.of(context).primaryColor.withOpacity(0.5)),
     );
   }
 
@@ -293,13 +294,13 @@ class _ConnectionsViewState extends State<ConnectionsView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? StartupOnboardingTheme.goldAccent.withOpacity(0.1) : Colors.white.withOpacity(0.05),
+          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Theme.of(context).dividerColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? StartupOnboardingTheme.goldAccent : Colors.transparent),
+          border: Border.all(color: isSelected ? Theme.of(context).primaryColor : Colors.transparent),
         ),
         child: Text(
           label,
-          style: GoogleFonts.workSans(fontSize: 13, color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.softIvory),
+          style: GoogleFonts.workSans(fontSize: 13, color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyLarge?.color),
         ),
       ),
     );
@@ -312,12 +313,12 @@ class _ConnectionsViewState extends State<ConnectionsView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.inbox, size: 64, color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+            Icon(LucideIcons.inbox, size: 64, color: Theme.of(context).dividerColor),
             const SizedBox(height: 24),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.4)),
+              style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4)),
             ),
           ],
         ),

@@ -19,27 +19,22 @@ class _InvestorDiscoveryViewState extends State<InvestorDiscoveryView> {
   @override
   Widget build(BuildContext context) {
     final viewModel = ConnectionViewModel();
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: StartupOnboardingTheme.navyBg,
+          backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+              icon: const Icon(LucideIcons.arrowLeft),
               onPressed: () => Navigator.pop(context),
             ),
-            title: Text(
-              'Tìm nhà đầu tư',
-              style: GoogleFonts.outfit(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
-              ),
-            ),
+            title: const Text('Tìm nhà đầu tư'),
           ),
           body: Column(
             children: [
@@ -52,18 +47,18 @@ class _InvestorDiscoveryViewState extends State<InvestorDiscoveryView> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: StartupOnboardingTheme.navySurface,
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: Border.all(color: theme.dividerColor),
                         ),
                         child: TextField(
                           controller: _searchController,
-                          style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
+                          style: GoogleFonts.workSans(color: textColor),
                           onChanged: viewModel.setSearchQuery,
                           decoration: InputDecoration(
-                            icon: const Icon(LucideIcons.search, size: 20, color: StartupOnboardingTheme.goldAccent),
+                            icon: Icon(LucideIcons.search, size: 20, color: theme.primaryColor),
                             hintText: 'Tên, quỹ, lĩnh vực...',
-                            hintStyle: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.2)),
+                            hintStyle: GoogleFonts.workSans(color: textColor.withOpacity(0.3)),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(vertical: 16),
                           ),
@@ -74,19 +69,20 @@ class _InvestorDiscoveryViewState extends State<InvestorDiscoveryView> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: StartupOnboardingTheme.navySurface,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: theme.dividerColor),
                       ),
-                      child: const Icon(LucideIcons.sliders, color: StartupOnboardingTheme.goldAccent, size: 20),
+                      child: Icon(LucideIcons.sliders, color: theme.primaryColor, size: 20),
                     ),
                   ],
                 ),
               ),
 
               // Filters Quick Select
-              const SingleChildScrollView(
+              SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   children: [
                     _QuickFilterChip(label: 'Tất cả', isSelected: true),
@@ -102,9 +98,9 @@ class _InvestorDiscoveryViewState extends State<InvestorDiscoveryView> {
               // Discovery List
               Expanded(
                 child: viewModel.isLoading 
-                  ? const Center(child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent))
+                  ? Center(child: CircularProgressIndicator(color: theme.primaryColor))
                   : viewModel.discoveryResults.isEmpty 
-                    ? _buildEmptySearch()
+                    ? _buildEmptySearch(context)
                     : ListView.builder(
                         padding: const EdgeInsets.all(24),
                         itemCount: viewModel.discoveryResults.length,
@@ -127,19 +123,21 @@ class _InvestorDiscoveryViewState extends State<InvestorDiscoveryView> {
     );
   }
 
-  Widget _buildEmptySearch() {
+  Widget _buildEmptySearch(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.searchX, size: 60, color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+            Icon(LucideIcons.searchX, size: 60, color: textColor.withOpacity(0.1)),
             const SizedBox(height: 16),
             Text(
               'Không tìm thấy nhà đầu tư nào phù hợp.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+              style: GoogleFonts.workSans(color: textColor.withOpacity(0.3)),
             ),
           ],
         ),
@@ -156,19 +154,23 @@ class _QuickFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+        color: isSelected ? theme.primaryColor : theme.cardColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isSelected ? Colors.transparent : theme.dividerColor),
       ),
       child: Text(
         label,
         style: GoogleFonts.workSans(
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.softIvory,
+          color: isSelected 
+            ? (theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white)
+            : (theme.textTheme.bodyLarge?.color?.withOpacity(0.6) ?? Colors.white),
         ),
       ),
     );

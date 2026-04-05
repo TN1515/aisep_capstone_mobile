@@ -17,7 +17,7 @@ class StartupBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      color: const Color(0xFF0F172A), // Premium Dark Black-Navy for the nav bar
+      color: Theme.of(context).cardColor, // Use theme card color
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,
       elevation: 25,
@@ -33,8 +33,8 @@ class StartupBottomNavBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(LucideIcons.users, 'Kết nối', 0),
-                  _buildNavItem(LucideIcons.graduationCap, 'Tư vấn', 1),
+                  _buildNavItem(context, LucideIcons.users, 'Kết nối', 0),
+                  _buildNavItem(context, LucideIcons.graduationCap, 'Tư vấn', 1),
                 ],
               ),
             ),
@@ -46,8 +46,8 @@ class StartupBottomNavBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(LucideIcons.fileText, 'Tài liệu', 3),
-                  _buildNavItem(LucideIcons.shieldCheck, 'Xác thực', 4),
+                  _buildNavItem(context, LucideIcons.fileText, 'Tài liệu', 3),
+                  _buildNavItem(context, LucideIcons.shieldCheck, 'Xác thực', 4),
                 ],
               ),
             ),
@@ -57,10 +57,10 @@ class StartupBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildNavItem(BuildContext context, IconData icon, String label, int index) {
     final bool isActive = currentIndex == index;
-    final Color color = isActive ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.slateGray.withOpacity(0.8);
-    final double iconWeight = isActive ? 0.8 : 0.4;
+    final theme = Theme.of(context);
+    final Color color = isActive ? theme.primaryColor : theme.textTheme.bodyLarge?.color?.withOpacity(0.4) ?? Colors.grey;
 
     return InkWell(
       onTap: () => onTap(index),

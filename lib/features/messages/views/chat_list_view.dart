@@ -20,17 +20,10 @@ class ChatListView extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+            icon: const Icon(LucideIcons.arrowLeft),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(
-            'Tin nhắn',
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
-            ),
-          ),
+          title: const Text('Tin nhắn'),
         ),
         body: Consumer<ChatViewModel>(
           builder: (context, viewModel, child) {

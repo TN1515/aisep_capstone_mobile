@@ -49,7 +49,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // Integration: Bottom Navigation Bar is now directly in DashboardView
       bottomNavigationBar: StartupBottomNavBar(
         currentIndex: _currentIndex,
@@ -63,12 +63,14 @@ class _DashboardViewState extends State<DashboardView> {
         margin: const EdgeInsets.only(top: 10),
         child: FloatingActionButton(
           onPressed: () => _onTabTapped(2), // Always go to Dashboard
-          backgroundColor: _currentIndex == 2 ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.navySurface,
+          backgroundColor: _currentIndex == 2 ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
           elevation: 4,
           shape: const CircleBorder(),
           child: Icon(
             Icons.home_rounded,
-            color: _currentIndex == 2 ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.goldAccent,
+            color: _currentIndex == 2 
+                ? (Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white) 
+                : Theme.of(context).primaryColor,
             size: 32,
           ),
         ),
@@ -94,8 +96,8 @@ class _DashboardViewState extends State<DashboardView> {
       animation: _viewModel,
       builder: (context, child) {
         if (_viewModel.isLoading && _viewModel.stats == null) {
-          return const Center(
-            child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent),
+          return Center(
+            child: CircularProgressIndicator(color: Theme.of(context).primaryColor),
           );
         }
 
@@ -129,8 +131,8 @@ class _DashboardViewState extends State<DashboardView> {
                   await _viewModel.fetchDashboardData();
                   await notiViewModel.refresh();
                 },
-                color: StartupOnboardingTheme.goldAccent,
-                backgroundColor: StartupOnboardingTheme.navySurface,
+                color: Theme.of(context).primaryColor,
+                backgroundColor: Theme.of(context).cardColor,
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(),
                   slivers: [
@@ -247,20 +249,20 @@ class _DashboardViewState extends State<DashboardView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+          Icon(icon, size: 64, color: Theme.of(context).primaryColor.withOpacity(0.5)),
           const SizedBox(height: 16),
           Text(
             title,
             style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Tính năng đang được phát triển bộ giao diện mới.',
-            style: GoogleFonts.workSans(color: StartupOnboardingTheme.slateGray),
+            style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6)),
           ),
         ],
       ),
@@ -279,7 +281,7 @@ class _DashboardViewState extends State<DashboardView> {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: Theme.of(context).textTheme.titleLarge?.color,
               ),
             ),
             TextButton(
@@ -288,7 +290,7 @@ class _DashboardViewState extends State<DashboardView> {
                 'Xem tất cả',
                 style: GoogleFonts.workSans(
                   fontSize: 13,
-                  color: StartupOnboardingTheme.goldAccent,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
             ),

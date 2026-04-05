@@ -38,7 +38,7 @@ class DashboardHeader extends StatelessWidget {
                   greeting,
                   style: GoogleFonts.workSans(
                     fontSize: 14,
-                    color: StartupOnboardingTheme.goldAccent.withOpacity(0.8),
+                    color: Theme.of(context).primaryColor.withOpacity(0.8),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -48,7 +48,7 @@ class DashboardHeader extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: StartupOnboardingTheme.softIvory,
+                    color: Theme.of(context).textTheme.displayLarge?.color,
                   ),
                 ),
               ],
@@ -56,9 +56,9 @@ class DashboardHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: onMessageTap,
-            icon: const Icon(
+            icon: Icon(
               LucideIcons.messageSquare,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
               size: 22,
             ),
           ),
@@ -66,9 +66,9 @@ class DashboardHeader extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: onNotificationTap,
-                icon: const Icon(
+                icon: Icon(
                   Icons.notifications_outlined,
-                  color: StartupOnboardingTheme.softIvory,
+                  color: Theme.of(context).textTheme.displayLarge?.color,
                 ),
               ),
               if (unreadCount > 0)
@@ -106,14 +106,14 @@ class DashboardHeader extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
-                gradient: const LinearGradient(
-                  colors: [StartupOnboardingTheme.navySurface, Colors.black],
+                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.5)),
+                gradient: LinearGradient(
+                  colors: [Theme.of(context).cardColor, Colors.black.withOpacity(0.2)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: const Icon(Icons.person_rounded, color: StartupOnboardingTheme.goldAccent, size: 24),
+              child: Icon(Icons.person_rounded, color: Theme.of(context).primaryColor, size: 24),
             ),
           ),
         ],

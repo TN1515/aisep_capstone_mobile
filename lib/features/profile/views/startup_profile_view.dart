@@ -54,11 +54,12 @@ class _StartupProfileViewState extends State<StartupProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: StartupOnboardingTheme.navyBg,
+          backgroundColor: theme.scaffoldBackgroundColor,
           body: Stack(
             children: [
               CustomScrollView(
@@ -88,8 +89,8 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               if (_viewModel.isLoading)
                 Container(
                   color: Colors.black26,
-                  child: const Center(
-                    child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent),
+                  child: Center(
+                    child: CircularProgressIndicator(color: theme.primaryColor),
                   ),
                 ),
                 
@@ -114,7 +115,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
           // Transparent when at bottom, navy-ish/blurred when sticky
           color: _isAtBottom 
               ? Colors.transparent 
-              : StartupOnboardingTheme.navySurface,
+              : Theme.of(context).cardColor,
           boxShadow: _isAtBottom ? [] : [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
@@ -130,10 +131,10 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 onPressed: () => _viewModel.toggleEditMode(),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  side: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+                  side: BorderSide(color: Theme.of(context).dividerColor),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text('Hủy bỏ', style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.7), fontWeight: FontWeight.bold, fontSize: 13)),
+                child: Text('Hủy bỏ', style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7), fontWeight: FontWeight.bold, fontSize: 13)),
               ),
             ),
             const SizedBox(width: 12),
@@ -141,12 +142,12 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               child: ElevatedButton(
                 onPressed: () => _viewModel.saveProfile(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: StartupOnboardingTheme.goldAccent,
-                  foregroundColor: StartupOnboardingTheme.navyBg,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 4,
-                  shadowColor: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+                  shadowColor: Theme.of(context).primaryColor.withOpacity(0.3),
                 ),
                 child: Text('Lưu thay đổi', style: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 13)),
               ),
@@ -170,11 +171,11 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               Container(
                 height: 180,
                 width: double.infinity,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [StartupOnboardingTheme.navySurface, StartupOnboardingTheme.navyBg],
+                    colors: [Theme.of(context).cardColor, Theme.of(context).scaffoldBackgroundColor],
                   ),
                 ),
                 child: Opacity(
@@ -223,7 +224,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                             MaterialPageRoute(builder: (context) => const MembershipUpgradeView()),
                           );
                         },
-                        iconColor: StartupOnboardingTheme.goldAccent,
+                        iconColor: Theme.of(context).primaryColor,
                       ),
                   ],
                 ),
@@ -276,12 +277,12 @@ class _StartupProfileViewState extends State<StartupProfileView> {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: StartupOnboardingTheme.navySurface,
+            color: Theme.of(context).cardColor,
             shape: BoxShape.circle,
-            border: Border.all(color: StartupOnboardingTheme.goldAccent, width: 2),
+            border: Border.all(color: Theme.of(context).primaryColor, width: 2),
             boxShadow: [
               BoxShadow(
-                color: StartupOnboardingTheme.goldAccent.withOpacity(0.2),
+                color: Theme.of(context).primaryColor.withOpacity(0.2),
                 blurRadius: 15,
                 spreadRadius: 2,
               ),
@@ -292,7 +293,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               _viewModel.profile.logoUrl,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.business, size: 50, color: StartupOnboardingTheme.slateGray),
+                  Icon(Icons.business, size: 50, color: Theme.of(context).textTheme.bodySmall?.color),
             ),
           ),
         ),
@@ -324,7 +325,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             style: GoogleFonts.outfit(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
             ),
           ),
           const SizedBox(height: 4),
@@ -336,7 +337,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               textAlign: TextAlign.center,
               style: GoogleFonts.workSans(
                 fontSize: 15,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -348,16 +349,16 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
-              _buildCompactChip(_viewModel.profile.stage, Icons.rocket_launch_outlined, StartupOnboardingTheme.goldAccent.withOpacity(0.1), StartupOnboardingTheme.goldAccent),
-              _buildCompactChip(_viewModel.profile.industry, Icons.category_outlined, StartupOnboardingTheme.navySurface, StartupOnboardingTheme.softIvory.withOpacity(0.8)),
-              _buildCompactChip(_viewModel.profile.location, Icons.location_on_outlined, StartupOnboardingTheme.navySurface, StartupOnboardingTheme.softIvory.withOpacity(0.8)),
+              _buildCompactChip(context, _viewModel.profile.stage, Icons.rocket_launch_outlined, Theme.of(context).primaryColor.withOpacity(0.1), Theme.of(context).primaryColor),
+              _buildCompactChip(context, _viewModel.profile.industry, Icons.category_outlined, Theme.of(context).cardColor, Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8) ?? Colors.grey),
+              _buildCompactChip(context, _viewModel.profile.location, Icons.location_on_outlined, Theme.of(context).cardColor, Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8) ?? Colors.grey),
             ],
           ),
         ],
       );
   }
 
-  Widget _buildCompactChip(String label, IconData icon, Color bgColor, Color textColor) {
+  Widget _buildCompactChip(BuildContext context, String label, IconData icon, Color bgColor, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -389,11 +390,11 @@ class _StartupProfileViewState extends State<StartupProfileView> {
           icon: const Icon( Icons.edit_rounded, size: 16),
           label: const Text('Chỉnh sửa hồ sơ'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: StartupOnboardingTheme.goldAccent,
-            foregroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             elevation: 4,
-            shadowColor: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+            shadowColor: Theme.of(context).primaryColor.withOpacity(0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -413,13 +414,13 @@ class _StartupProfileViewState extends State<StartupProfileView> {
           icon: const Icon(Icons.verified_user_outlined, size: 16),
           label: const Text('Xác thực'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-            foregroundColor: StartupOnboardingTheme.goldAccent,
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+            foregroundColor: Theme.of(context).primaryColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1),
+              side: BorderSide(color: Theme.of(context).primaryColor, width: 1),
             ),
             textStyle: GoogleFonts.workSans(
               fontSize: 13,
@@ -431,9 +432,9 @@ class _StartupProfileViewState extends State<StartupProfileView> {
         Container(
           height: 42,
           decoration: BoxDecoration(
-            color: StartupOnboardingTheme.navySurface,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: IconButton(
             onPressed: () {
@@ -442,7 +443,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 MaterialPageRoute(builder: (context) => const SettingsView()),
               );
             },
-            icon: const Icon(Icons.settings_outlined, color: StartupOnboardingTheme.softIvory, size: 20),
+            icon: Icon(Icons.settings_outlined, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8), size: 20),
             tooltip: 'Cài đặt',
           ),
         ),
@@ -492,14 +493,14 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.person_pin_outlined, color: StartupOnboardingTheme.goldAccent, size: 20),
+                   Icon(Icons.person_pin_outlined, color: Theme.of(context).primaryColor, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Sáng lập viên', style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.softIvory.withOpacity(0.5), fontWeight: FontWeight.bold)),
-                        Text(_viewModel.profile.founderNames.replaceAll('\n', ', '), style: GoogleFonts.workSans(fontSize: 14, color: StartupOnboardingTheme.softIvory, fontWeight: FontWeight.w600)),
+                        Text('Sáng lập viên', style: GoogleFonts.workSans(fontSize: 12, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5), fontWeight: FontWeight.bold)),
+                        Text(_viewModel.profile.founderNames.replaceAll('\n', ', '), style: GoogleFonts.workSans(fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -536,18 +537,18 @@ class _StartupProfileViewState extends State<StartupProfileView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: StartupOnboardingTheme.goldAccent, size: 20),
+          Icon(icon, color: Theme.of(context).primaryColor, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.softIvory.withOpacity(0.5), fontWeight: FontWeight.bold)),
+                Text(label, style: GoogleFonts.workSans(fontSize: 12, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5), fontWeight: FontWeight.bold)),
                 Text(
                   displayValue,
                   style: GoogleFonts.workSans(
                     fontSize: 14,
-                    color: isLink && !isPlaceholder ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.softIvory,
+                    color: isLink && !isPlaceholder ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyLarge?.color,
                     fontWeight: FontWeight.w600,
                     decoration: isLink && !isPlaceholder ? TextDecoration.underline : null,
                   ),
@@ -564,13 +565,13 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.softIvory.withOpacity(0.5), fontWeight: FontWeight.bold)),
+        Text(label, style: GoogleFonts.workSans(fontSize: 12, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5), fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
         Text(
           value.isEmpty ? 'Chưa cập nhật' : value,
           style: GoogleFonts.workSans(
             fontSize: 14,
-            color: StartupOnboardingTheme.softIvory,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             height: 1.5,
           ),
         ),

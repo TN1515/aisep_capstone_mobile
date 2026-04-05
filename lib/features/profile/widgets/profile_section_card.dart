@@ -21,10 +21,10 @@ class ProfileSectionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16.0),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: StartupOnboardingTheme.softIvory.withOpacity(0.05),
+          color: Theme.of(context).dividerColor,
           width: 1,
         ),
       ),
@@ -40,7 +40,7 @@ class ProfileSectionCard extends StatelessWidget {
                   title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: StartupOnboardingTheme.goldAccent.withOpacity(0.9),
+                    color: Theme.of(context).primaryColor.withOpacity(0.9),
                     letterSpacing: 1.2,
                     fontSize: 12,
                   ),
@@ -49,7 +49,7 @@ class ProfileSectionCard extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 18),
                     onPressed: onEdit,
-                    color: StartupOnboardingTheme.goldAccent,
+                    color: Theme.of(context).primaryColor,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -59,7 +59,7 @@ class ProfileSectionCard extends StatelessWidget {
           Divider(
             height: 1, 
             thickness: 0.5, 
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.1),
+            color: Theme.of(context).dividerColor,
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),

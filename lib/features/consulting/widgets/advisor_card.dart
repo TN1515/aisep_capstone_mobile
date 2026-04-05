@@ -24,12 +24,12 @@ class AdvisorCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.grey).withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -64,7 +64,7 @@ class AdvisorCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Colors.greenAccent,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: StartupOnboardingTheme.navySurface, width: 2),
+                                border: Border.all(color: Theme.of(context).cardColor, width: 2),
                               ),
                             ),
                           ),
@@ -84,7 +84,7 @@ class AdvisorCard extends StatelessWidget {
                                   style: GoogleFonts.outfit(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: StartupOnboardingTheme.softIvory,
+                                    color: Theme.of(context).textTheme.titleLarge?.color,
                                   ),
                                 ),
                               ),
@@ -92,7 +92,7 @@ class AdvisorCard extends StatelessWidget {
                                 onTap: onBookmark,
                                 child: Icon(
                                   advisor.isBookmarked ? Icons.favorite : LucideIcons.heart,
-                                  color: advisor.isBookmarked ? Colors.redAccent : Colors.white,
+                                  color: advisor.isBookmarked ? Colors.redAccent : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
                                   size: 24,
                                 ),
                               ),
@@ -102,7 +102,7 @@ class AdvisorCard extends StatelessWidget {
                             advisor.title,
                             style: GoogleFonts.workSans(
                               fontSize: 12,
-                              color: StartupOnboardingTheme.goldAccent.withOpacity(0.9),
+                              color: Theme.of(context).primaryColor.withOpacity(0.9),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -110,7 +110,7 @@ class AdvisorCard extends StatelessWidget {
                           Wrap(
                             spacing: 6,
                             runSpacing: 6,
-                            children: advisor.expertise.take(3).map((e) => _buildExpertiseChip(e)).toList(),
+                            children: advisor.expertise.take(3).map((e) => _buildExpertiseChip(context, e)).toList(),
                           ),
                         ],
                       ),
@@ -118,20 +118,20 @@ class AdvisorCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                Divider(color: Theme.of(context).dividerColor, height: 1),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildStatItem(LucideIcons.star, advisor.rating.toString(), 'Rating', color: Colors.orangeAccent),
-                    _buildStatItem(LucideIcons.calendar, advisor.totalSessions.toString(), 'Sessions'),
-                    _buildStatItem(LucideIcons.briefcase, '${advisor.yearsExperience}y', 'Exp'),
+                    _buildStatItem(context, LucideIcons.star, advisor.rating.toString(), 'Rating', color: Colors.orangeAccent),
+                    _buildStatItem(context, LucideIcons.calendar, advisor.totalSessions.toString(), 'Sessions'),
+                    _buildStatItem(context, LucideIcons.briefcase, '${advisor.yearsExperience}y', 'Exp'),
                     Text(
                       currencyFormat.format(advisor.hourlyRate),
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: StartupOnboardingTheme.goldAccent,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ],
@@ -144,28 +144,28 @@ class AdvisorCard extends StatelessWidget {
     );
   }
 
-  Widget _buildExpertiseChip(String label) {
+  Widget _buildExpertiseChip(BuildContext context, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.goldAccent.withOpacity(0.05),
+        color: Theme.of(context).primaryColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 10,
-          color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(IconData icon, String value, String label, {Color? color}) {
+  Widget _buildStatItem(BuildContext context, IconData icon, String value, String label, {Color? color}) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: color ?? StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+        Icon(icon, size: 14, color: color ?? Theme.of(context).primaryColor.withOpacity(0.5)),
         const SizedBox(width: 4),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,14 +176,14 @@ class AdvisorCard extends StatelessWidget {
               style: GoogleFonts.workSans(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             Text(
               label,
               style: TextStyle(
                 fontSize: 8,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.3),
               ),
             ),
           ],

@@ -17,13 +17,16 @@ class DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: theme.dividerColor,
           width: 1,
         ),
       ),
@@ -32,7 +35,7 @@ class DocumentCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
-          splashColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+          splashColor: theme.primaryColor.withOpacity(0.1),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -41,7 +44,7 @@ class DocumentCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildFileIcon(),
+                    _buildFileIcon(context),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -52,7 +55,7 @@ class DocumentCard extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: StartupOnboardingTheme.softIvory,
+                              color: textColor,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -60,18 +63,18 @@ class DocumentCard extends StatelessWidget {
                             '${document.type} • ${DateFormat('dd/MM/yyyy').format(document.uploadDate)}',
                             style: GoogleFonts.workSans(
                               fontSize: 12,
-                              color: StartupOnboardingTheme.slateGray,
+                              color: textColor.withOpacity(0.6),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    _buildStatusBadge(),
+                    _buildStatusBadge(context),
                   ],
                 ),
                 if (document.status != DocumentStatus.verified && document.status != DocumentStatus.failed) ...[
                   const SizedBox(height: 16),
-                  _buildProgressBar(),
+                  _buildProgressBar(context),
                 ],
               ],
             ),
@@ -81,7 +84,8 @@ class DocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFileIcon() {
+  Widget _buildFileIcon(BuildContext context) {
+    final theme = Theme.of(context);
     IconData iconData = LucideIcons.fileText;
     if (document.fileName.toLowerCase().endsWith('.pdf')) iconData = LucideIcons.fileText;
     if (document.fileName.toLowerCase().endsWith('.xlsx') || document.fileName.toLowerCase().endsWith('.csv')) iconData = LucideIcons.fileText;
@@ -90,15 +94,16 @@ class DocumentCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navyBg,
+        color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(iconData, color: StartupOnboardingTheme.goldAccent, size: 24),
+      child: Icon(iconData, color: theme.primaryColor, size: 24),
     );
   }
 
-  Widget _buildStatusBadge() {
-    Color color = StartupOnboardingTheme.goldAccent;
+  Widget _buildStatusBadge(BuildContext context) {
+    final theme = Theme.of(context);
+    Color color = theme.primaryColor;
     IconData icon = LucideIcons.clock;
     String label = 'Đang xử lý';
 
@@ -158,7 +163,9 @@ class DocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     double progress = 0.2;
     if (document.status == DocumentStatus.hashing) progress = 0.5;
     if (document.status == DocumentStatus.pendingBlockchain) progress = 0.8;
@@ -173,7 +180,7 @@ class DocumentCard extends StatelessWidget {
               'Tiến trình xác thực',
               style: GoogleFonts.workSans(
                 fontSize: 10,
-                color: StartupOnboardingTheme.slateGray,
+                color: textColor.withOpacity(0.6),
               ),
             ),
             Text(
@@ -181,7 +188,7 @@ class DocumentCard extends StatelessWidget {
               style: GoogleFonts.workSans(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.goldAccent,
+                color: theme.primaryColor,
               ),
             ),
           ],
@@ -191,8 +198,8 @@ class DocumentCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(2),
           child: LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white.withOpacity(0.05),
-            valueColor: AlwaysStoppedAnimation<Color>(StartupOnboardingTheme.goldAccent),
+            backgroundColor: theme.dividerColor,
+            valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
             minHeight: 4,
           ),
         ),

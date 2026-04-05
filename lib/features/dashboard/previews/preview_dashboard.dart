@@ -5,6 +5,7 @@ import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.da
 import 'package:provider/provider.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/view_models/dashboard_view_model.dart';
 import 'package:aisep_capstone_mobile/features/consulting/view_models/consulting_view_model.dart';
+import 'package:aisep_capstone_mobile/features/settings/view_models/settings_view_model.dart';
 
 void main() {
   runApp(const DashboardPreviewApp());
@@ -19,12 +20,19 @@ class DashboardPreviewApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
         ChangeNotifierProvider(create: (_) => ConsultingViewModel()),
+        ChangeNotifierProvider(create: (_) => SettingsViewModel()),
       ],
-      child: MaterialApp(
-        title: 'Dashboard Preview',
-        debugShowCheckedModeBanner: false,
-        theme: StartupOnboardingTheme.darkTheme,
-        home: const DashboardView(),
+      child: Consumer<SettingsViewModel>(
+        builder: (context, settingsViewModel, child) {
+          return MaterialApp(
+            title: 'Dashboard Preview',
+            debugShowCheckedModeBanner: false,
+            theme: settingsViewModel.settings.isDarkMode 
+                ? StartupOnboardingTheme.darkTheme 
+                : StartupOnboardingTheme.lightTheme,
+            home: const DashboardView(),
+          );
+        },
       ),
     );
   }

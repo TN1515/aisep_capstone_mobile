@@ -12,35 +12,32 @@ class AiReportDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Báo cáo chi tiết AI',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.softIvory,
-          ),
-        ),
+        title: const Text('Báo cáo chi tiết AI'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
+            _buildHeader(context),
             const SizedBox(height: 32),
-            _buildSummarySection(),
+            _buildSummarySection(context),
             const SizedBox(height: 32),
-            _buildMetricsGrid(),
+            _buildMetricsGrid(context),
             const SizedBox(height: 32),
-            _buildSwotAnalysis(),
+            _buildSwotAnalysis(context),
             const SizedBox(height: 40),
             _buildDownloadButton(context),
           ],
@@ -49,16 +46,18 @@ class AiReportDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+            color: theme.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.2)),
+            border: Border.all(color: theme.primaryColor.withOpacity(0.2)),
           ),
           child: Text(
             'KẾT QUẢ ĐÁNH GIÁ',
@@ -66,7 +65,7 @@ class AiReportDetailView extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 2,
-              color: StartupOnboardingTheme.goldAccent,
+              color: theme.primaryColor,
             ),
           ),
         ),
@@ -76,7 +75,7 @@ class AiReportDetailView extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.softIvory,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -84,14 +83,16 @@ class AiReportDetailView extends StatelessWidget {
           'Ngày đánh giá: ${DateFormat('dd MMMM, yyyy').format(evaluation.evaluationDate)}',
           style: GoogleFonts.workSans(
             fontSize: 14,
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+            color: textColor.withOpacity(0.5),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSummarySection() {
+  Widget _buildSummarySection(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -100,7 +101,7 @@ class AiReportDetailView extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent,
+            color: theme.primaryColor,
           ),
         ),
         const SizedBox(height: 12),
@@ -109,14 +110,16 @@ class AiReportDetailView extends StatelessWidget {
           style: GoogleFonts.workSans(
             fontSize: 15,
             height: 1.6,
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+            color: textColor.withOpacity(0.7),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMetricsGrid() {
+  Widget _buildMetricsGrid(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,7 +128,7 @@ class AiReportDetailView extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent,
+            color: theme.primaryColor,
           ),
         ),
         const SizedBox(height: 16),
@@ -144,9 +147,9 @@ class AiReportDetailView extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: StartupOnboardingTheme.navySurface,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: theme.dividerColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +159,7 @@ class AiReportDetailView extends StatelessWidget {
                     entry.key,
                     style: GoogleFonts.workSans(
                       fontSize: 11,
-                      color: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                      color: textColor.withOpacity(0.4),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -167,7 +170,7 @@ class AiReportDetailView extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: StartupOnboardingTheme.softIvory,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -175,7 +178,7 @@ class AiReportDetailView extends StatelessWidget {
                         '/ 10',
                         style: GoogleFonts.outfit(
                           fontSize: 12,
-                          color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+                          color: textColor.withOpacity(0.3),
                         ),
                       ),
                     ],
@@ -189,18 +192,20 @@ class AiReportDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildSwotAnalysis() {
+  Widget _buildSwotAnalysis(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildColumn('Điểm mạnh', evaluation.strengths, Colors.greenAccent)),
+        Expanded(child: _buildColumn(context, 'Điểm mạnh', evaluation.strengths, Colors.greenAccent)),
         const SizedBox(width: 16),
-        Expanded(child: _buildColumn('Thách thức', evaluation.weaknesses, Colors.orangeAccent)),
+        Expanded(child: _buildColumn(context, 'Thách thức', evaluation.weaknesses, Colors.orangeAccent)),
       ],
     );
   }
 
-  Widget _buildColumn(String title, List<String> items, Color color) {
+  Widget _buildColumn(BuildContext context, String title, List<String> items, Color color) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -225,7 +230,7 @@ class AiReportDetailView extends StatelessWidget {
                   item,
                   style: GoogleFonts.workSans(
                     fontSize: 13,
-                    color: StartupOnboardingTheme.softIvory.withOpacity(0.6),
+                    color: textColor.withOpacity(0.6),
                   ),
                 ),
               ),
@@ -237,15 +242,16 @@ class AiReportDetailView extends StatelessWidget {
   }
 
   Widget _buildDownloadButton(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       height: 64,
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.goldAccent,
+        color: theme.primaryColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+            color: theme.primaryColor.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -261,14 +267,14 @@ class AiReportDetailView extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.downloadCloud, color: StartupOnboardingTheme.navyBg),
+            Icon(LucideIcons.downloadCloud, color: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white),
             const SizedBox(width: 12),
             Text(
               'Tải báo cáo PDF',
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.navyBg,
+                color: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
               ),
             ),
           ],

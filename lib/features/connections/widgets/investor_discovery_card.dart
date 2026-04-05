@@ -17,9 +17,10 @@ class InvestorDiscoveryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = StartupOnboardingTheme.goldAccent;
-    final Color surfaceColor = StartupOnboardingTheme.navySurface;
-    final Color textColor = StartupOnboardingTheme.softIvory;
+    final theme = Theme.of(context);
+    final Color accentColor = theme.primaryColor;
+    final Color surfaceColor = theme.cardColor;
+    final Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -27,7 +28,7 @@ class InvestorDiscoveryCard extends StatelessWidget {
         color: surfaceColor,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: theme.dividerColor,
           width: 1,
         ),
       ),
@@ -44,7 +45,7 @@ class InvestorDiscoveryCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _buildMatchScore(),
+                    _buildMatchScore(context),
                     const SizedBox(width: 12),
                     if (investor.isVerified)
                       Container(
@@ -74,7 +75,7 @@ class InvestorDiscoveryCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: investor.isFavorite ? accentColor.withOpacity(0.1) : Colors.white.withOpacity(0.05),
+                          color: investor.isFavorite ? accentColor.withOpacity(0.1) : theme.dividerColor.withOpacity(0.05),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -135,8 +136,8 @@ class InvestorDiscoveryCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    ...investor.preferredIndustries.take(2).map((tag) => _buildTag(tag, LucideIcons.tag)),
-                    ...investor.preferredStages.take(1).map((tag) => _buildTag(tag, LucideIcons.trendingUp)),
+                    ...investor.preferredIndustries.take(2).map((tag) => _buildTag(context, tag, LucideIcons.tag)),
+                    ...investor.preferredStages.take(1).map((tag) => _buildTag(context, tag, LucideIcons.trendingUp)),
                   ],
                 ),
               ],
@@ -147,41 +148,42 @@ class InvestorDiscoveryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMatchScore() {
+  Widget _buildMatchScore(BuildContext context) {
     final score = (investor.matchScore * 100).toInt();
     return Row(
       children: [
-        Icon(LucideIcons.sparkles, color: StartupOnboardingTheme.goldAccent, size: 14),
+        Icon(LucideIcons.sparkles, color: Theme.of(context).primaryColor, size: 14),
         const SizedBox(width: 4),
         Text(
           '$score% Phù hợp',
           style: GoogleFonts.outfit(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent,
+            color: Theme.of(context).primaryColor,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTag(String label, IconData icon) {
+  Widget _buildTag(BuildContext context, String label, IconData icon) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: theme.dividerColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: StartupOnboardingTheme.slateGray),
+          Icon(icon, size: 10, color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
           const SizedBox(width: 6),
           Text(
             label,
             style: GoogleFonts.workSans(
               fontSize: 11,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+              color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7),
             ),
           ),
         ],

@@ -46,7 +46,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         elevation: 0,
         toolbarHeight: 60, // Compact height
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory, size: 20),
+          icon: const Icon(LucideIcons.arrowLeft, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(

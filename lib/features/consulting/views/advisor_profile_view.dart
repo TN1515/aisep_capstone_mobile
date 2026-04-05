@@ -47,7 +47,7 @@ class AdvisorProfileView extends StatelessWidget {
       backgroundColor: StartupOnboardingTheme.navyBg,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+        icon: const Icon(LucideIcons.arrowLeft),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [

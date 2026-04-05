@@ -13,13 +13,15 @@ class ActivityItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05), width: 1),
+        border: Border.all(color: theme.dividerColor, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,12 +29,12 @@ class ActivityItemTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _getTypeColor().withOpacity(0.1),
+              color: _getTypeColor(context).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               _getTypeIcon(),
-              color: _getTypeColor(),
+              color: _getTypeColor(context),
               size: 18,
             ),
           ),
@@ -45,7 +47,7 @@ class ActivityItemTile extends StatelessWidget {
                   activity.description,
                   style: GoogleFonts.workSans(
                     fontSize: 14,
-                    color: StartupOnboardingTheme.softIvory.withOpacity(0.9),
+                    color: theme.textTheme.bodyLarge?.color?.withOpacity(0.9),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -54,7 +56,7 @@ class ActivityItemTile extends StatelessWidget {
                   _formatTimestamp(activity.timestamp),
                   style: GoogleFonts.workSans(
                     fontSize: 12,
-                    color: StartupOnboardingTheme.slateGray.withOpacity(0.5),
+                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.5),
                   ),
                 ),
               ],
@@ -75,13 +77,13 @@ class ActivityItemTile extends StatelessWidget {
     }
   }
 
-  Color _getTypeColor() {
+  Color _getTypeColor(BuildContext context) {
     switch (activity.type) {
       case 'document': return Colors.blueAccent;
       case 'connection': return Colors.greenAccent;
-      case 'ai': return StartupOnboardingTheme.goldAccent;
+      case 'ai': return Theme.of(context).primaryColor;
       case 'kyc': return Colors.orangeAccent;
-      default: return StartupOnboardingTheme.goldAccent;
+      default: return Theme.of(context).primaryColor;
     }
   }
 

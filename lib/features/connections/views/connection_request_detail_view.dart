@@ -23,35 +23,33 @@ class ConnectionRequestDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = ConnectionViewModel();
-    final Color textColor = StartupOnboardingTheme.softIvory;
+    final theme = Theme.of(context);
+    final Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: StartupOnboardingTheme.navyBg,
+          backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Colors.transparent,
             elevation: 0,
-            title: Text(
-              'Chi tiết kết nối',
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
-              ),
+            leading: IconButton(
+              icon: const Icon(LucideIcons.arrowLeft),
+              onPressed: () => Navigator.pop(context),
             ),
+            title: const Text('Chi tiết kết nối'),
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileSummary(),
+                _buildProfileSummary(context),
                 const SizedBox(height: 32),
-                _buildMessageSection(textColor),
+                _buildMessageSection(context, textColor),
                 const SizedBox(height: 32),
-                _buildTimelineSection(textColor),
+                _buildTimelineSection(context, textColor),
                 const SizedBox(height: 100),
               ],
             ),
@@ -62,13 +60,16 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileSummary() {
+  Widget _buildProfileSummary(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: [
@@ -76,8 +77,8 @@ class ConnectionRequestDetailView extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-                child: const Icon(LucideIcons.user, color: StartupOnboardingTheme.goldAccent, size: 24),
+                backgroundColor: theme.primaryColor.withOpacity(0.1),
+                child: Icon(LucideIcons.user, color: theme.primaryColor, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -89,14 +90,14 @@ class ConnectionRequestDetailView extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: StartupOnboardingTheme.softIvory,
+                        color: textColor,
                       ),
                     ),
                     Text(
                       '${connection.position}${connection.organization != null ? ' @ ${connection.organization}' : ''}',
                       style: GoogleFonts.workSans(
                         fontSize: 13,
-                        color: StartupOnboardingTheme.softIvory.withOpacity(0.6),
+                        color: textColor.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -106,13 +107,13 @@ class ConnectionRequestDetailView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Divider(color: Colors.white.withOpacity(0.05)),
+          Divider(color: theme.dividerColor),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildCompactMetric('Độ phù hợp', '${(connection.matchScore * 100).toInt()}%'),
-              _buildCompactMetric('Cập nhật', DateFormat('dd/MM/yyyy').format(connection.lastUpdated)),
+              _buildCompactMetric(context, 'Độ phù hợp', '${(connection.matchScore * 100).toInt()}%'),
+              _buildCompactMetric(context, 'Cập nhật', DateFormat('dd/MM/yyyy').format(connection.lastUpdated)),
             ],
           ),
         ],
@@ -120,35 +121,37 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactMetric(String label, String value) {
+  Widget _buildCompactMetric(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.workSans(fontSize: 10, color: StartupOnboardingTheme.softIvory.withOpacity(0.4)),
+          style: GoogleFonts.workSans(fontSize: 10, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.4)),
         ),
         Text(
           value,
-          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory),
+          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color),
         ),
       ],
     );
   }
 
-  Widget _buildMessageSection(Color textColor) {
+  Widget _buildMessageSection(BuildContext context, Color textColor) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('LỜI NHẮN KẾT NỐI'),
+        _buildSectionTitle(context, 'LỜI NHẮN KẾT NỐI'),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: StartupOnboardingTheme.navySurface,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+            border: Border.all(color: theme.primaryColor.withOpacity(0.1)),
           ),
           child: Text(
             connection.bio ?? 'Không có lời nhắn đi kèm.',
@@ -163,19 +166,22 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineSection(Color textColor) {
+  Widget _buildTimelineSection(BuildContext context, Color textColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('DÒNG THỜI GIAN'),
+        _buildSectionTitle(context, 'DÒNG THỜI GIAN'),
         const SizedBox(height: 20),
-        _buildTimelineTile('Gửi yêu cầu', 'Yêu cầu kết nối đã được gửi thành công.', connection.lastUpdated, true),
-        _buildTimelineTile('Nhà đầu tư đã xem', 'Yêu cầu của bạn đã được hiển thị cho đối tác.', connection.lastUpdated.add(const Duration(minutes: 15)), false),
+        _buildTimelineTile(context, 'Gửi yêu cầu', 'Yêu cầu kết nối đã được gửi thành công.', connection.lastUpdated, true),
+        _buildTimelineTile(context, 'Nhà đầu tư đã xem', 'Yêu cầu của bạn đã được hiển thị cho đối tác.', connection.lastUpdated.add(const Duration(minutes: 15)), false),
       ],
     );
   }
 
-  Widget _buildTimelineTile(String title, String desc, DateTime time, bool isFirst) {
+  Widget _buildTimelineTile(BuildContext context, String title, String desc, DateTime time, bool isFirst) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -185,14 +191,14 @@ class ConnectionRequestDetailView extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: isFirst ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.goldAccent.withOpacity(0.2),
+                color: isFirst ? theme.primaryColor : theme.primaryColor.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
             ),
             Container(
               width: 1,
               height: 40,
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+              color: theme.primaryColor.withOpacity(0.1),
             ),
           ],
         ),
@@ -201,10 +207,10 @@ class ConnectionRequestDetailView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory)),
-              Text(desc, style: GoogleFonts.workSans(fontSize: 11, color: StartupOnboardingTheme.softIvory.withOpacity(0.5))),
+              Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
+              Text(desc, style: GoogleFonts.workSans(fontSize: 11, color: textColor.withOpacity(0.5))),
               const SizedBox(height: 4),
-              Text(DateFormat('HH:mm - dd/MM/yyyy').format(time), style: GoogleFonts.workSans(fontSize: 10, color: StartupOnboardingTheme.goldAccent.withOpacity(0.4))),
+              Text(DateFormat('HH:mm - dd/MM/yyyy').format(time), style: GoogleFonts.workSans(fontSize: 10, color: theme.primaryColor.withOpacity(0.4))),
               const SizedBox(height: 20),
             ],
           ),
@@ -213,14 +219,14 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
       style: GoogleFonts.outfit(
         fontSize: 11,
         fontWeight: FontWeight.bold,
         letterSpacing: 1,
-        color: StartupOnboardingTheme.goldAccent,
+        color: Theme.of(context).primaryColor,
       ),
     );
   }
@@ -235,9 +241,10 @@ class ConnectionRequestDetailView extends StatelessWidget {
   }
 
   Widget _buildReceiverActions(BuildContext context, ConnectionViewModel vm) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-      color: StartupOnboardingTheme.navyBg,
+      color: theme.scaffoldBackgroundColor,
       child: Row(
         children: [
           Expanded(
@@ -269,36 +276,38 @@ class ConnectionRequestDetailView extends StatelessWidget {
   }
 
   Widget _buildSenderActions(BuildContext context, ConnectionViewModel vm) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-      color: StartupOnboardingTheme.navyBg,
+      color: theme.scaffoldBackgroundColor,
       child: Row(
         children: [
           Expanded(
             child: OutlinedButton(
               onPressed: () => _confirmAction(context, 'Hủy yêu cầu', () => vm.cancelRequest(connection.id)),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.2)),
+                side: BorderSide(color: textColor.withOpacity(0.2)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: Text('Hủy yêu cầu', style: GoogleFonts.outfit(color: StartupOnboardingTheme.softIvory, fontWeight: FontWeight.bold)),
+              child: Text('Hủy yêu cầu', style: GoogleFonts.outfit(color: textColor, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                 // In a real app, map the connection data to InvestorModel
-                 // For now, navigate back to Hub for simplification
                  Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: StartupOnboardingTheme.goldAccent,
+                backgroundColor: theme.primaryColor,
+                foregroundColor: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: Text('Cập nhật', style: GoogleFonts.outfit(color: StartupOnboardingTheme.navyBg, fontWeight: FontWeight.bold)),
+              child: Text('Cập nhật', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -307,26 +316,29 @@ class ConnectionRequestDetailView extends StatelessWidget {
   }
 
   void _confirmAction(BuildContext context, String actionDesc, VoidCallback onConfirm) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       builder: (_) => Container(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.alertTriangle, color: StartupOnboardingTheme.goldAccent, size: 48),
+            Icon(LucideIcons.alertTriangle, color: theme.primaryColor, size: 48),
             const SizedBox(height: 24),
             Text(
               'Xác nhận $actionDesc?',
-              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory),
+              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
             ),
             const SizedBox(height: 12),
             Text(
               'Hành động này không thể hoàn tác. Bạn có chắc chắn muốn tiếp tục?',
               textAlign: TextAlign.center,
-              style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.5)),
+              style: GoogleFonts.workSans(color: textColor.withOpacity(0.5)),
             ),
             const SizedBox(height: 40),
             Row(
@@ -334,7 +346,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('Hủy', style: GoogleFonts.outfit(color: StartupOnboardingTheme.softIvory.withOpacity(0.4))),
+                    child: Text('Hủy', style: GoogleFonts.outfit(color: textColor.withOpacity(0.4))),
                   ),
                 ),
                 const SizedBox(width: 16),

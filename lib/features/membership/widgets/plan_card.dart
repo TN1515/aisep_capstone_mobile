@@ -33,12 +33,12 @@ class PlanCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected 
               ? accentColor.withOpacity(0.12)
-              : StartupOnboardingTheme.navySurface.withOpacity(0.5),
+              : Theme.of(context).cardColor.withOpacity(0.5),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: isSelected 
                 ? accentColor 
-                : Colors.white.withOpacity(0.08),
+                : Theme.of(context).dividerColor,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -73,7 +73,7 @@ class PlanCard extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? accentColor : StartupOnboardingTheme.softIvory,
+                color: isSelected ? accentColor : Theme.of(context).textTheme.displayLarge?.color,
                 letterSpacing: -0.5,
               ),
             ),
@@ -84,7 +84,7 @@ class PlanCard extends StatelessWidget {
               plan.tagline,
               style: GoogleFonts.workSans(
                 fontSize: 13,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
                 height: 1.4,
               ),
             ),
@@ -100,7 +100,7 @@ class PlanCard extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: StartupOnboardingTheme.softIvory,
+                    color: Theme.of(context).textTheme.displayLarge?.color,
                   ),
                 ),
                 if (plan.price != '0') ...[
@@ -109,14 +109,14 @@ class PlanCard extends StatelessWidget {
                     '/${plan.period}',
                     style: GoogleFonts.workSans(
                       fontSize: 14,
-                      color: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
                     ),
                   ),
                 ],
               ],
             ),
             const SizedBox(height: 24),
-            const Divider(color: Colors.white10, height: 1),
+            Divider(color: Theme.of(context).dividerColor, height: 1),
             const SizedBox(height: 24),
             
             // Benefits List (Selected top 3-4 highlights)
@@ -141,7 +141,7 @@ class PlanCard extends StatelessWidget {
                                   feature.name,
                                   style: GoogleFonts.workSans(
                                     fontSize: 12.5,
-                                    color: StartupOnboardingTheme.softIvory.withOpacity(0.9),
+                                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.9),
                                   ),
                                 ),
                               ),

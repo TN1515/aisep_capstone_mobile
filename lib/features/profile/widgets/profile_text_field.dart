@@ -21,6 +21,9 @@ class ProfileTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -28,9 +31,9 @@ class ProfileTextField extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+              color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7),
             ),
           ),
         ),
@@ -39,31 +42,31 @@ class ProfileTextField extends StatelessWidget {
           keyboardType: keyboardType,
           maxLines: maxLines,
           validator: validator,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: StartupOnboardingTheme.softIvory,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.textTheme.bodyLarge?.color,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.3),
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.textTheme.bodyLarge?.color?.withOpacity(0.3),
             ),
             filled: true,
-            fillColor: StartupOnboardingTheme.navyBg,
+            fillColor: theme.scaffoldBackgroundColor,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+              borderSide: BorderSide(color: theme.dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+              borderSide: BorderSide(color: theme.dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1.5),
+              borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
             ),
           ),
         ),

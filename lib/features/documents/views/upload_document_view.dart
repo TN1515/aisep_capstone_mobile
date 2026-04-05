@@ -28,22 +28,19 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: StartupOnboardingTheme.softIvory),
+          icon: const Icon(LucideIcons.chevronLeft),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Tải lên tài liệu',
-          style: GoogleFonts.outfit(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.softIvory,
-          ),
-        ),
+        title: const Text('Tải lên tài liệu'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -53,7 +50,7 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. File Upload Area (Simulated)
-              _buildFileUploadArea(),
+              _buildFileUploadArea(context),
               const SizedBox(height: 32),
 
               // 2. Metadata Form
@@ -62,27 +59,27 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.goldAccent,
+                  color: theme.primaryColor,
                   letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: 16),
-              _buildFieldLabel('Tên tài liệu'),
+              _buildFieldLabel(context, 'Tên tài liệu'),
               TextFormField(
                 controller: _nameController,
-                style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
-                decoration: _getInputDecoration('VD: AISEP_Pitch_Deck_2024.pdf'),
+                style: GoogleFonts.workSans(color: textColor),
+                decoration: _getInputDecoration(context, 'VD: AISEP_Pitch_Deck_2024.pdf'),
                 validator: (v) => v?.isEmpty ?? true ? 'Vui lòng nhập tên file' : null,
               ),
               const SizedBox(height: 20),
 
-              _buildFieldLabel('Loại tài liệu'),
+              _buildFieldLabel(context, 'Loại tài liệu'),
               DropdownButtonFormField<String>(
                 value: _selectedType,
-                dropdownColor: StartupOnboardingTheme.navySurface,
-                icon: const Icon(LucideIcons.chevronDown, color: StartupOnboardingTheme.goldAccent, size: 20),
-                style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
-                decoration: _getInputDecoration(null),
+                dropdownColor: theme.cardColor,
+                icon: Icon(LucideIcons.chevronDown, color: theme.primaryColor, size: 20),
+                style: GoogleFonts.workSans(color: textColor),
+                decoration: _getInputDecoration(context, null),
                 items: _documentTypes.map((t) => DropdownMenuItem(
                   value: t,
                   child: Text(t),
@@ -91,38 +88,47 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
               ),
               const SizedBox(height: 20),
 
-              _buildFieldLabel('Phiên bản'),
+              _buildFieldLabel(context, 'Phiên bản'),
               TextFormField(
                 controller: _versionController,
-                style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
-                decoration: _getInputDecoration('VD: 1.2.0'),
+                style: GoogleFonts.workSans(color: textColor),
+                decoration: _getInputDecoration(context, 'VD: 1.2.0'),
               ),
               const SizedBox(height: 20),
 
-              _buildFieldLabel('Mô tả (Tùy chọn)'),
+              _buildFieldLabel(context, 'Mô tả (Tùy chọn)'),
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
-                style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
-                decoration: _getInputDecoration('Nhập tóm tắt ngắn về tài liệu này...'),
+                style: GoogleFonts.workSans(color: textColor),
+                decoration: _getInputDecoration(context, 'Nhập tóm tắt ngắn về tài liệu này...'),
               ),
 
               const SizedBox(height: 16),
 
               // 3. Blockchain Switch
-              _buildBlockchainOption(),
+              _buildBlockchainOption(context),
               const SizedBox(height: 24),
 
               // 4. Visibility Control
-              _buildVisibilitySection(),
+              _buildVisibilitySection(context),
               const SizedBox(height: 48),
 
               // 4. Submit Button
               SizedBox(
                 width: double.infinity,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _handleUpload,
-                  child: const Text('Xác nhận & Tải lên'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor,
+                    foregroundColor: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(
+                    'Xác nhận & Tải lên',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -133,7 +139,9 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
     );
   }
 
-  Widget _buildFieldLabel(String label) {
+  Widget _buildFieldLabel(BuildContext context, String label) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
@@ -141,20 +149,22 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
         style: GoogleFonts.outfit(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: StartupOnboardingTheme.softIvory.withOpacity(0.9),
+          color: textColor.withOpacity(0.9),
         ),
       ),
     );
   }
 
-  InputDecoration _getInputDecoration(String? hint) {
+  InputDecoration _getInputDecoration(BuildContext context, String? hint) {
+    final theme = Theme.of(context);
+    final hintColor = theme.textTheme.bodyMedium?.color?.withOpacity(0.4) ?? Colors.grey;
     return InputDecoration(
       hintText: hint,
       hintStyle: GoogleFonts.workSans(
-        color: StartupOnboardingTheme.slateGray.withOpacity(0.5),
+        color: hintColor,
       ),
       filled: true,
-      fillColor: StartupOnboardingTheme.navySurface,
+      fillColor: theme.cardColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -162,39 +172,40 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+        borderSide: BorderSide(color: theme.dividerColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: StartupOnboardingTheme.goldAccent, width: 1.5),
+        borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
       ),
     );
   }
 
-  Widget _buildFileUploadArea() {
+  Widget _buildFileUploadArea(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+          color: theme.primaryColor.withOpacity(0.3),
           width: 2,
-          style: BorderStyle.solid, // Note: Dash border requires custom painter or package, using solid for now
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LucideIcons.upload, size: 48, color: StartupOnboardingTheme.goldAccent),
+          Icon(LucideIcons.upload, size: 48, color: theme.primaryColor),
           const SizedBox(height: 16),
           Text(
             'Chọn tệp hoặc kéo thả trực tiếp',
             style: GoogleFonts.outfit(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: StartupOnboardingTheme.softIvory,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -202,7 +213,7 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
             'Hỗ trợ PDF, DOCX, XLSX, IMG (Max 10MB)',
             style: GoogleFonts.workSans(
               fontSize: 12,
-              color: StartupOnboardingTheme.slateGray,
+              color: textColor.withOpacity(0.6),
             ),
           ),
         ],
@@ -210,17 +221,19 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
     );
   }
 
-  Widget _buildVisibilitySection() {
+  Widget _buildVisibilitySection(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldLabel('Chế độ hiển thị'),
+        _buildFieldLabel(context, 'Chế độ hiển thị'),
         DropdownButtonFormField<String>(
           value: _visibilityMode,
-          dropdownColor: StartupOnboardingTheme.navySurface,
-          icon: const Icon(LucideIcons.chevronDown, color: StartupOnboardingTheme.goldAccent, size: 20),
-          style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
-          decoration: _getInputDecoration(null),
+          dropdownColor: theme.cardColor,
+          icon: Icon(LucideIcons.chevronDown, color: theme.primaryColor, size: 20),
+          style: GoogleFonts.workSans(color: textColor),
+          decoration: _getInputDecoration(context, null),
           items: ['Riêng tư', 'Công khai'].map((m) => DropdownMenuItem(
             value: m,
             child: Text(m),
@@ -229,29 +242,32 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
         ),
         if (_visibilityMode == 'Công khai') ...[
           const SizedBox(height: 20),
-          _buildFieldLabel('Chia sẻ với'),
+          _buildFieldLabel(context, 'Chia sẻ với'),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: StartupOnboardingTheme.navySurface,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              border: Border.all(color: theme.dividerColor),
             ),
             child: Column(
               children: [
                 _buildVisibilityOption(
+                  context,
                   'Nhà đầu tư (Investor)', 
                   LucideIcons.trendingUp, 
                   DocumentVisibility.investor
                 ),
-                const Divider(color: Colors.white10, height: 1),
+                Divider(color: theme.dividerColor, height: 1),
                 _buildVisibilityOption(
+                  context,
                   'Cố vấn (Advisor)', 
                   LucideIcons.shield, 
                   DocumentVisibility.advisor
                 ),
-                const Divider(color: Colors.white10, height: 1),
+                Divider(color: theme.dividerColor, height: 1),
                 _buildVisibilityOption(
+                  context,
                   'Tất cả (Both)', 
                   LucideIcons.users, 
                   DocumentVisibility.both
@@ -264,7 +280,9 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
     );
   }
 
-  Widget _buildVisibilityOption(String label, IconData icon, DocumentVisibility value) {
+  Widget _buildVisibilityOption(BuildContext context, String label, IconData icon, DocumentVisibility value) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     final bool isSelected = _sharedWith == value;
     return InkWell(
       onTap: () => setState(() => _sharedWith = value),
@@ -272,42 +290,44 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: isSelected ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+            Icon(icon, size: 18, color: isSelected ? theme.primaryColor : textColor.withOpacity(0.3)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
                 style: GoogleFonts.workSans(
                   fontSize: 14,
-                  color: isSelected ? StartupOnboardingTheme.softIvory : StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                  color: isSelected ? textColor : textColor.withOpacity(0.5),
                 ),
               ),
             ),
             if (isSelected)
-              const Icon(LucideIcons.check, size: 18, color: StartupOnboardingTheme.goldAccent),
+              Icon(LucideIcons.check, size: 18, color: theme.primaryColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBlockchainOption() {
+  Widget _buildBlockchainOption(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryColor.withOpacity(0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+              color: theme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(LucideIcons.shieldCheck, color: StartupOnboardingTheme.goldAccent, size: 20),
+            child: Icon(LucideIcons.shieldCheck, color: theme.primaryColor, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -319,14 +339,14 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: StartupOnboardingTheme.softIvory,
+                    color: textColor,
                   ),
                 ),
                 Text(
                   'Tạo mã băm và lưu trữ timestamp.',
                   style: GoogleFonts.workSans(
                     fontSize: 12,
-                    color: StartupOnboardingTheme.slateGray,
+                    color: textColor.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -335,7 +355,7 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
           Switch(
             value: _isBlockchainEnabled,
             onChanged: (v) => setState(() => _isBlockchainEnabled = v),
-            activeColor: StartupOnboardingTheme.goldAccent,
+            activeColor: theme.primaryColor,
           ),
         ],
       ),
@@ -362,7 +382,7 @@ class _UploadDocumentViewState extends State<UploadDocumentView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đang bắt đầu bảo mật tài liệu: ${newDoc.fileName}'),
-          backgroundColor: StartupOnboardingTheme.goldAccent,
+          backgroundColor: Theme.of(context).primaryColor,
         ),
       );
     }

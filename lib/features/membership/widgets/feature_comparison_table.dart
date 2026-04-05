@@ -32,7 +32,7 @@ class FeatureComparisonTable extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
                   letterSpacing: 1.2,
                 ),
               ),
@@ -54,26 +54,26 @@ class FeatureComparisonTable extends StatelessWidget {
           itemCount: selectedPlan.features.length,
           itemBuilder: (context, index) {
             final feature = selectedPlan.features[index];
-            return _buildFeatureItem(feature, accentColor);
+            return _buildFeatureItem(context, feature, accentColor);
           },
         ),
       ],
     );
   }
 
-  Widget _buildFeatureItem(MembershipFeature feature, Color accentColor) {
+  Widget _buildFeatureItem(BuildContext context, MembershipFeature feature, Color accentColor) {
     final bool isAvailable = _isFeatureAvailable(feature.value);
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface.withOpacity(0.3),
+        color: Theme.of(context).cardColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: feature.isHighlight 
               ? accentColor.withOpacity(0.2) 
-              : Colors.white.withOpacity(0.03),
+              : Theme.of(context).dividerColor,
         ),
       ),
       child: Row(
@@ -100,8 +100,8 @@ class FeatureComparisonTable extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: feature.isHighlight ? FontWeight.bold : FontWeight.normal,
                 color: isAvailable 
-                    ? StartupOnboardingTheme.softIvory 
-                    : StartupOnboardingTheme.softIvory.withOpacity(0.3),
+                    ? Theme.of(context).textTheme.displayLarge?.color 
+                    : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
               ),
             ),
           ),
@@ -111,7 +111,7 @@ class FeatureComparisonTable extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: isAvailable ? accentColor : StartupOnboardingTheme.softIvory.withOpacity(0.2),
+                color: isAvailable ? accentColor : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.2),
               ),
             ),
         ],

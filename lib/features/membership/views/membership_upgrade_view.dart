@@ -17,23 +17,16 @@ class MembershipUpgradeView extends StatelessWidget {
       child: Consumer<MembershipUpgradeViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              iconTheme: const IconThemeData(color: StartupOnboardingTheme.softIvory),
+              centerTitle: false,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: Text(
-                'Nâng cấp thành viên',
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.softIvory,
-                ),
-              ),
+              title: const Text('Nâng cấp thành viên'),
             ),
             body: Stack(
               children: [
@@ -58,7 +51,7 @@ class MembershipUpgradeView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeaderSection(),
+                      _buildHeaderSection(context),
                       const SizedBox(height: 32),
                       _buildPlansHorizontalList(viewModel),
                       const SizedBox(height: 48),
@@ -72,7 +65,7 @@ class MembershipUpgradeView extends StatelessWidget {
                 ),
                 _buildStickyCTA(context, viewModel),
                 if (viewModel.isLoading)
-                  _buildLoadingOverlay(),
+                  _buildLoadingOverlay(context),
               ],
             ),
           );
@@ -81,7 +74,7 @@ class MembershipUpgradeView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
@@ -103,7 +96,7 @@ class MembershipUpgradeView extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -115,7 +108,7 @@ class MembershipUpgradeView extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
+              color: Theme.of(context).textTheme.displayLarge?.color,
               height: 1.1,
             ),
           ),
@@ -124,7 +117,7 @@ class MembershipUpgradeView extends StatelessWidget {
             'Mở khóa các tính năng cao cấp để tăng tốc hành trình gọi vốn của bạn.',
             style: GoogleFonts.workSans(
               fontSize: 15,
-              color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+              color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
               height: 1.5,
             ),
           ),
@@ -180,8 +173,8 @@ class MembershipUpgradeView extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              StartupOnboardingTheme.navyBg.withOpacity(0),
-              StartupOnboardingTheme.navyBg,
+              Theme.of(context).scaffoldBackgroundColor.withOpacity(0),
+              Theme.of(context).scaffoldBackgroundColor,
             ],
             stops: const [0, 0.4],
           ),
@@ -234,9 +227,9 @@ class MembershipUpgradeView extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingOverlay() {
+  Widget _buildLoadingOverlay(BuildContext context) {
     return Container(
-      color: StartupOnboardingTheme.navyBg.withOpacity(0.8),
+      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.8),
       child: const Center(
         child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent),
       ),

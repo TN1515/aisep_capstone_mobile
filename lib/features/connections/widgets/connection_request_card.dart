@@ -18,9 +18,10 @@ class ConnectionRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = StartupOnboardingTheme.goldAccent;
-    final Color surfaceColor = StartupOnboardingTheme.navySurface;
-    final Color textColor = StartupOnboardingTheme.softIvory;
+    final theme = Theme.of(context);
+    final Color accentColor = theme.primaryColor;
+    final Color surfaceColor = theme.cardColor;
+    final Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -28,7 +29,7 @@ class ConnectionRequestCard extends StatelessWidget {
         color: surfaceColor,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: theme.dividerColor,
           width: 1,
         ),
       ),
@@ -51,7 +52,7 @@ class ConnectionRequestCard extends StatelessWidget {
                       DateFormat('dd/MM/yyyy').format(connection.lastUpdated),
                       style: GoogleFonts.workSans(
                         fontSize: 11,
-                        color: textColor.withOpacity(0.4),
+                        color: textColor.withOpacity(0.5),
                       ),
                     ),
                   ],

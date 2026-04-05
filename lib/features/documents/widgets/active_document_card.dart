@@ -17,18 +17,21 @@ class ActiveDocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.navySurface,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: theme.dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.2 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -36,7 +39,7 @@ class ActiveDocumentCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildFileIcon(),
+            _buildFileIcon(context),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -50,16 +53,16 @@ class ActiveDocumentCard extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: StartupOnboardingTheme.softIvory,
+                            color: textColor,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      _buildVisibilityIndicator(),
+                      _buildVisibilityIndicator(context),
                       const SizedBox(width: 8),
-                      _buildStatusChip(),
+                      _buildStatusChip(context),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -70,33 +73,33 @@ class ActiveDocumentCard extends StatelessWidget {
                         style: GoogleFonts.workSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: StartupOnboardingTheme.goldAccent.withOpacity(0.7),
+                          color: theme.primaryColor.withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '•',
-                        style: TextStyle(color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+                        style: TextStyle(color: textColor.withOpacity(0.3)),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat('dd/MM/yyyy').format(document.uploadDate),
                         style: GoogleFonts.workSans(
                           fontSize: 12,
-                          color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                          color: textColor.withOpacity(0.5),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '•',
-                        style: TextStyle(color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+                        style: TextStyle(color: textColor.withOpacity(0.3)),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '${document.sizeInMb.toStringAsFixed(1)} MB',
                         style: GoogleFonts.workSans(
                           fontSize: 12,
-                          color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                          color: textColor.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -110,7 +113,8 @@ class ActiveDocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVisibilityIndicator() {
+  Widget _buildVisibilityIndicator(BuildContext context) {
+    final theme = Theme.of(context);
     IconData icon;
     Color color;
     String label;
@@ -133,7 +137,7 @@ class ActiveDocumentCard extends StatelessWidget {
         break;
       case DocumentVisibility.private:
         icon = LucideIcons.eyeOff;
-        color = StartupOnboardingTheme.softIvory.withOpacity(0.3);
+        color = theme.textTheme.bodyLarge?.color?.withOpacity(0.3) ?? Colors.grey;
         label = 'Riêng tư';
         break;
     }
@@ -163,7 +167,7 @@ class ActiveDocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFileIcon() {
+  Widget _buildFileIcon(BuildContext context) {
     IconData icon;
     Color color;
 
@@ -175,7 +179,7 @@ class ActiveDocumentCard extends StatelessWidget {
       color = Colors.greenAccent.withOpacity(0.8);
     } else {
       icon = LucideIcons.file;
-      color = StartupOnboardingTheme.goldAccent.withOpacity(0.8);
+      color = Theme.of(context).primaryColor.withOpacity(0.8);
     }
 
     return Container(
@@ -188,7 +192,8 @@ class ActiveDocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip() {
+  Widget _buildStatusChip(BuildContext context) {
+    final theme = Theme.of(context);
     String label;
     Color color;
 
@@ -202,11 +207,11 @@ class ActiveDocumentCard extends StatelessWidget {
       case DocumentStatus.aiEvaluating:
       case DocumentStatus.hashing:
         label = 'Đang xử lý';
-        color = StartupOnboardingTheme.goldAccent;
+        color = theme.primaryColor;
         break;
       default:
         label = 'Mới';
-        color = StartupOnboardingTheme.softIvory.withOpacity(0.5);
+        color = theme.textTheme.bodyLarge?.color?.withOpacity(0.5) ?? Colors.grey;
     }
 
     return Container(

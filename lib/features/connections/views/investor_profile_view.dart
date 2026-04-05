@@ -13,10 +13,11 @@ class InvestorProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color textColor = StartupOnboardingTheme.softIvory;
+    final theme = Theme.of(context);
+    final Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           CustomScrollView(
@@ -29,7 +30,7 @@ class InvestorProfileView extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _buildSectionTitle('TÓM TẮT THESIS'),
+                    _buildSectionTitle(context, 'TÓM TẮT THESIS'),
                     const SizedBox(height: 12),
                     Text(
                       investor.thesis,
@@ -40,15 +41,15 @@ class InvestorProfileView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    _buildSectionTitle('LĨNH VỰC QUAN TÂM'),
+                    _buildSectionTitle(context, 'LĨNH VỰC QUAN TÂM'),
                     const SizedBox(height: 12),
-                    _buildChipGroup(investor.preferredIndustries),
+                    _buildChipGroup(context, investor.preferredIndustries),
                     const SizedBox(height: 32),
-                    _buildSectionTitle('GIAI ĐOẠN ĐẦU TƯ'),
+                    _buildSectionTitle(context, 'GIAI ĐOẠN ĐẦU TƯ'),
                     const SizedBox(height: 12),
-                    _buildChipGroup(investor.preferredStages),
+                    _buildChipGroup(context, investor.preferredStages),
                     const SizedBox(height: 32),
-                    _buildSectionTitle('HỖ TRỢ CUNG CẤP'),
+                    _buildSectionTitle(context, 'HỖ TRỢ CUNG CẤP'),
                     const SizedBox(height: 12),
                     Text(
                       investor.supportOffered,
@@ -70,7 +71,7 @@ class InvestorProfileView extends StatelessWidget {
             top: 50,
             left: 20,
             child: IconButton(
-              icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+              icon: const Icon(LucideIcons.arrowLeft),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -86,13 +87,13 @@ class InvestorProfileView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => _navigateToRequestForm(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: StartupOnboardingTheme.goldAccent,
-                  foregroundColor: StartupOnboardingTheme.navyBg,
+                  backgroundColor: theme.primaryColor,
+                  foregroundColor: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 8,
-                  shadowColor: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+                  shadowColor: theme.primaryColor.withOpacity(0.3),
                 ),
                 child: Text(
                   'Gửi yêu cầu kết nối',
@@ -109,34 +110,34 @@ class InvestorProfileView extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
       style: GoogleFonts.outfit(
         fontSize: 12,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.2,
-        color: StartupOnboardingTheme.goldAccent,
+        color: Theme.of(context).primaryColor,
       ),
     );
   }
 
-  Widget _buildChipGroup(List<String> items) {
+  Widget _buildChipGroup(BuildContext context, List<String> items) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: items.map((item) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.navySurface,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: Text(
           item,
           style: GoogleFonts.workSans(
             fontSize: 12,
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.8),
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
           ),
         ),
       )).toList(),

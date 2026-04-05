@@ -20,22 +20,25 @@ class SummaryProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: StartupOnboardingTheme.navySurface,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: AppColors.text.withOpacity(0.04),
+              color: (isDark ? Colors.black : Colors.grey).withOpacity(0.05),
               blurRadius: 40,
               offset: const Offset(0, 10),
             ),
           ],
           border: Border.all(
-            color: AppColors.text.withOpacity(0.05),
+            color: theme.dividerColor,
             width: 1,
           ),
         ),
@@ -43,7 +46,7 @@ class SummaryProgressCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                _buildCircularProgress(),
+                _buildCircularProgress(context),
                 const SizedBox(width: 20),
                 Expanded(
                   child: Column(
@@ -54,7 +57,7 @@ class SummaryProgressCard extends StatelessWidget {
                         style: GoogleFonts.workSans(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: StartupOnboardingTheme.softIvory,
+                          color: theme.textTheme.titleLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -62,7 +65,7 @@ class SummaryProgressCard extends StatelessWidget {
                         'Hãy hoàn thiện 100% để tăng cơ hội kết nối với nhà đầu tư.',
                         style: GoogleFonts.workSans(
                           fontSize: 12,
-                          color: StartupOnboardingTheme.slateGray.withOpacity(0.8),
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
                         ),
                       ),
                     ],
@@ -70,23 +73,25 @@ class SummaryProgressCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Divider(color: Colors.white10),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Divider(color: theme.dividerColor),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatusItem(
+                  context,
                   'Xác thực KYC',
                   _getKycText(),
                   _getKycColor(),
                   onTap: onKycTap,
                 ),
                 _buildStatusItem(
+                  context,
                   'Đánh giá AI',
                   aiScore != null ? '$aiScore/100' : 'Chưa có',
-                  StartupOnboardingTheme.goldAccent,
+                  theme.primaryColor,
                 ),
               ],
             ),
@@ -96,7 +101,8 @@ class SummaryProgressCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCircularProgress() {
+  Widget _buildCircularProgress(BuildContext context) {
+    final theme = Theme.of(context);
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -105,8 +111,8 @@ class SummaryProgressCard extends StatelessWidget {
           height: 64,
           child: CircularProgressIndicator(
             value: profileCompletion,
-            backgroundColor: Colors.white.withOpacity(0.05),
-            color: StartupOnboardingTheme.goldAccent,
+            backgroundColor: theme.dividerColor,
+            color: theme.primaryColor,
             strokeWidth: 6,
           ),
         ),
@@ -115,14 +121,15 @@ class SummaryProgressCard extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent,
+            color: theme.primaryColor,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatusItem(String label, String value, Color color, {VoidCallback? onTap}) {
+  Widget _buildStatusItem(BuildContext context, String label, String value, Color color, {VoidCallback? onTap}) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -132,7 +139,7 @@ class SummaryProgressCard extends StatelessWidget {
             label,
             style: GoogleFonts.workSans(
               fontSize: 12,
-              color: StartupOnboardingTheme.slateGray.withOpacity(0.8),
+              color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 6),
@@ -168,10 +175,10 @@ class SummaryProgressCard extends StatelessWidget {
 
   Color _getKycColor() {
     switch (kycStatus) {
-      case DashboardKycStatus.none: return StartupOnboardingTheme.slateGray;
-      case DashboardKycStatus.pending: return Colors.orangeAccent;
-      case DashboardKycStatus.verified: return Colors.greenAccent;
-      case DashboardKycStatus.rejected: return Colors.redAccent;
+      case DashboardKycStatus.none: return Colors.blueGrey;
+      case DashboardKycStatus.pending: return Colors.orange;
+      case DashboardKycStatus.verified: return Colors.green;
+      case DashboardKycStatus.rejected: return Colors.red;
     }
   }
 }

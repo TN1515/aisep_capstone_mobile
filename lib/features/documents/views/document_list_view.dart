@@ -38,25 +38,20 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ChangeNotifierProvider(
       create: (_) => DocumentViewModel(),
       child: Consumer<DocumentViewModel>(
         builder: (context, viewModel, _) {
           return Scaffold(
-            backgroundColor: StartupOnboardingTheme.navyBg,
+            backgroundColor: theme.scaffoldBackgroundColor,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: Text(
-                'Quản lý tài liệu',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.softIvory,
-                ),
-              ),
+              title: const Text('Quản lý tài liệu'),
               actions: [
                 IconButton(
-                  icon: Icon(LucideIcons.plusCircle, color: StartupOnboardingTheme.goldAccent),
+                  icon: Icon(LucideIcons.plusCircle, color: theme.primaryColor),
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UploadDocumentView(viewModel: viewModel))),
                 ),
                 const SizedBox(width: 12),
@@ -64,9 +59,9 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
               bottom: TabBar(
                 controller: _tabController,
                 isScrollable: false,
-                indicatorColor: StartupOnboardingTheme.goldAccent,
-                labelColor: StartupOnboardingTheme.goldAccent,
-                unselectedLabelColor: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                indicatorColor: theme.primaryColor,
+                labelColor: theme.primaryColor,
+                unselectedLabelColor: theme.textTheme.bodyLarge?.color?.withOpacity(0.4),
                 labelStyle: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 13),
                 indicatorSize: TabBarIndicatorSize.label,
                 tabs: const [
@@ -77,12 +72,12 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
               ),
             ),
             body: viewModel.isLoading
-                ? Center(child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent))
+                ? Center(child: CircularProgressIndicator(color: theme.primaryColor))
                 : TabBarView(
                     controller: _tabController,
                     children: [
                       _buildManagementTab(context, viewModel),
-                      _buildBlockchainTab(viewModel),
+                      _buildBlockchainTab(context, viewModel),
                       _buildAiTab(context, viewModel),
                     ],
                   ),
@@ -95,6 +90,7 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
   Widget _buildManagementTab(BuildContext context, DocumentViewModel viewModel) {
     if (viewModel.documents.isEmpty) {
       return _buildEmptyStateView(
+        context,
         LucideIcons.filePlus,
         'Chưa có tài liệu',
         'Tải lên Pitch Deck hoặc báo cáo tài chính để bắt đầu.',
@@ -114,9 +110,10 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
     );
   }
 
-  Widget _buildBlockchainTab(DocumentViewModel viewModel) {
+  Widget _buildBlockchainTab(BuildContext context, DocumentViewModel viewModel) {
     if (viewModel.documents.isEmpty) {
       return _buildEmptyStateView(
+        context,
         LucideIcons.shieldCheck,
         'Chưa rõ nguồn gốc',
         'Tài liệu tải lên sẽ được băm và lưu trữ on-chain tại đây.',
@@ -139,6 +136,7 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
   Widget _buildAiTab(BuildContext context, DocumentViewModel viewModel) {
     if (viewModel.evaluationHistory.isEmpty) {
       return _buildEmptyStateView(
+        context,
         LucideIcons.brainCircuit,
         'Chưa có đánh giá AI',
         'Yêu cầu AISEP phân tích tiềm năng từ các tài liệu đã xác thực.',
@@ -161,21 +159,22 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
     );
   }
 
-  Widget _buildEmptyStateView(IconData icon, String title, String message) {
+  Widget _buildEmptyStateView(BuildContext context, IconData icon, String title, String message) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+            Icon(icon, size: 64, color: theme.primaryColor.withOpacity(0.1)),
             const SizedBox(height: 24),
             Text(
               title,
               style: GoogleFonts.outfit(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: theme.textTheme.displayLarge?.color,
               ),
             ),
             const SizedBox(height: 12),
@@ -183,7 +182,7 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
               message,
               textAlign: TextAlign.center,
               style: GoogleFonts.workSans(
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+                color: theme.textTheme.bodyLarge?.color?.withOpacity(0.4),
               ),
             ),
           ],
@@ -193,9 +192,10 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
   }
 
   void _showDocumentActions(BuildContext context, DocumentModel doc, DocumentViewModel viewModel) {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: StartupOnboardingTheme.navySurface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       builder: (_) => Container(
@@ -203,12 +203,12 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildActionTile(LucideIcons.zap, 'Yêu cầu AI đánh giá', () {
+            _buildActionTile(context, LucideIcons.zap, 'Yêu cầu AI đánh giá', () {
               Navigator.pop(context);
               viewModel.requestAiEvaluation(doc.id);
               _tabController.animateTo(2);
             }),
-            _buildActionTile(LucideIcons.history, 'Xem lịch sử phiên bản', () {
+            _buildActionTile(context, LucideIcons.history, 'Xem lịch sử phiên bản', () {
               Navigator.pop(context);
               Navigator.push(
                 context,
@@ -220,7 +220,7 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
                 ),
               );
             }),
-            _buildActionTile(LucideIcons.edit3, 'Chỉnh sửa metadata', () {
+            _buildActionTile(context, LucideIcons.edit3, 'Chỉnh sửa metadata', () {
               Navigator.pop(context);
               showModalBottomSheet(
                 context: context,
@@ -232,21 +232,22 @@ class _DocumentListViewState extends State<DocumentListView> with SingleTickerPr
                 ),
               );
             }),
-            const Divider(color: Colors.white10),
-            _buildActionTile(LucideIcons.trash2, 'Xóa tài liệu', () {}, isDestructive: true),
+            Divider(color: theme.dividerColor),
+            _buildActionTile(context, LucideIcons.trash2, 'Xóa tài liệu', () {}, isDestructive: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionTile(IconData icon, String label, VoidCallback onTap, {bool isDestructive = false}) {
+  Widget _buildActionTile(BuildContext context, IconData icon, String label, VoidCallback onTap, {bool isDestructive = false}) {
+    final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon, color: isDestructive ? Colors.redAccent : StartupOnboardingTheme.goldAccent, size: 20),
+      leading: Icon(icon, color: isDestructive ? Colors.redAccent : theme.primaryColor, size: 20),
       title: Text(
         label,
         style: GoogleFonts.workSans(
-          color: isDestructive ? Colors.redAccent : StartupOnboardingTheme.softIvory,
+          color: isDestructive ? Colors.redAccent : theme.textTheme.bodyLarge?.color,
           fontWeight: FontWeight.w500,
         ),
       ),

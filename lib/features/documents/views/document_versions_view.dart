@@ -15,35 +15,32 @@ class DocumentVersionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Lịch sử phiên bản',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.softIvory,
-          ),
-        ),
+        title: const Text('Lịch sử phiên bản'),
       ),
       body: Consumer<DocumentViewModel>(
         builder: (context, viewModel, child) {
           final versions = document.versions ?? [];
           
           if (versions.isEmpty) {
-            return _buildEmptyVersions();
+            return _buildEmptyVersions(context);
           }
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeaderInfo(),
+              _buildHeaderInfo(context),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -63,21 +60,24 @@ class DocumentVersionsView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderInfo() {
+  Widget _buildHeaderInfo(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+    
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryColor.withOpacity(0.1)),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            StartupOnboardingTheme.navySurface,
-            StartupOnboardingTheme.navySurface.withOpacity(0.5),
+            theme.cardColor,
+            theme.cardColor.withOpacity(0.5),
           ],
         ),
       ),
@@ -86,10 +86,10 @@ class DocumentVersionsView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+              color: theme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(LucideIcons.fileText, color: StartupOnboardingTheme.goldAccent),
+            child: Icon(LucideIcons.fileText, color: theme.primaryColor),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -101,7 +101,7 @@ class DocumentVersionsView extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: StartupOnboardingTheme.softIvory,
+                    color: textColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -109,7 +109,7 @@ class DocumentVersionsView extends StatelessWidget {
                   'Phiên bản hiện tại: ${document.version ?? "1.0"}',
                   style: GoogleFonts.workSans(
                     fontSize: 12,
-                    color: StartupOnboardingTheme.goldAccent,
+                    color: theme.primaryColor,
                   ),
                 ),
               ],
@@ -121,6 +121,8 @@ class DocumentVersionsView extends StatelessWidget {
   }
 
   Widget _buildVersionItem(BuildContext context, DocumentVersion version, bool isCurrent, DocumentViewModel viewModel) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
     return Container(
@@ -135,11 +137,11 @@ class DocumentVersionsView extends StatelessWidget {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: isCurrent ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.softIvory.withOpacity(0.2),
+                  color: isCurrent ? theme.primaryColor : textColor.withOpacity(0.2),
                   shape: BoxShape.circle,
                   boxShadow: isCurrent ? [
                     BoxShadow(
-                      color: StartupOnboardingTheme.goldAccent.withOpacity(0.3),
+                      color: theme.primaryColor.withOpacity(0.3),
                       blurRadius: 8,
                       spreadRadius: 2,
                     )
@@ -149,7 +151,7 @@ class DocumentVersionsView extends StatelessWidget {
               Container(
                 width: 2,
                 height: 100, // Adjust height based on content
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.05),
+                color: theme.dividerColor,
               ),
             ],
           ),
@@ -159,10 +161,10 @@ class DocumentVersionsView extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isCurrent ? StartupOnboardingTheme.goldAccent.withOpacity(0.05) : StartupOnboardingTheme.navySurface,
+                color: isCurrent ? theme.primaryColor.withOpacity(0.05) : theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isCurrent ? StartupOnboardingTheme.goldAccent.withOpacity(0.3) : Colors.white.withOpacity(0.05),
+                  color: isCurrent ? theme.primaryColor.withOpacity(0.3) : theme.dividerColor,
                 ),
               ),
               child: Column(
@@ -176,14 +178,14 @@ class DocumentVersionsView extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isCurrent ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.softIvory,
+                          color: isCurrent ? theme.primaryColor : textColor,
                         ),
                       ),
                       if (isCurrent)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: StartupOnboardingTheme.goldAccent,
+                            color: theme.primaryColor,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -191,22 +193,22 @@ class DocumentVersionsView extends StatelessWidget {
                             style: GoogleFonts.workSans(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: StartupOnboardingTheme.navyBg,
+                              color: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                             ),
                           ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildDetailRow(LucideIcons.calendar, dateFormat.format(version.date)),
+                  _buildDetailRow(context, LucideIcons.calendar, dateFormat.format(version.date)),
                   const SizedBox(height: 8),
-                  _buildDetailRow(LucideIcons.user, version.author),
+                  _buildDetailRow(context, LucideIcons.user, version.author),
                   const SizedBox(height: 8),
-                  _buildDetailRow(LucideIcons.hardDrive, '${version.sizeInMb.toStringAsFixed(1)} MB'),
+                  _buildDetailRow(context, LucideIcons.hardDrive, '${version.sizeInMb.toStringAsFixed(1)} MB'),
                   
                   if (!isCurrent) ...[
                     const SizedBox(height: 16),
-                    Divider(color: Colors.white.withOpacity(0.05)),
+                    Divider(color: theme.dividerColor),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -219,7 +221,7 @@ class DocumentVersionsView extends StatelessWidget {
                           icon: const Icon(LucideIcons.refreshCw, size: 14),
                           label: const Text('Phục hồi'),
                           style: TextButton.styleFrom(
-                            foregroundColor: StartupOnboardingTheme.goldAccent,
+                            foregroundColor: theme.primaryColor,
                             textStyle: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ),
@@ -235,35 +237,39 @@ class DocumentVersionsView extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String value) {
+  Widget _buildDetailRow(BuildContext context, IconData icon, String value) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Row(
       children: [
-        Icon(icon, size: 14, color: StartupOnboardingTheme.softIvory.withOpacity(0.4)),
+        Icon(icon, size: 14, color: textColor.withOpacity(0.4)),
         const SizedBox(width: 8),
         Text(
           value,
           style: GoogleFonts.workSans(
             fontSize: 13,
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+            color: textColor.withOpacity(0.7),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildEmptyVersions() {
+  Widget _buildEmptyVersions(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LucideIcons.history, size: 64, color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+          Icon(LucideIcons.history, size: 64, color: theme.primaryColor.withOpacity(0.1)),
           const SizedBox(height: 24),
           Text(
             'Chưa có lịch sử phiên bản',
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
+              color: textColor,
             ),
           ),
         ],

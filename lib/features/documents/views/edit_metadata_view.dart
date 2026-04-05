@@ -42,6 +42,9 @@ class _EditMetadataViewState extends State<EditMetadataView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return Container(
       padding: EdgeInsets.only(
         left: 24,
@@ -49,9 +52,9 @@ class _EditMetadataViewState extends State<EditMetadataView> {
         top: 24,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      decoration: const BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -63,7 +66,7 @@ class _EditMetadataViewState extends State<EditMetadataView> {
                 width: 48,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: theme.dividerColor,
                   borderRadius: BorderRadius.circular(100),
                 ),
               ),
@@ -74,19 +77,19 @@ class _EditMetadataViewState extends State<EditMetadataView> {
               style: GoogleFonts.outfit(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 32),
-            _buildTextField('Tên tài liệu', _nameController, LucideIcons.fileText),
+            _buildTextField(context, 'Tên tài liệu', _nameController, LucideIcons.fileText),
             const SizedBox(height: 20),
-            _buildDropdownField('Loại tài liệu', _selectedType, _types, (val) {
+            _buildDropdownField(context, 'Loại tài liệu', _selectedType, _types, (val) {
               if (val != null) setState(() => _selectedType = val);
             }, LucideIcons.tag),
             const SizedBox(height: 20),
-            _buildTextField('Mô tả', _descController, LucideIcons.alignLeft, maxLines: 3),
+            _buildTextField(context, 'Mô tả', _descController, LucideIcons.alignLeft, maxLines: 3),
             const SizedBox(height: 20),
-            _buildVisibilitySelector(),
+            _buildVisibilitySelector(context),
             const SizedBox(height: 32),
             _buildSubmitButton(context),
           ],
@@ -95,7 +98,9 @@ class _EditMetadataViewState extends State<EditMetadataView> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildTextField(BuildContext context, String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -104,28 +109,30 @@ class _EditMetadataViewState extends State<EditMetadataView> {
           style: GoogleFonts.workSans(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.7),
+            color: theme.primaryColor.withOpacity(0.7),
           ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           maxLines: maxLines,
-          style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
+          style: GoogleFonts.workSans(color: textColor),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 18, color: StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+            prefixIcon: Icon(icon, size: 18, color: theme.primaryColor.withOpacity(0.5)),
             filled: true,
-            fillColor: Colors.black.withOpacity(0.1),
+            fillColor: theme.scaffoldBackgroundColor.withOpacity(0.5),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.05))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: StartupOnboardingTheme.goldAccent)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.dividerColor)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.primaryColor)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField(String label, String value, List<String> items, Function(String?) onChanged, IconData icon) {
+  Widget _buildDropdownField(BuildContext context, String label, String value, List<String> items, Function(String?) onChanged, IconData icon) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -134,30 +141,30 @@ class _EditMetadataViewState extends State<EditMetadataView> {
           style: GoogleFonts.workSans(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.7),
+            color: theme.primaryColor.withOpacity(0.7),
           ),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.1),
+            color: theme.scaffoldBackgroundColor.withOpacity(0.5),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
-              dropdownColor: StartupOnboardingTheme.navySurface,
-              icon: const Icon(LucideIcons.chevronDown, size: 18, color: StartupOnboardingTheme.goldAccent),
+              dropdownColor: theme.cardColor,
+              icon: Icon(LucideIcons.chevronDown, size: 18, color: theme.primaryColor),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
                   child: Row(
                     children: [
-                      Icon(icon, size: 16, color: StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+                      Icon(icon, size: 16, color: theme.primaryColor.withOpacity(0.5)),
                       const SizedBox(width: 12),
-                      Text(item, style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory)),
+                      Text(item, style: GoogleFonts.workSans(color: textColor)),
                     ],
                   ),
                 );
@@ -170,7 +177,9 @@ class _EditMetadataViewState extends State<EditMetadataView> {
     );
   }
 
-  Widget _buildVisibilitySelector() {
+  Widget _buildVisibilitySelector(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -179,7 +188,7 @@ class _EditMetadataViewState extends State<EditMetadataView> {
           style: GoogleFonts.workSans(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.7),
+            color: theme.primaryColor.withOpacity(0.7),
           ),
         ),
         const SizedBox(height: 12),
@@ -193,9 +202,9 @@ class _EditMetadataViewState extends State<EditMetadataView> {
               onSelected: (selected) {
                 if (selected) setState(() => _selectedVisibility = v);
               },
-              selectedColor: StartupOnboardingTheme.goldAccent,
-              backgroundColor: Colors.white.withOpacity(0.05),
-              labelStyle: TextStyle(color: isSelected ? StartupOnboardingTheme.navyBg : StartupOnboardingTheme.softIvory),
+              selectedColor: theme.primaryColor,
+              backgroundColor: theme.dividerColor.withOpacity(0.05),
+              labelStyle: TextStyle(color: isSelected ? (theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white) : textColor),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             );
           }).toList(),
@@ -214,6 +223,7 @@ class _EditMetadataViewState extends State<EditMetadataView> {
   }
 
   Widget _buildSubmitButton(BuildContext context) {
+    final theme = Theme.of(context);
     return ElevatedButton(
       onPressed: () {
         context.read<DocumentViewModel>().updateDocumentMetadata(
@@ -227,8 +237,8 @@ class _EditMetadataViewState extends State<EditMetadataView> {
         ToastUtils.showTopToast(context, 'Đã cập nhật metadata thành công.');
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: StartupOnboardingTheme.goldAccent,
-        foregroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
         minimumSize: const Size(double.infinity, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),

@@ -21,7 +21,7 @@ class BookmarkedAdvisorsView extends StatelessWidget {
           backgroundColor: StartupOnboardingTheme.navyBg,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft, color: StartupOnboardingTheme.softIvory),
+            icon: const Icon(LucideIcons.arrowLeft),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(

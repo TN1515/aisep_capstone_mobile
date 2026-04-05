@@ -18,18 +18,12 @@ class ConsultingDashboardView extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: StartupOnboardingTheme.navyBg,
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          title: Text(
-            'Quản lý Tư vấn',
-            style: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
-            ),
-          ),
+          centerTitle: false,
+          title: const Text('Quản lý Tư vấn'),
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 16),
@@ -43,8 +37,8 @@ class ConsultingDashboardView extends StatelessWidget {
                 icon: const Icon(LucideIcons.search, size: 16),
                 label: Text('Tìm Cố vấn', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: StartupOnboardingTheme.goldAccent,
-                  foregroundColor: StartupOnboardingTheme.navyBg,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                   minimumSize: const Size(0, 32),
@@ -54,9 +48,9 @@ class ConsultingDashboardView extends StatelessWidget {
             ),
           ],
           bottom: TabBar(
-            indicatorColor: StartupOnboardingTheme.goldAccent,
-            labelColor: StartupOnboardingTheme.goldAccent,
-            unselectedLabelColor: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+            indicatorColor: Theme.of(context).primaryColor,
+            labelColor: Theme.of(context).primaryColor,
+            unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
             labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             tabs: const [
               Tab(text: 'Yêu cầu'),
@@ -72,14 +66,17 @@ class ConsultingDashboardView extends StatelessWidget {
             return TabBarView(
               children: [
                 _buildSessionList(
+                  context,
                   sessions.where((s) => s.status == ConsultingStatus.requested || s.status == ConsultingStatus.proposed).toList(),
                   'Chưa có yêu cầu tư vấn nào.',
                 ),
                 _buildSessionList(
+                  context,
                   sessions.where((s) => s.status == ConsultingStatus.confirmed || s.status == ConsultingStatus.payable || s.status == ConsultingStatus.paid).toList(),
                   'Không có lịch hẹn sắp tới.',
                 ),
                 _buildSessionList(
+                  context,
                   sessions.where((s) => s.status == ConsultingStatus.conducted || s.status == ConsultingStatus.completed || s.status == ConsultingStatus.cancelled).toList(),
                   'Lịch sử tư vấn trống.',
                 ),
@@ -91,17 +88,17 @@ class ConsultingDashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildSessionList(List<ConsultingSessionModel> sessions, String emptyMsg) {
+  Widget _buildSessionList(BuildContext context, List<ConsultingSessionModel> sessions, String emptyMsg) {
     if (sessions.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.calendar, size: 64, color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+            Icon(LucideIcons.calendar, size: 64, color: Theme.of(context).dividerColor),
             const SizedBox(height: 16),
             Text(
               emptyMsg,
-              style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+              style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3)),
             ),
           ],
         ),
@@ -125,9 +122,9 @@ class ConsultingDashboardView extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Material(
         color: Colors.transparent,
@@ -162,7 +159,7 @@ class ConsultingDashboardView extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: StartupOnboardingTheme.softIvory,
+                              color: Theme.of(context).textTheme.titleLarge?.color,
                             ),
                           ),
                           Text(
@@ -171,7 +168,7 @@ class ConsultingDashboardView extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.workSans(
                               fontSize: 12,
-                              color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
                             ),
                           ),
                         ],
@@ -181,18 +178,18 @@ class ConsultingDashboardView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                Divider(color: Theme.of(context).dividerColor, height: 1),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                     Row(
                       children: [
-                        Icon(LucideIcons.calendar, size: 14, color: StartupOnboardingTheme.goldAccent.withOpacity(0.7)),
+                        Icon(LucideIcons.calendar, size: 14, color: Theme.of(context).primaryColor.withOpacity(0.7)),
                         const SizedBox(width: 6),
                         Text(
                           session.scheduledAt != null ? dateFormat.format(session.scheduledAt!) : 'Chưa xếp lịch',
-                          style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.softIvory),
+                          style: GoogleFonts.workSans(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
                         ),
                       ],
                     ),
@@ -200,26 +197,26 @@ class ConsultingDashboardView extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: StartupOnboardingTheme.goldAccent,
+                          color: Theme.of(context).primaryColor,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
                           'Gửi đánh giá',
-                          style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.navyBg),
+                          style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white),
                         ),
                       )
                     else
                       Row(
                         children: [
-                          Icon(LucideIcons.clock, size: 14, color: StartupOnboardingTheme.goldAccent.withOpacity(0.7)),
+                          Icon(LucideIcons.clock, size: 14, color: Theme.of(context).primaryColor.withOpacity(0.7)),
                           const SizedBox(width: 6),
                           Text(
                             session.scheduledAt != null ? timeFormat.format(session.scheduledAt!) : '--:--',
-                            style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.softIvory),
+                            style: GoogleFonts.workSans(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
                           ),
                         ],
                       ),
-                    Icon(LucideIcons.chevronRight, size: 16, color: StartupOnboardingTheme.softIvory.withOpacity(0.2)),
+                    Icon(LucideIcons.chevronRight, size: 16, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.2)),
                   ],
                 ),
               ],

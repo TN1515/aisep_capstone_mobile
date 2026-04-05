@@ -35,13 +35,11 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
   @override
   Widget build(BuildContext context) {
 
-    return Theme(
-      data: StartupOnboardingTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
           actions: [
             TextButton(
               onPressed: () => _viewModel.skipToDashboard(context, const DashboardView()),
@@ -66,7 +64,7 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
                         duration: const Duration(milliseconds: 600),
                         child: Text(
                           'Hoàn thiện hồ sơ',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.displayLarge,
+                          style: Theme.of(context).textTheme.displayLarge,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -75,7 +73,7 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
                         delay: const Duration(milliseconds: 100),
                         child: Text(
                           'Hãy chia sẻ thông tin cơ bản để chúng tôi hỗ trợ bạn tốt hơn.',
-                          style: StartupOnboardingTheme.darkTheme.textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -147,10 +145,10 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
                               ? null 
                               : () => _viewModel.saveAndContinue(context, _formKey, const DashboardView()),
                           child: _viewModel.isLoading 
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(color: StartupOnboardingTheme.navyBg, strokeWidth: 2),
+                                  child: CircularProgressIndicator(color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white, strokeWidth: 2),
                                 )
                               : const Text('Lưu và tiếp tục'),
                         ),

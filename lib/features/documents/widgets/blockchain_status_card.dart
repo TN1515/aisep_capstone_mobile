@@ -16,21 +16,23 @@ class BlockchainStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final bool isVerified = document.status == DocumentStatus.verified || document.status == DocumentStatus.aiCompleted;
     final bool isPending = document.status == DocumentStatus.pendingBlockchain || document.status == DocumentStatus.hashing;
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: isVerified 
             ? Colors.greenAccent.withOpacity(0.2) 
             : isPending 
-              ? StartupOnboardingTheme.goldAccent.withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
+              ? theme.primaryColor.withOpacity(0.2)
+              : theme.dividerColor,
         ),
       ),
       child: Column(
@@ -38,7 +40,7 @@ class BlockchainStatusCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _buildStatusIcon(isVerified, isPending),
+              _buildStatusIcon(context, isVerified, isPending),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -49,7 +51,7 @@ class BlockchainStatusCard extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: StartupOnboardingTheme.softIvory,
+                        color: textColor,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -59,7 +61,7 @@ class BlockchainStatusCard extends StatelessWidget {
                       isVerified ? 'Tài liệu đã được xác thực on-chain' : isPending ? 'Đang chờ xác thực...' : 'Chưa được xác thực',
                       style: GoogleFonts.workSans(
                         fontSize: 12,
-                        color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+                        color: textColor.withOpacity(0.5),
                       ),
                     ),
                   ],
@@ -71,11 +73,11 @@ class BlockchainStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           if (document.txHash != null) ...[
-            _buildInfoRow('Transaction Hash', document.txHash!, isHash: true),
+            _buildInfoRow(context, 'Transaction Hash', document.txHash!),
             const SizedBox(height: 12),
           ],
           if (document.fileHash != null) ...[
-            _buildInfoRow('File Hash (SHA256)', document.fileHash!, isHash: true),
+            _buildInfoRow(context, 'File Hash (SHA256)', document.fileHash!),
             const SizedBox(height: 12),
           ],
           const SizedBox(height: 16),
@@ -85,26 +87,30 @@ class BlockchainStatusCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusIcon(bool isVerified, bool isPending) {
+  Widget _buildStatusIcon(BuildContext context, bool isVerified, bool isPending) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isVerified 
           ? Colors.greenAccent.withOpacity(0.1) 
           : isPending 
-            ? StartupOnboardingTheme.goldAccent.withOpacity(0.1)
-            : StartupOnboardingTheme.navyBg,
+            ? theme.primaryColor.withOpacity(0.1)
+            : theme.scaffoldBackgroundColor,
         shape: BoxShape.circle,
       ),
       child: Icon(
         isVerified ? LucideIcons.shieldCheck : isPending ? LucideIcons.refreshCw : LucideIcons.shieldAlert,
-        color: isVerified ? Colors.greenAccent : isPending ? StartupOnboardingTheme.goldAccent : StartupOnboardingTheme.softIvory.withOpacity(0.3),
+        color: isVerified ? Colors.greenAccent : isPending ? theme.primaryColor : textColor.withOpacity(0.3),
         size: 24,
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {bool isHash = false}) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -114,14 +120,14 @@ class BlockchainStatusCard extends StatelessWidget {
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
-            color: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+            color: theme.primaryColor.withOpacity(0.5),
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: StartupOnboardingTheme.navyBg.withOpacity(0.5),
+            color: theme.scaffoldBackgroundColor.withOpacity(0.5),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -131,14 +137,14 @@ class BlockchainStatusCard extends StatelessWidget {
                   value,
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 11,
-                    color: StartupOnboardingTheme.softIvory.withOpacity(0.7),
+                    color: textColor.withOpacity(0.7),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(LucideIcons.copy, size: 14, color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+              Icon(LucideIcons.copy, size: 14, color: textColor.withOpacity(0.3)),
             ],
           ),
         ),
@@ -148,6 +154,7 @@ class BlockchainStatusCard extends StatelessWidget {
 
   Widget _buildActionButton(BuildContext context, bool isVerified, bool isPending) {
     if (isPending) return const SizedBox.shrink();
+    final theme = Theme.of(context);
 
     return SizedBox(
       width: double.infinity,
@@ -155,7 +162,7 @@ class BlockchainStatusCard extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onVerify,
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: isVerified ? Colors.greenAccent.withOpacity(0.3) : StartupOnboardingTheme.goldAccent.withOpacity(0.5)),
+          side: BorderSide(color: isVerified ? Colors.greenAccent.withOpacity(0.3) : theme.primaryColor.withOpacity(0.5)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: Row(
@@ -164,14 +171,14 @@ class BlockchainStatusCard extends StatelessWidget {
             Icon(
               isVerified ? LucideIcons.externalLink : LucideIcons.zap, 
               size: 16, 
-              color: isVerified ? Colors.greenAccent : StartupOnboardingTheme.goldAccent
+              color: isVerified ? Colors.greenAccent : theme.primaryColor
             ),
             const SizedBox(width: 12),
             Text(
               isVerified ? 'Xem trên Blockchain' : 'Yêu cầu xác thực ngay',
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
-                color: isVerified ? Colors.greenAccent : StartupOnboardingTheme.goldAccent,
+                color: isVerified ? Colors.greenAccent : theme.primaryColor,
               ),
             ),
           ],
