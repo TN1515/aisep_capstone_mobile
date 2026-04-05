@@ -44,34 +44,38 @@ class SummaryProgressCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Row(
-              children: [
-                _buildCircularProgress(context),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hoàn thiện hồ sơ',
-                        style: GoogleFonts.workSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: theme.textTheme.titleLarge?.color,
+            GestureDetector(
+              onTap: onKycTap,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  _buildCircularProgress(context),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hoàn thiện hồ sơ',
+                          style: GoogleFonts.workSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: theme.textTheme.titleLarge?.color,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Hãy hoàn thiện 100% để tăng cơ hội kết nối với nhà đầu tư.',
-                        style: GoogleFonts.workSans(
-                          fontSize: 12,
-                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Hãy hoàn thiện 100% để tăng cơ hội kết nối với nhà đầu tư.',
+                          style: GoogleFonts.workSans(
+                            fontSize: 12,
+                            color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),

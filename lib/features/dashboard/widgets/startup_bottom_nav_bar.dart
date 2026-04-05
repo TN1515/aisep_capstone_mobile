@@ -46,8 +46,8 @@ class StartupBottomNavBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(context, LucideIcons.fileText, 'Tài liệu', 3),
-                  _buildNavItem(context, LucideIcons.shieldCheck, 'Xác thực', 4),
+                  _buildNavItem(context, LucideIcons.messageSquare, 'Nhắn tin', 3),
+                  _buildNavItem(context, LucideIcons.fileText, 'Tài liệu', 4),
                 ],
               ),
             ),

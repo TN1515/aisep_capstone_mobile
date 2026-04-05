@@ -9,7 +9,6 @@ class DashboardHeader extends StatelessWidget {
   final String startupName;
   final int unreadCount;
   final VoidCallback onNotificationTap;
-  final VoidCallback onMessageTap; // NEW
   final VoidCallback onProfileTap;
 
   const DashboardHeader({
@@ -19,7 +18,6 @@ class DashboardHeader extends StatelessWidget {
     required this.startupName,
     required this.unreadCount,
     required this.onNotificationTap,
-    required this.onMessageTap, // NEW
     required this.onProfileTap,
   });
 
@@ -52,14 +50,6 @@ class DashboardHeader extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          IconButton(
-            onPressed: onMessageTap,
-            icon: Icon(
-              LucideIcons.messageSquare,
-              color: Theme.of(context).textTheme.displayLarge?.color,
-              size: 22,
             ),
           ),
           Stack(

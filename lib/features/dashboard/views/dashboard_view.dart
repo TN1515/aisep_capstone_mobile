@@ -78,14 +78,11 @@ class _DashboardViewState extends State<DashboardView> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const ConnectionsView(), // Index 0: Updated from Placeholder
-          const ConsultingDashboardView(), // Index 1: Redesigned
-          _buildDashboardContent(), // Center item: Trang chủ
-          const DocumentListView(), // Index 3: Updated from Placeholder
-          KycFormView(
-            isIncorporated: true, 
-            onBack: () => _onTabTapped(2), // Move back to Home (Index 2)
-          ), 
+          const ConnectionsView(), // Index 0: Kết nối
+          const ConsultingDashboardView(), // Index 1: Tư vấn
+          _buildDashboardContent(), // Index 2: Trang chủ
+          const ChatListView(), // Index 3: Nhắn tin
+          const DocumentListView(), // Index 4: Tài liệu
         ],
       ),
     );
@@ -151,12 +148,6 @@ class _DashboardViewState extends State<DashboardView> {
                               MaterialPageRoute(builder: (_) => const NotificationsView()),
                             );
                           },
-                          onMessageTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ChatListView()),
-                            );
-                          },
                           onProfileTap: () {
                             Navigator.push(
                               context,
@@ -175,7 +166,17 @@ class _DashboardViewState extends State<DashboardView> {
                     profileCompletion: stats.profileCompletion,
                     kycStatus: stats.kycStatus,
                     aiScore: stats.aiEvaluationScore,
-                    onKycTap: () => _onTabTapped(4), // Switch to KYC Tab (Index 4)
+                    onKycTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => KycFormView(
+                            isIncorporated: true,
+                            onBack: () => Navigator.pop(context),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -205,7 +206,16 @@ class _DashboardViewState extends State<DashboardView> {
                               MaterialPageRoute(builder: (context) => const StartupProfileView()),
                             );
                           } else if (task.category == 'Pháp lý' || task.title.contains('KYC')) {
-                            _onTabTapped(4); // Switch to Verification (Xác thực) tab
+                            // Link to KYC via Navigator.push instead of tab change
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => KycFormView(
+                                  isIncorporated: true,
+                                  onBack: () => Navigator.pop(context),
+                                ),
+                              ),
+                            );
                           } else if (task.category == 'Tư vấn') {
                             _onTabTapped(1); // Switch to Consulting tab
                           } else {
@@ -273,28 +283,13 @@ class _DashboardViewState extends State<DashboardView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                'Xem tất cả',
-                style: GoogleFonts.workSans(
-                  fontSize: 13,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-            ),
-          ],
+        child: Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
         ),
       ),
     );
