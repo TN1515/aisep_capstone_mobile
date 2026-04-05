@@ -218,7 +218,6 @@ class _StartupLoginViewState extends State<StartupLoginView> {
             );
           },
         ),
-      ),
     );
   }
 }

@@ -92,7 +92,6 @@ class OnboardingWelcomeView extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

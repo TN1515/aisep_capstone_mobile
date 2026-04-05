@@ -222,7 +222,6 @@ class _StartupRegistrationViewState extends State<StartupRegistrationView> {
             );
           },
         ),
-      ),
     );
   }
 }

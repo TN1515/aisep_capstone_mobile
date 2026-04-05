@@ -161,7 +161,6 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
             );
           },
         ),
-      ),
     );
   }
 

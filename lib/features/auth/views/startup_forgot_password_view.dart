@@ -137,7 +137,6 @@ class _StartupForgotPasswordViewState extends State<StartupForgotPasswordView> {
             );
           },
         ),
-      ),
     );
   }
 }

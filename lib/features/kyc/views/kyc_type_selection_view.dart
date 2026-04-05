@@ -41,54 +41,53 @@ class _KycTypeSelectionViewState extends State<KycTypeSelectionView> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      FadeInDown(
-                        child: Text(
-                          'Chọn loại hình\nxác thực',
-                          style: Theme.of(context).textTheme.displayLarge,
-                        ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    FadeInDown(
+                      child: Text(
+                        'Chọn loại hình\nxác thực',
+                        style: Theme.of(context).textTheme.displayLarge,
                       ),
-                      const SizedBox(height: 48),
-                      _buildSelectionCard(
-                        0,
-                        Icons.business_rounded,
-                        'Startup đã có pháp nhân',
-                        'Dành cho doanh nghiệp đã đăng ký kinh doanh chính thức, có mã số thuế.',
-                      ),
-                      const SizedBox(height: 24),
-                      _buildSelectionCard(
-                        1,
-                        Icons.emoji_objects_rounded,
-                        'Startup chưa có pháp nhân',
-                        'Dành cho dự án mới, nhóm nghiên cứu hoặc Lab-to-Market đang phát triển.',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              FadeInUp(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _selectedIndex != null ? _onContinue : null,
-                      child: const Text('Tiếp tục'),
                     ),
+                    const SizedBox(height: 48),
+                    _buildSelectionCard(
+                      0,
+                      Icons.business_rounded,
+                      'Startup đã có pháp nhân',
+                      'Dành cho doanh nghiệp đã đăng ký kinh doanh chính thức, có mã số thuế.',
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSelectionCard(
+                      1,
+                      Icons.emoji_objects_rounded,
+                      'Startup chưa có pháp nhân',
+                      'Dành cho dự án mới, nhóm nghiên cứu hoặc Lab-to-Market đang phát triển.',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            FadeInUp(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _selectedIndex != null ? _onContinue : null,
+                    child: const Text('Tiếp tục'),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -152,7 +151,7 @@ class _KycTypeSelectionViewState extends State<KycTypeSelectionView> {
                       description,
                       style: GoogleFonts.workSans(
                         fontSize: 14,
-                        color: StartupOnboardingTheme.slateGray.withOpacity(0.8),
+                        color: Colors.grey.withOpacity(0.8),
                         height: 1.5,
                       ),
                     ),

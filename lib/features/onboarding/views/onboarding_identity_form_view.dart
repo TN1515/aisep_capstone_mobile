@@ -108,7 +108,6 @@ class _OnboardingIdentityFormViewState extends State<OnboardingIdentityFormView>
             ],
           ),
         ),
-      ),
     );
   }
 

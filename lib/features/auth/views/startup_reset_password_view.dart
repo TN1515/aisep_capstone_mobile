@@ -165,7 +165,6 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
             );
           },
         ),
-      ),
     );
   }
 }

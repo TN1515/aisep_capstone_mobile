@@ -19,87 +19,86 @@ class KycIntroView extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      FadeInDown(
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: StartupOnboardingTheme.goldAccent.withOpacity(0.05),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.verified_user_rounded,
-                            size: 80,
-                            color: StartupOnboardingTheme.goldAccent,
-                          ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    FadeInDown(
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: StartupOnboardingTheme.goldAccent.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.verified_user_rounded,
+                          size: 80,
+                          color: StartupOnboardingTheme.goldAccent,
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      FadeInDown(
-                        delay: const Duration(milliseconds: 200),
-                        child: Text(
-                          'Xác thực Startup\ncủa bạn',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.displayLarge,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 400),
-                        child: Text(
-                          'Xác thực danh tính giúp tăng mức độ tin cậy và mở khóa toàn bộ tính năng hỗ trợ AI cho doanh nghiệp của bạn.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ),
-                      const SizedBox(height: 48),
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 600),
-                        child: Column(
-                          children: [
-                            _buildBenefitRow(Icons.check_circle_outline_rounded, 'Huy hiệu "Xác thực" trên hồ sơ công khai.'),
-                            _buildBenefitRow(Icons.check_circle_outline_rounded, 'Ưu tiên kết nối trực tiếp với Nhà đầu tư.'),
-                            _buildBenefitRow(Icons.check_circle_outline_rounded, 'Chạy bộ đánh giá AI (AI Analysis) chuyên sâu.'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              FadeInUp(
-                delay: const Duration(milliseconds: 800),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const KycTypeSelectionView()),
-                        );
-                      },
-                      child: const Text('Bắt đầu ngay'),
                     ),
+                    const SizedBox(height: 32),
+                    FadeInDown(
+                      delay: const Duration(milliseconds: 200),
+                      child: Text(
+                        'Xác thực Startup\ncủa bạn',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.displayLarge,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FadeInDown(
+                      delay: const Duration(milliseconds: 400),
+                      child: Text(
+                        'Xác thực danh tính giúp tăng mức độ tin cậy và mở khóa toàn bộ tính năng hỗ trợ AI cho doanh nghiệp của bạn.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    FadeInDown(
+                      delay: const Duration(milliseconds: 600),
+                      child: Column(
+                        children: [
+                          _buildBenefitRow(context, Icons.check_circle_outline_rounded, 'Huy hiệu "Xác thực" trên hồ sơ công khai.'),
+                          _buildBenefitRow(context, Icons.check_circle_outline_rounded, 'Ưu tiên kết nối trực tiếp với Nhà đầu tư.'),
+                          _buildBenefitRow(context, Icons.check_circle_outline_rounded, 'Chạy bộ đánh giá AI (AI Analysis) chuyên sâu.'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            FadeInUp(
+              delay: const Duration(milliseconds: 800),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const KycTypeSelectionView()),
+                      );
+                    },
+                    child: const Text('Bắt đầu ngay'),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildBenefitRow(IconData icon, String text) {
+  Widget _buildBenefitRow(BuildContext context, IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
