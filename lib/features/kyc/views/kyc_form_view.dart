@@ -44,7 +44,10 @@ class _KycFormViewState extends State<KycFormView> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: theme.iconTheme.color),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: const Text('Xác thực hồ sơ'),
           centerTitle: true,
         ),
