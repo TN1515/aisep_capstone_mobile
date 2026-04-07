@@ -15,15 +15,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Cập nhật cấu hình compilerOptions mới để tránh lỗi deprecation của jvmTarget
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.aisep_capstone_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // flutter_secure_storage requires minSdk 18. Setting to 21 for better compatibility.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

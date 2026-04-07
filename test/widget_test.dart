@@ -13,7 +13,7 @@ import 'package:aisep_capstone_mobile/main.dart';
 void main() {
   testWidgets('Dashboard smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const MyApp(isLoggedIn: false));
 
     // Verify that our dashboard title is present.
     expect(find.text('Việc cần làm'), findsOneWidget);

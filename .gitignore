@@ -61,4 +61,50 @@ android/key.properties
 *.keystore
 *.jks
 ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
+# Environments config (Sensitive data)
+configs/
+*.env
+.env*
+!*.env.example
+
+# Google & Firebase Services (Sensitive)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+ios/firebase_app_id_file.json
+.firebaserc
+firebase.json
+
+# Certificates & Keys (High Sensitivity)
+*.keystore
+*.jks
+*.p12
+*.cer
+*.crt
+*.der
+*.p7b
+*.p7c
+*.pem
+*.key
+android/key.properties
+android/local.properties
+
+# Fastlane (Automated deployment)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Python artifacts (Internal tools)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# macOS / XCode leftovers
+**/*.mode1v3
+**/*.mode2v3
+**/*.perspectivev3
+DerivedData/
