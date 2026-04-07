@@ -40,6 +40,7 @@ class StartupDropdownField extends StatelessWidget {
           value: value?.isEmpty == true ? null : value,
           onChanged: onChanged,
           validator: validator,
+          isExpanded: true,
           dropdownColor: Theme.of(context).cardColor,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: StartupOnboardingTheme.goldAccent),
           style: GoogleFonts.workSans(

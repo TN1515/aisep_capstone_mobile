@@ -20,7 +20,8 @@ import 'package:aisep_capstone_mobile/features/notifications/views/notifications
 import 'package:aisep_capstone_mobile/features/messages/views/chat_list_view.dart';              // NEW
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart'; // NEW
+import 'package:provider/provider.dart';
+import '../../profile/view_models/startup_profile_view_model.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({Key? key}) : super(key: key);
@@ -140,7 +141,7 @@ class _DashboardViewState extends State<DashboardView> {
                         child: DashboardHeader(
                           greeting: _viewModel.greeting,
                           userName: _viewModel.userName,
-                          startupName: _viewModel.startupName,
+                          startupName: context.watch<StartupProfileViewModel>().profile.startupName,
                           unreadCount: notiViewModel.unreadCount, // Dynamic unread count
                           onNotificationTap: () {
                             Navigator.push(

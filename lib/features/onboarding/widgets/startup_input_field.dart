@@ -10,6 +10,7 @@ class StartupInputField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool autofocus;
   final String? Function(String?)? validator;
+  final int maxLines;
 
   const StartupInputField({
     super.key,
@@ -20,6 +21,7 @@ class StartupInputField extends StatelessWidget {
     this.suffixIcon,
     this.autofocus = false,
     this.validator,
+    this.maxLines = 1,
   });
 
   @override
@@ -43,6 +45,7 @@ class StartupInputField extends StatelessWidget {
           keyboardType: keyboardType,
           autofocus: autofocus,
           validator: validator,
+          maxLines: maxLines,
           style: GoogleFonts.workSans(
             fontSize: 16,
             color: Theme.of(context).textTheme.bodyLarge?.color,

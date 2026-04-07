@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
+import 'package:aisep_capstone_mobile/features/auth/view_models/auth_view_model.dart';
+import 'package:aisep_capstone_mobile/features/onboarding/views/startup_onboarding_screen.dart';
 import 'package:aisep_capstone_mobile/features/settings/view_models/settings_view_model.dart';
 import '../widgets/settings_widgets.dart';
 import 'change_password_view.dart';
@@ -12,6 +14,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<SettingsViewModel>();
+    final authViewModel = context.read<AuthViewModel>();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -124,7 +127,7 @@ class SettingsView extends StatelessWidget {
                             title: 'Đăng xuất',
                             isDestructive: true,
                             isLast: true,
-                            onTap: () => _confirmLogout(context, viewModel),
+                            onTap: () => _confirmLogout(context, viewModel, authViewModel),
                           ),
                         ],
                       ),
@@ -146,7 +149,7 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  void _confirmLogout(BuildContext context, SettingsViewModel viewModel) {
+  void _confirmLogout(BuildContext context, SettingsViewModel viewModel, AuthViewModel authViewModel) {
     showModalBottomSheet(
       context: context,
       backgroundColor: StartupOnboardingTheme.navySurface,
@@ -208,9 +211,11 @@ class SettingsView extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      viewModel.logout();
-                      Navigator.pop(context); // Close bottom sheet
-                      Navigator.pop(context); // Logout
+                      authViewModel.logout();
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const StartupOnboardingScreen()),
+                        (route) => false,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,

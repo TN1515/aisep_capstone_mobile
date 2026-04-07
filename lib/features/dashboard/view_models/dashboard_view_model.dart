@@ -21,8 +21,7 @@ class DashboardViewModel extends BaseViewModel {
   Future<void> fetchDashboardData() async {
     setLoading(true);
     try {
-      // Mock API call
-      await Future.delayed(const Duration(seconds: 1));
+      // Mock API call - (Removing artificial delay for speed)
       
       _stats = DashboardStats(
         profileCompletion: 0.65,
