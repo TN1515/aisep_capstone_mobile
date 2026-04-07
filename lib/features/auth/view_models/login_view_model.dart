@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:aisep_capstone_mobile/core/view_models/base_view_model.dart';
+import 'package:aisep_capstone_mobile/core/services/token_service.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
+import 'package:aisep_capstone_mobile/features/auth/services/auth_service.dart';
+import 'package:aisep_capstone_mobile/features/auth/models/auth_request_models.dart';
+import 'package:aisep_capstone_mobile/features/auth/view_models/auth_view_model.dart';
+import 'package:provider/provider.dart';
+
+import 'package:aisep_capstone_mobile/features/auth/view_models/auth_view_model.dart';
+import 'package:aisep_capstone_mobile/features/onboarding/views/startup_onboarding_screen.dart';
+import 'package:aisep_capstone_mobile/features/startup_profile/views/create_startup_profile_view.dart';
+import 'package:provider/provider.dart';
 
 class LoginViewModel extends BaseViewModel {
   final TextEditingController emailController = TextEditingController();
@@ -13,21 +23,34 @@ class LoginViewModel extends BaseViewModel {
     clearError();
 
     try {
-      // Mock API call
-      await Future.delayed(const Duration(seconds: 2));
+      final authViewModel = context.read<AuthViewModel>();
+      
+      // MAPPING API: Gọi đăng nhập qua AuthViewModel để nhận Destination
+      final destination = await authViewModel.login(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
 
-      // Success logic (e.g., Navigate to Dashboard)
-      // For now, staying on screen or showing success
       if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const DashboardView()),
-          (route) => false,
-        );
+        if (destination != LoginDestination.onboarding) {
+          // Thành công: Điều hướng dựa trên kết quả API
+          Widget screen = destination == LoginDestination.dashboard 
+              ? const DashboardView() 
+              : const CreateStartupProfileView();
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => screen),
+            (route) => false,
+          );
+        } else {
+          // Thất bại: Hiển thị lỗi từ AuthViewModel
+          setError(authViewModel.errorMessage ?? 'Đăng nhập thất bại');
+        }
       }
     } catch (e) {
-      setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email/mật khẩu.');
+      setError('Lỗi kết nối hệ thống. Vui lòng thử lại sau.');
     } finally {
-      setLoading(false);
+      if (context.mounted) setLoading(false);
     }
   }
 

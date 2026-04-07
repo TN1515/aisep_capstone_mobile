@@ -167,7 +167,7 @@ class _StartupOtpVerificationViewState extends State<StartupOtpVerificationView>
                                 _viewModel.focusNodes[index - 1].requestFocus();
                               }
                               if (_viewModel.controllers.every((c) => c.text.isNotEmpty)) {
-                                _viewModel.verify(context, widget.isPasswordReset);
+                                _viewModel.verify(context, widget.email, widget.isPasswordReset);
                               }
                             },
                           ),
@@ -184,7 +184,7 @@ class _StartupOtpVerificationViewState extends State<StartupOtpVerificationView>
                       child: ElevatedButton(
                         onPressed: _viewModel.isLoading
                             ? null
-                            : () => _viewModel.verify(context, widget.isPasswordReset),
+                            : () => _viewModel.verify(context, widget.email, widget.isPasswordReset),
                         child: _viewModel.isLoading
                             ? SizedBox(
                                 height: 20,
@@ -210,7 +210,7 @@ class _StartupOtpVerificationViewState extends State<StartupOtpVerificationView>
                             ),
                           ),
                           TextButton(
-                            onPressed: _viewModel.timerSeconds == 0 ? _viewModel.startResendTimer : null,
+                            onPressed: _viewModel.timerSeconds == 0 ? () => _viewModel.resendOtp(widget.email) : null,
                             child: Text(
                               _viewModel.timerSeconds > 0
                                   ? 'Gửi lại mã sau ${_viewModel.timerSeconds} giây'

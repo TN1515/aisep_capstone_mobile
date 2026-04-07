@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:aisep_capstone_mobile/core/view_models/base_view_model.dart';
 import 'package:aisep_capstone_mobile/features/auth/views/startup_otp_verification_view.dart';
+import 'package:aisep_capstone_mobile/features/auth/services/auth_service.dart';
 
 class ForgotPasswordViewModel extends BaseViewModel {
+  final AuthService _authService = AuthService();
   final TextEditingController emailController = TextEditingController();
 
   Future<void> sendResetOtp(BuildContext context, GlobalKey<FormState> formKey) async {
@@ -12,22 +14,26 @@ class ForgotPasswordViewModel extends BaseViewModel {
     clearError();
 
     try {
-      // Mock API call
-      await Future.delayed(const Duration(seconds: 2));
+      final String email = emailController.text.trim();
+      final response = await _authService.forgotPassword(email);
 
-      // Success -> Navigate to OTP for reset
-      if (context.mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => StartupOtpVerificationView(
-              email: emailController.text,
-              isPasswordReset: true,
+      if (response.success) {
+        // Success -> Chuyển sang màn hình xác thực OTP để Reset
+        if (context.mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => StartupOtpVerificationView(
+                email: email,
+                isPasswordReset: true,
+              ),
             ),
-          ),
-        );
+          );
+        }
+      } else {
+        setError(response.error ?? 'Không thể gửi mã OTP. Vui lòng kiểm tra lại email.');
       }
     } catch (e) {
-      setError('Không thể gửi mã OTP. Vui lòng kiểm tra lại email.');
+      setError('Lỗi kết nối. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
     }

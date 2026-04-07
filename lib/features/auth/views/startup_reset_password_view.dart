@@ -5,7 +5,14 @@ import 'package:aisep_capstone_mobile/features/auth/widgets/startup_auth_text_fi
 import 'package:aisep_capstone_mobile/features/auth/view_models/reset_password_view_model.dart';
 
 class StartupResetPasswordView extends StatefulWidget {
-  const StartupResetPasswordView({super.key});
+  final String email;
+  final String otp;
+
+  const StartupResetPasswordView({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
 
   @override
   State<StartupResetPasswordView> createState() => _StartupResetPasswordViewState();
@@ -18,7 +25,10 @@ class _StartupResetPasswordViewState extends State<StartupResetPasswordView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = ResetPasswordViewModel();
+    _viewModel = ResetPasswordViewModel(
+      email: widget.email,
+      otp: widget.otp,
+    );
   }
 
   @override
