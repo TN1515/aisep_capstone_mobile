@@ -57,6 +57,7 @@ class StartupKYCStatusDto {
   final String? legalFullName;
   final String? enterpriseCode;
   final String? projectName;
+  final String? taxOrDescription;
   final String? representativeFullName;
   final String? representativeRole;
   final String? workEmail;
@@ -70,6 +71,7 @@ class StartupKYCStatusDto {
     this.legalFullName,
     this.enterpriseCode,
     this.projectName,
+    this.taxOrDescription,
     this.representativeFullName,
     this.representativeRole,
     this.workEmail,
@@ -111,6 +113,7 @@ class StartupKYCStatusDto {
       legalFullName: getValue('legalFullName'),
       enterpriseCode: getValue('enterpriseCode'),
       projectName: getValue('projectName'),
+      taxOrDescription: getValue('taxOrDescription'),
       representativeFullName: getValue('representativeFullName'),
       representativeRole: getValue('representativeRole'),
       workEmail: getValue('workEmail'),
