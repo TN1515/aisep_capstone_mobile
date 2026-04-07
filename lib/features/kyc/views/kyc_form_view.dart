@@ -7,7 +7,8 @@ import 'package:aisep_capstone_mobile/features/onboarding/widgets/chip_selector.
 import 'package:aisep_capstone_mobile/features/kyc/widgets/kyc_file_upload_card.dart';
 import 'package:aisep_capstone_mobile/features/onboarding/widgets/startup_dropdown_field.dart';
 import 'package:aisep_capstone_mobile/features/kyc/view_models/kyc_view_model.dart';
-import 'package:aisep_capstone_mobile/features/kyc/views/kyc_review_view.dart';
+import 'package:aisep_capstone_mobile/features/kyc/models/kyc_status_model.dart';
+import 'package:provider/provider.dart';
 
 class KycFormView extends StatefulWidget {
   final bool isIncorporated;
@@ -26,12 +27,52 @@ class _KycFormViewState extends State<KycFormView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = KycViewModel(isIncorporated: widget.isIncorporated);
+    _viewModel = context.read<KycViewModel>();
+    
+    // Khởi tạo trạng thái ban đầu từ Dashboard
+    _viewModel.isIncorporated = widget.isIncorporated;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _viewModel.loadStatus();
+    });
+
+    // Đăng ký listeners cho TẤT CẢ bộ controllers để Auto-save hoạt động mọi lúc
+    _attachListeners();
+  }
+
+  void _attachListeners() {
+    // Bộ Có pháp nhân
+    _viewModel.nameControllerInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.taxControllerInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.repNameControllerInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.workEmailControllerInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.linkControllerInc.addListener(_viewModel.triggerAutoSave);
+
+    // Bộ Chưa có pháp nhân
+    _viewModel.nameControllerNoInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.descriptionControllerNoInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.repNameControllerNoInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.workEmailControllerNoInc.addListener(_viewModel.triggerAutoSave);
+    _viewModel.linkControllerNoInc.addListener(_viewModel.triggerAutoSave);
+  }
+
+  void _removeListeners() {
+    _viewModel.nameControllerInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.taxControllerInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.repNameControllerInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.workEmailControllerInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.linkControllerInc.removeListener(_viewModel.triggerAutoSave);
+
+    _viewModel.nameControllerNoInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.descriptionControllerNoInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.repNameControllerNoInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.workEmailControllerNoInc.removeListener(_viewModel.triggerAutoSave);
+    _viewModel.linkControllerNoInc.removeListener(_viewModel.triggerAutoSave);
   }
 
   @override
   void dispose() {
-    _viewModel.dispose();
+    _removeListeners();
     super.dispose();
   }
 
@@ -46,16 +87,30 @@ class _KycFormViewState extends State<KycFormView> {
           elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: theme.iconTheme.color),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (_showForm) {
+                setState(() => _showForm = false);
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
           ),
-          title: const Text('Xác thực hồ sơ'),
+          title: Text(_showForm ? 'Thông tin KYC' : 'Xác thực hồ sơ'),
           centerTitle: true,
+          actions: [
+            if (_showForm)
+              _buildAutoSaveIndicator(),
+          ],
         ),
         body: ListenableBuilder(
           listenable: _viewModel,
           builder: (context, child) {
+            if (_viewModel.isLoading && _viewModel.status == KycStatus.none) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
             if (!_showForm) {
-              return _buildStatusDashboard();
+               return _buildStatusDashboard();
             }
 
             return Column(
@@ -72,7 +127,6 @@ class _KycFormViewState extends State<KycFormView> {
                         _buildTypeSelector(),
                         const SizedBox(height: 32),
                         
-                        // Form Sections with Animations
                         _buildSectionHeader('1. Thông tin định danh'),
                         const SizedBox(height: 16),
                         _buildBasicInfoSection(),
@@ -99,6 +153,36 @@ class _KycFormViewState extends State<KycFormView> {
             );
           },
         ),
+    );
+  }
+
+  Widget _buildAutoSaveIndicator() {
+    return Container(
+      margin: const EdgeInsets.only(right: 16),
+      child: Center(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _viewModel.isSavingDraft
+            ? Row(
+                children: [
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: StartupOnboardingTheme.goldAccent),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Đang lưu...',
+                    style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.goldAccent),
+                  ),
+                ],
+              )
+            : Text(
+                'Đã lưu nháp',
+                style: GoogleFonts.workSans(fontSize: 12, color: Colors.greenAccent.withOpacity(0.5)),
+              ),
+        ),
+      ),
     );
   }
 
@@ -272,14 +356,13 @@ class _KycFormViewState extends State<KycFormView> {
           ),
         ),
         const SizedBox(height: 16),
-        if (status != KycStatus.none)
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Quay lại Dashboard',
-              style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5)),
-            ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Quay lại Dashboard',
+            style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5)),
           ),
+        ),
       ],
     );
   }
@@ -371,14 +454,15 @@ class _KycFormViewState extends State<KycFormView> {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
+          color: isSelected ? Colors.white : StartupOnboardingTheme.goldAccent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).primaryColor.withOpacity(0.2),
+            color: StartupOnboardingTheme.goldAccent,
+            width: 1.5,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: Theme.of(context).primaryColor.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -390,7 +474,7 @@ class _KycFormViewState extends State<KycFormView> {
             style: GoogleFonts.workSans(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Theme.of(context).scaffoldBackgroundColor : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+              color: isSelected ? StartupOnboardingTheme.navyBg : Colors.white,
             ),
           ),
         ),
@@ -411,24 +495,21 @@ class _KycFormViewState extends State<KycFormView> {
   }
 
   Widget _buildBasicInfoSection() {
-    return FadeIn(
-      key: ValueKey(_viewModel.isIncorporated),
-      child: Column(
-        children: [
-          StartupInputField(
-            label: _viewModel.isIncorporated ? 'Tên pháp lý đầy đủ' : 'Tên dự án / Startup',
-            hint: _viewModel.isIncorporated ? 'VD: Công ty TNHH AISEP Tech' : 'VD: BioCore AI Project',
-            controller: _viewModel.nameController,
-          ),
-          const SizedBox(height: 20),
-          StartupInputField(
-            label: _viewModel.isIncorporated ? 'Mã số doanh nghiệp' : 'Mô tả ngắn gọn',
-            hint: _viewModel.isIncorporated ? 'VD: 0313XXXXXX' : 'VD: Giải pháp giải mã gen ứng dụng AI',
-            controller: _viewModel.taxOrDescriptionController,
-            keyboardType: _viewModel.isIncorporated ? TextInputType.number : TextInputType.text,
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        StartupInputField(
+          label: _viewModel.isIncorporated ? 'Tên pháp lý đầy đủ' : 'Tên dự án / Startup',
+          hint: _viewModel.isIncorporated ? 'VD: Công ty TNHH AISEP Tech' : 'VD: BioCore AI Project',
+          controller: _viewModel.nameController,
+        ),
+        const SizedBox(height: 20),
+        StartupInputField(
+          label: _viewModel.isIncorporated ? 'Mã số doanh nghiệp' : 'Mô tả ngắn gọn',
+          hint: _viewModel.isIncorporated ? 'VD: 0313XXXXXX' : 'VD: Giải pháp giải mã gen ứng dụng AI',
+          controller: _viewModel.taxOrDescriptionController,
+          keyboardType: _viewModel.isIncorporated ? TextInputType.number : TextInputType.text,
+        ),
+      ],
     );
   }
 
@@ -466,10 +547,22 @@ class _KycFormViewState extends State<KycFormView> {
         KycFileUploadCard(
           title: _viewModel.isIncorporated ? 'Giấy đăng ký kinh doanh' : 'Tài liệu dự án (Pitch Deck/Minh chứng)',
           hint: 'Vui lòng tải lên file PDF hoặc hình ảnh (max 10MB)',
-          fileName: _viewModel.uploadedFileName,
+          fileName: _viewModel.getFileNameByKind(
+            _viewModel.isIncorporated 
+              ? EvidenceFileKind.BUSINESS_REGISTRATION 
+              : EvidenceFileKind.OTHER
+          ),
           isUploading: _viewModel.isFileUploading,
-          onUpload: _viewModel.handleUpload,
-          onRemove: _viewModel.removeFile,
+          onUpload: () => _viewModel.pickFiles(
+            _viewModel.isIncorporated 
+              ? EvidenceFileKind.BUSINESS_REGISTRATION 
+              : EvidenceFileKind.OTHER
+          ),
+          onRemove: () => _viewModel.removeFileByKind(
+            _viewModel.isIncorporated 
+              ? EvidenceFileKind.BUSINESS_REGISTRATION 
+              : EvidenceFileKind.OTHER
+          ),
         ),
         const SizedBox(height: 20),
         StartupInputField(
@@ -538,23 +631,28 @@ class _KycFormViewState extends State<KycFormView> {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: canSubmit ? () => _viewModel.submitKyc(context) : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDone ? Colors.grey.withOpacity(0.1) : Theme.of(context).primaryColor,
-              disabledBackgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              disabledForegroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: canSubmit ? () => _viewModel.submitKyc(context) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDone ? Colors.grey.withOpacity(0.1) : Theme.of(context).primaryColor,
+                  disabledBackgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  disabledForegroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+                ),
+                child: _viewModel.isLoading 
+                  ? SizedBox(
+                      height: 20, 
+                      width: 20, 
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).scaffoldBackgroundColor)
+                    )
+                  : Text(isDone ? 'Đang trong quá trình xét duyệt' : 'Gửi hồ sơ xác thực'),
+              ),
             ),
-            child: _viewModel.isLoading 
-              ? SizedBox(
-                  height: 20, 
-                  width: 20, 
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).scaffoldBackgroundColor)
-                )
-              : Text(isDone ? 'Đang trong quá trình xét duyệt' : 'Gửi hồ sơ xác thực'),
-          ),
+          ],
         ),
       ),
     );

@@ -49,7 +49,7 @@ class MockKycViewModel extends KycViewModel {
     nameController.text = "Công ty TNHH AISEP Global";
     taxOrDescriptionController.text = "0313456789";
     repNameController.text = "Nguyễn Văn AI";
-    selectedRole = "Founder";
+    selectRole("Founder/CEO");
   }
 
   // Bạn có thể override các phương thức API để không gọi lên server
