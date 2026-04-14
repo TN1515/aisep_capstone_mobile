@@ -93,7 +93,7 @@ class ConsultingHistoryView extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundImage: NetworkImage(session.advisor?.avatarUrl ?? ''),
+                  backgroundImage: NetworkImage(session.advisor?.profilePhotoURL ?? ''),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

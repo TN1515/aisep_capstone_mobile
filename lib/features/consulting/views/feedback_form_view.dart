@@ -75,11 +75,11 @@ class _FeedbackFormViewState extends State<FeedbackFormView> {
       children: [
         CircleAvatar(
           radius: 40,
-          backgroundImage: NetworkImage(widget.session.advisor?.avatarUrl ?? ''),
+          backgroundImage: NetworkImage(widget.session.advisor?.profilePhotoURL ?? ''),
         ),
         const SizedBox(height: 16),
         Text(
-          widget.session.advisor?.name ?? 'Unknown',
+          widget.session.advisor?.fullName ?? 'Unknown',
           style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory),
         ),
         Text(

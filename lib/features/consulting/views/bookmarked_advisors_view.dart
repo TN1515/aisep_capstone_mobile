@@ -16,20 +16,19 @@ class BookmarkedAdvisorsView extends StatelessWidget {
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: StartupOnboardingTheme.navyBg,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.maybePop(context),
           ),
           title: Text(
             'Danh sách theo dõi',
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.softIvory,
             ),
           ),
         ),
@@ -45,15 +44,15 @@ class BookmarkedAdvisorsView extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: StartupOnboardingTheme.navySurface,
+                        color: Theme.of(context).primaryColor.withOpacity(0.05),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(LucideIcons.heartOff, size: 64, color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+                      child: Icon(LucideIcons.heartOff, size: 64, color: Theme.of(context).primaryColor.withOpacity(0.2)),
                     ),
                     const SizedBox(height: 24),
                     Text(
                       'Chưa có cố vấn nào trong danh sách.',
-                      style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+                      style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5)),
                     ),
                     const SizedBox(height: 12),
                     TextButton(

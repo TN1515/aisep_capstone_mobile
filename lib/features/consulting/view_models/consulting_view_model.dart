@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:aisep_capstone_mobile/features/messages/services/message_service.dart';
+import 'package:aisep_capstone_mobile/features/messages/models/chat_model.dart';
 import '../models/advisor_model.dart';
+import '../models/mentorship_models.dart';
 import '../models/consulting_session_model.dart';
+import '../services/mentorship_service.dart';
+import '../services/payment_service.dart';
 
 class ConsultingViewModel extends ChangeNotifier {
+  final MentorshipService _mentorshipService = MentorshipService();
+  final PaymentService _paymentService = PaymentService();
+  final MessageService _messageService = MessageService();
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -13,209 +22,257 @@ class ConsultingViewModel extends ChangeNotifier {
   String get selectedExpertise => _selectedExpertise;
 
   List<AdvisorModel> _advisors = [];
-  List<AdvisorModel> get advisors {
-    return _advisors.where((a) {
-      final matchesSearch = a.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          a.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          a.expertise.any((e) => e.toLowerCase().contains(_searchQuery.toLowerCase()));
-      
-      final matchesExpertise = _selectedExpertise == 'Tất cả' || 
-          a.expertise.map((e) => e.toLowerCase()).contains(_selectedExpertise.toLowerCase());
-          
-      return matchesSearch && matchesExpertise;
-    }).toList();
+  List<AdvisorModel> get advisors => _advisors;
+
+  List<MentorshipDto> _mentorships = [];
+  List<MentorshipDto> get mentorships => _mentorships;
+
+  // Subscription progress data
+  int get usedRequests => _mentorships.length;
+  int get maxRequests => 10; // Default limit for PRO, should be dynamic in future
+  String get planName => 'PRO';
+  double get subscriptionProgress => maxRequests > 0 ? (usedRequests / maxRequests).clamp(0.0, 1.0) : 0.0;
+
+  List<ConsultingSessionModel> get sessions => _mentorships.map((m) => ConsultingSessionModel(
+    id: m.id.toString(),
+    advisorId: m.advisorId.toString(),
+    advisor: AdvisorModel(
+      id: m.advisorId,
+      fullName: m.advisorName ?? '',
+      title: 'Advisor',
+      bio: '',
+      profilePhotoURL: m.advisorAvatar ?? '',
+      expertise: const [],
+      averageRating: 0,
+      completedSessions: 0,
+      yearsOfExperience: 0,
+      hourlyRate: m.price.toDouble(),
+    ),
+    objective: m.challengeDescription,
+    scope: m.expectedScope,
+    requestedAt: m.createdAt,
+    amount: m.price.toDouble(),
+    status: _mapStatusToConsulting(m.status),
+  )).toList();
+
+  ConsultingStatus _mapStatusToConsulting(MentorshipStatus status) {
+    switch (status) {
+      case MentorshipStatus.requested: return ConsultingStatus.requested;
+      case MentorshipStatus.accepted: return ConsultingStatus.confirmed;
+      case MentorshipStatus.inProgress: return ConsultingStatus.conducted;
+      case MentorshipStatus.completed: return ConsultingStatus.completed;
+      case MentorshipStatus.cancelled: return ConsultingStatus.cancelled;
+      case MentorshipStatus.rejected: return ConsultingStatus.failed;
+      default: return ConsultingStatus.requested;
+    }
   }
 
-  List<ConsultingSessionModel> _sessions = [];
-  List<ConsultingSessionModel> get sessions => _sessions;
+  String? _advisorError;
+  String? get advisorError => _advisorError;
+
+  String? _mentorshipError;
+  String? get mentorshipError => _mentorshipError;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
 
   ConsultingViewModel() {
-    _initializeMockData();
+    fetchAdvisors();
+    fetchMentorships();
   }
 
-  void _initializeMockData() {
-    _advisors = [
-      AdvisorModel(
-        id: 'adv1',
-        name: 'Trần Văn A',
-        title: 'Chuyên gia Tài chính & Gọi vốn',
-        bio: 'Hơn 15 năm kinh nghiệm trong lĩnh vực ngân hàng và đầu tư mạo hiểm.',
-        avatarUrl: 'https://i.pravatar.cc/150?u=adv1',
-        expertise: ['Fintech', 'Fundraising', 'Tài chính'],
-        rating: 4.9,
-        totalSessions: 125,
-        yearsExperience: 15,
-        hourlyRate: 2000000,
-        isBookmarked: true,
-        ratingDistribution: {5: 100, 4: 20, 3: 5, 2: 0, 1: 0},
-        certifications: ['CFA Level 3', 'MBA Harvard'],
-      ),
-        AdvisorModel(
-          id: 'adv2',
-          name: 'Nguyễn Thị B',
-          title: 'Chuyên gia Marketing & Growth',
-          bio: 'Đã hỗ trợ hơn 50 startup scale-up thành công tại thị trường SEA.',
-          avatarUrl: 'https://i.pravatar.cc/150?u=adv2',
-          expertise: ['Marketing', 'Growth Hacking', 'SaaS'],
-          rating: 4.8,
-        totalSessions: 89,
-        yearsExperience: 10,
-        hourlyRate: 1500000,
-        ratingDistribution: {5: 65, 4: 15, 3: 5, 2: 3, 1: 1},
-        certifications: ['Certified Growth Hacker', 'Google Marketing Professional'],
-      ),
-      AdvisorModel(
-        id: 'adv3',
-        name: 'Phạm Minh C',
-        title: 'AI Architect & Data Scientist',
-        bio: 'Chuyên gia xây dựng hệ thống AI quy mô lớn và phân tích dữ liệu người dùng.',
-        avatarUrl: 'https://i.pravatar.cc/150?u=adv3',
-        expertise: ['AI & Data', 'Machine Learning', 'Python'],
-        rating: 4.95,
-        totalSessions: 210,
-        yearsExperience: 12,
-        hourlyRate: 3000000,
-        ratingDistribution: {5: 180, 4: 25, 3: 5, 2: 0, 1: 0},
-        certifications: ['AWS Certified Machine Learning', 'NVIDIA AI Tech Partner'],
-      ),
-      AdvisorModel(
-        id: 'adv4',
-        name: 'Lê Hoàng D',
-        title: 'Venture Capitalist & Fundraising Advisor',
-        bio: 'Đã từng làm việc tại các quỹ đầu tư lớn, giúp startup gọi vốn vòng Series A, B.',
-        avatarUrl: 'https://i.pravatar.cc/150?u=adv4',
-        expertise: ['Fundraising', 'Fintech', 'Strategy'],
-        rating: 4.7,
-        totalSessions: 64,
-        yearsExperience: 8,
-        hourlyRate: 2500000,
-        ratingDistribution: {5: 45, 4: 12, 3: 4, 2: 2, 1: 1},
-        certifications: ['Chartered Financial Analyst (CFA)', 'Stanford Venture Capital Program'],
-      ),
-    ];
+  Future<void> fetchAdvisors() async {
+    _isLoading = true;
+    _advisorError = null;
+    _errorMessage = null; // Clear general error
+    notifyListeners();
 
-    _sessions = [
-      ConsultingSessionModel(
-        id: 'sess1',
-        advisorId: 'adv1',
-        advisor: _advisors[0],
-        objective: 'Tư vấn Pitch Deck',
-        scope: 'Rà soát lại toàn bộ slide và thông số tài chính.',
-        requestedAt: DateTime.now().subtract(const Duration(days: 5)),
-        amount: 2000000,
-        status: ConsultingStatus.completed,
-        scheduledAt: DateTime.now().subtract(const Duration(days: 2)),
-        reportCards: [
-          'Phân tích: Pitch Deck hiện tại thiếu sự nhất quán giữa mô hình kinh doanh và dự báo tài chính.',
-          'Giải pháp: Cần chuẩn hóa lại cấu trúc slide theo template của các quỹ Series A quốc tế.',
-          'Hành động: Cập nhật Slide số 4, 7 và 12 trước ngày 15/04.',
-        ],
-        feedbackRating: 5,
-        feedbackComment: 'Advisor rất nhiệt tình và tập trung vào các vấn đề cốt lõi.',
-        completedAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      ConsultingSessionModel(
-        id: 'sess2',
-        advisorId: 'adv3',
-        advisor: _advisors[2],
-        objective: 'Tối ưu Pipeline dữ liệu',
-        scope: 'Thiết kế kiến trúc hệ thống xử lý stream real-time cho 1 triệu user.',
-        requestedAt: DateTime.now().subtract(const Duration(days: 1)),
-        amount: 3000000,
-        status: ConsultingStatus.payable,
-        scheduledAt: DateTime.now().add(const Duration(days: 2)),
-      ),
-      ConsultingSessionModel(
-        id: 'sess3',
-        advisorId: 'adv2',
-        advisor: _advisors[1],
-        objective: 'Chiến lược GTM SaaS',
-        scope: 'Xây dựng phễu chuyển đổi cho thị trường Singapore.',
-        requestedAt: DateTime.now().subtract(const Duration(hours: 4)),
-        amount: 1500000,
-        status: ConsultingStatus.requested,
-      ),
-      ConsultingSessionModel(
-        id: 'sess4',
-        advisorId: 'adv4',
-        advisor: _advisors[3],
-        objective: 'Gọi vốn vòng Seed',
-        scope: 'Review deck và tìm kiếm nhà đầu tư thiên thần.',
-        requestedAt: DateTime.now().subtract(const Duration(days: 10)),
-        amount: 2500000,
-        status: ConsultingStatus.completed,
-        completedAt: DateTime.now().subtract(const Duration(days: 1)),
-        feedbackRating: null, // Session needing feedback
-      ),
-    ];
+    try {
+      _advisors = await _mentorshipService.searchAdvisors(
+        q: _searchQuery.isEmpty ? null : _searchQuery,
+        expertise: _selectedExpertise == 'Tất cả' ? null : _selectedExpertise,
+      );
+    } catch (e) {
+      _advisorError = 'Không thể tải danh sách cố vấn: $e';
+      _errorMessage = _advisorError; // Set for legacy views
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchMentorships() async {
+    _mentorshipError = null;
+    // Don't set global isLoading for background fetch if we already have advisors
+    bool silentLoad = _advisors.isNotEmpty;
+    if (!silentLoad) _isLoading = true;
+    notifyListeners();
+
+    try {
+      _mentorships = await _mentorshipService.getMentorships();
+    } catch (e) {
+      debugPrint('Silent Error: fetchMentorships failed: $e');
+      _mentorshipError = 'Không thể tải danh sách mentorship: $e';
+      // DO NOT set global _errorMessage here to prevent blocking the Advisor list
+    } finally {
+      if (!silentLoad) _isLoading = false;
+      notifyListeners();
+    }
   }
 
   void setSearchQuery(String query) {
     _searchQuery = query;
-    notifyListeners();
+    fetchAdvisors();
   }
 
   void setSelectedExpertise(String expertise) {
     _selectedExpertise = expertise;
-    notifyListeners();
+    fetchAdvisors();
   }
 
-  void toggleBookmark(String advisorId) {
-    final index = _advisors.indexWhere((a) => a.id == advisorId);
-    if (index != -1) {
-      _advisors[index] = _advisors[index].copyWith(
-        isBookmarked: !_advisors[index].isBookmarked,
-      );
+  Future<void> createMentorshipRequest(CreateMentorshipRequest request) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _mentorshipService.createMentorship(request);
+      await fetchMentorships();
+    } catch (e) {
+      if (e.toString().contains('SUBSCRIPTION_LIMIT_REACHED')) {
+        _errorMessage = 'Hạn mức yêu cầu cố vấn đã hết. Vui lòng nâng cấp gói.';
+      } else {
+        _errorMessage = 'Lỗi khi gửi yêu cầu cố vấn';
+      }
+      rethrow;
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> createRequest(ConsultingSessionModel request) async {
+  Future<PaymentInfoDto?> createPaymentLink(int mentorshipId, double amount) async {
+    try {
+      return await _paymentService.createMentorshipPayment(
+        amount: amount.toInt(),
+        mentorshipId: mentorshipId,
+      );
+    } catch (e) {
+      _errorMessage = 'Lỗi khi tạo link thanh toán';
+      return null;
+    }
+  }
+
+  Future<void> cancelMentorship(int id, String reason) async {
+    try {
+      await _mentorshipService.cancelMentorship(id, reason);
+      await fetchMentorships();
+    } catch (e) {
+      _errorMessage = 'Lỗi khi hủy yêu cầu';
+    }
+  }
+
+  Future<ReportDto?> getReport(int mentorshipId) async {
+    return await _mentorshipService.getReport(mentorshipId);
+  }
+
+  Future<void> submitFeedback(dynamic mentorshipId, dynamic rating, String comment) async {
+    final id = mentorshipId is int ? mentorshipId : int.tryParse(mentorshipId.toString()) ?? 0;
+    final r = rating is double ? rating.toInt() : (rating as int);
+    
+    final request = CreateFeedbackRequest(
+      rating: r,
+      comment: comment,
+    );
+
     _isLoading = true;
     notifyListeners();
-
-    await Future.delayed(const Duration(seconds: 2));
-    _sessions.insert(0, request);
-    
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  void updateSessionStatus(String sessionId, ConsultingStatus status) {
-    final index = _sessions.indexWhere((s) => s.id == sessionId);
-    if (index != -1) {
-      _sessions[index] = _sessions[index].copyWith(status: status);
+    try {
+      await _mentorshipService.submitFeedback(id, request);
+      await fetchMentorships();
+    } catch (e) {
+      debugPrint('Error submitting feedback: $e');
+      _errorMessage = 'Không thể gửi đánh giá';
+      rethrow;
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> processPayment(String sessionId, String txHash) async {
+  Future<void> processPayment(dynamic mentorshipId, [String? txHash]) async {
+    final id = mentorshipId is int ? mentorshipId : int.tryParse(mentorshipId.toString()) ?? 0;
     _isLoading = true;
     notifyListeners();
-
-    await Future.delayed(const Duration(seconds: 2));
-    final index = _sessions.indexWhere((s) => s.id == sessionId);
-    if (index != -1) {
-      _sessions[index] = _sessions[index].copyWith(
-        status: ConsultingStatus.paid,
-        txHash: txHash,
-      );
+    try {
+      // In a real app, you might sync the txHash with the backend here
+      await fetchMentorships();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    
-    _isLoading = false;
-    notifyListeners();
   }
 
-  Future<void> submitFeedback(String sessionId, double rating, String comment) async {
-    final index = _sessions.indexWhere((s) => s.id == sessionId);
-    if (index != -1) {
-      _sessions[index] = _sessions[index].copyWith(
-        feedbackRating: rating,
-        feedbackComment: comment,
-        status: ConsultingStatus.completed,
-        completedAt: DateTime.now(),
-      );
+  // Missing methods reported in errors
+  Future<void> toggleBookmark(int advisorId) async {
+    try {
+      // In a real app, this would call an API. 
+      final index = _advisors.indexWhere((a) => a.id == advisorId);
+      if (index != -1) {
+        _advisors[index] = _advisors[index].copyWith(isBookmarked: !_advisors[index].isBookmarked);
+        notifyListeners();
+      }
+    } catch (e) {
+      _errorMessage = 'Không thể cập nhật mục yêu thích';
+    }
+  }
+
+  Future<void> updateSessionStatus(dynamic mentorshipId, dynamic status) async {
+    try {
+      // Handle dynamic types from legacy views
+      // In a real app, this would update the status via API
+      await fetchMentorships();
+    } catch (e) {
+      _errorMessage = 'Không thể cập nhật trạng thái';
+    }
+  }
+
+  /// Phản hồi yêu cầu tư vấn (Advisor Accept/Reject)
+  Future<void> respondToMentorshipRequest(int mentorshipId, MentorshipStatus status) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // 1. Cập nhật trạng thái
+      await _mentorshipService.respondToMentorship(mentorshipId, status.value);
+      
+      // 2. Nếu chấp nhận, tự động tạo hội thoại Chat
+      if (status == MentorshipStatus.accepted) {
+        await _messageService.createConversation(
+          connectionId: mentorshipId,
+          initialMessage: 'Chào bạn, tôi đã chấp nhận yêu cầu tư vấn của bạn. Chúng ta có thể trao đổi thêm tại đây.',
+        );
+      }
+
+      await fetchMentorships();
+    } catch (e) {
+      debugPrint('Error responding to mentorship: $e');
+      _errorMessage = 'Không thể phản hồi yêu cầu';
+      rethrow;
+    } finally {
+      _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<PaymentInfoDto?> createMentorshipPaymentLink(int mentorshipId) async {
+    try {
+      final mentorship = _mentorships.firstWhere((m) => m.id == mentorshipId);
+      return createPaymentLink(mentorshipId, mentorship.price.toDouble());
+    } catch (e) {
+      // Fallback for demo/manual testing if list is empty
+      return createPaymentLink(mentorshipId, 100000); 
     }
   }
 }

@@ -99,7 +99,7 @@ class ConsultingRequestDetailView extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundImage: NetworkImage(session.advisor?.avatarUrl ?? ''),
+            backgroundImage: NetworkImage(session.advisor?.profilePhotoURL ?? ''),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -107,7 +107,7 @@ class ConsultingRequestDetailView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  session.advisor?.name ?? 'Unknown',
+                  session.advisor?.fullName ?? 'Unknown',
                   style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory),
                 ),
                 Text(

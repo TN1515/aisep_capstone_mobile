@@ -25,7 +25,7 @@ class ConfirmScheduleView extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(
           'Xác nhận lịch hẹn',
@@ -63,7 +63,7 @@ class ConfirmScheduleView extends StatelessWidget {
                     style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.softIvory),
                   ),
                   const SizedBox(height: 24),
-                  _buildReviewRow(LucideIcons.user, 'Cố vấn', session.advisor?.name ?? ''),
+                  _buildReviewRow(LucideIcons.user, 'Cố vấn', session.advisor?.fullName ?? ''),
                   const SizedBox(height: 16),
                   _buildReviewRow(LucideIcons.calendar, 'Ngày', session.scheduledAt != null ? dateFormat.format(session.scheduledAt!) : 'TBA'),
                   const SizedBox(height: 16),
@@ -115,7 +115,7 @@ class ConfirmScheduleView extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.maybePop(context),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.redAccent),
                 minimumSize: const Size(0, 56),
