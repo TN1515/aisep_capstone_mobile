@@ -14,8 +14,8 @@ class AuthResponse {
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
       accessToken: json['accessToken'] ?? '',
-      refreshToken: json['refreshToken'],
-      user: UserModel.fromJson(json['data'] ?? {}),
+      refreshToken: null, // Schema provided doesn't show refreshToken in Login/Verify
+      user: UserModel.fromSimpleData(json['data']?.toString() ?? 'Startup'),
     );
   }
 }

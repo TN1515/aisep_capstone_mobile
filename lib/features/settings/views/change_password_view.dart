@@ -149,6 +149,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                             final success = await viewModel.changePassword(
                               _currentController.text,
                               _newController.text,
+                              _confirmController.text,
                             );
                             if (success && mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(

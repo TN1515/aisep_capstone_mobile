@@ -60,7 +60,7 @@ class SettingsViewModel extends ChangeNotifier {
     // Real implementation would call a repository here
   }
 
-  Future<bool> changePassword(String current, String newPwd) async {
+  Future<bool> changePassword(String current, String newPwd, String confirmNewPwd) async {
     _isLoading = true;
     notifyListeners();
     

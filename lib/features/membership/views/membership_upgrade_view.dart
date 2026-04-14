@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../view_models/membership_upgrade_view_model.dart';
 import '../widgets/plan_card.dart';
 import '../widgets/feature_comparison_table.dart';
@@ -205,26 +206,63 @@ class MembershipUpgradeView extends StatelessWidget {
     );
   }
 
-  void _navigateToPayment(BuildContext context, MembershipUpgradeViewModel viewModel) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MembershipPaymentView(
-          plan: viewModel.selectedPlan,
-          onPaymentConfirmed: () async {
-            await viewModel.upgradeToSelected();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: Colors.green,
-                  content: Text('Nâng cấp lên gói ${viewModel.currentPlan.name} thành công!'),
+  void _navigateToPayment(BuildContext context, MembershipUpgradeViewModel viewModel) async {
+    final paymentInfo = await viewModel.initiateUpgrade();
+    
+    if (paymentInfo != null && context.mounted) {
+      final Uri url = Uri.parse(paymentInfo.checkoutUrl);
+      
+      try {
+        final bool launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+        
+        if (launched && context.mounted) {
+          // Show helpful instruction dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              backgroundColor: StartupOnboardingTheme.navySurface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                   const Icon(Icons.payment_rounded, color: StartupOnboardingTheme.goldAccent),
+                   const SizedBox(width: 12),
+                   Text('Thanh toán PayOS', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18)),
+                ],
+              ),
+              content: Text(
+                'Ứng dụng đang mở cổng thanh toán trên trình duyệt. Sau khi hoàn thành, vui lòng quay lại đây để tiếp tục.',
+                style: GoogleFonts.workSans(color: Colors.white.withOpacity(0.7), fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('ĐÃ HIỂU', style: GoogleFonts.outfit(color: StartupOnboardingTheme.goldAccent, fontWeight: FontWeight.bold)),
                 ),
-              );
-            }
-          },
+              ],
+            ),
+          );
+        } else if (context.mounted) {
+          throw 'Could not launch URL';
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.orange,
+              content: Text('Không thể mở trình duyệt tự động. Vui lòng kiểm tra cài đặt máy.'),
+            ),
+          );
+        }
+      }
+    } else if (viewModel.errorMessage != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(viewModel.errorMessage!),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildLoadingOverlay(BuildContext context) {

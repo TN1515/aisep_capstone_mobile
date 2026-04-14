@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:aisep_capstone_mobile/core/view_models/base_view_model.dart';
 import 'package:aisep_capstone_mobile/features/onboarding/models/onboarding_page_model.dart';
 import 'package:aisep_capstone_mobile/features/auth/views/startup_registration_view.dart';
 
 class OnboardingViewModel extends BaseViewModel {
   final PageController pageController = PageController();
+  final _storage = const FlutterSecureStorage();
   int currentPage = 0;
 
   final List<OnboardingPageModel> pages = const [
@@ -40,19 +42,24 @@ class OnboardingViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  void next(BuildContext context) {
+  void next(BuildContext context) async {
     if (currentPage < pages.length - 1) {
       pageController.nextPage(
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     } else {
-      // Final Navigation
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const StartupRegistrationView(),
-        ),
-      );
+      // Mark as seen
+      await _storage.write(key: 'has_seen_onboarding', value: 'true');
+      
+      if (context.mounted) {
+        // Final Navigation
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const StartupRegistrationView(),
+          ),
+        );
+      }
     }
   }
 

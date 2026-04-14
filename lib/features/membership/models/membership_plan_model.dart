@@ -62,7 +62,7 @@ class MembershipPlan {
       tier: MembershipTier.pro,
       name: 'Pro',
       tagline: 'Tăng tốc kết nối & dữ liệu',
-      price: '499.000',
+      price: '99.000',
       period: 'tháng',
       isPopular: true,
       accentColor: Color(0xFFEAB308), // Gold
@@ -86,7 +86,7 @@ class MembershipPlan {
       tier: MembershipTier.fundraising,
       name: 'Fundraising',
       tagline: 'Giải pháp gọi vốn toàn diện',
-      price: '1.490.000',
+      price: '199.000',
       period: 'tháng',
       accentColor: Color(0xFF6366F1), // Premium Indigo/Violet
       features: [

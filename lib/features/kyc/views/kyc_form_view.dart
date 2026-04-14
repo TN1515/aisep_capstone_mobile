@@ -206,11 +206,18 @@ class _KycFormViewState extends State<KycFormView> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildStepRow(1, 'Thông tin định danh', 'Cung cấp tên pháp lý và mã số doanh nghiệp.', status != KycStatus.none),
+          _buildStepRow(1, 'Thông tin định danh', 'Cung cấp tên pháp lý và mã số doanh nghiệp.', isCompleted: status != KycStatus.none),
           _buildStepDivider(status != KycStatus.none),
-          _buildStepRow(2, 'Tài liệu minh chứng', 'Tải lên Pitch deck hoặc Giấy phép kinh doanh.', status != KycStatus.none),
-          _buildStepDivider(status == KycStatus.verified || status == KycStatus.pending),
-          _buildStepRow(3, 'Thẩm định hồ sơ', 'Chuyên gia AISEP đánh giá và phê duyệt.', status == KycStatus.verified),
+          _buildStepRow(2, 'Tài liệu minh chứng', 'Tải lên Pitch deck hoặc Giấy phép kinh doanh.', isCompleted: status != KycStatus.none),
+          _buildStepDivider(status == KycStatus.verified || status == KycStatus.pending || status == KycStatus.rejected),
+          _buildStepRow(
+            3, 
+            'Thẩm định hồ sơ', 
+            'Chuyên gia AISEP đánh giá và phê duyệt.', 
+            isCompleted: status == KycStatus.verified,
+            isFailed: status == KycStatus.rejected,
+            isInProgress: status == KycStatus.pending,
+          ),
           const SizedBox(height: 48),
           _buildDashboardActions(status),
         ],
@@ -252,35 +259,43 @@ class _KycFormViewState extends State<KycFormView> {
 
     return FadeInDown(
       child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withOpacity(0.2)),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 40),
+              child: Icon(icon, color: color, size: 56),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               title,
-              style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: color),
+              style: GoogleFonts.outfit(
+                fontSize: 28, 
+                fontWeight: FontWeight.bold, 
+                color: color,
+                letterSpacing: -0.5,
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.workSans(
-                fontSize: 14,
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
-                height: 1.5,
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.workSans(
+                  fontSize: 15,
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.6),
+                  height: 1.5,
+                ),
               ),
             ),
           ],
@@ -289,21 +304,38 @@ class _KycFormViewState extends State<KycFormView> {
     );
   }
 
-  Widget _buildStepRow(int step, String title, String sub, bool isCompleted) {
+  Widget _buildStepRow(int step, String title, String sub, {required bool isCompleted, bool isFailed = false, bool isInProgress = false}) {
+    Color bgColor = isCompleted 
+        ? Theme.of(context).primaryColor 
+        : (isFailed ? Colors.redAccent : (isInProgress ? Theme.of(context).primaryColor.withOpacity(0.1) : Theme.of(context).cardColor));
+    
+    Color borderColor = (isCompleted || isFailed || isInProgress) 
+        ? (isFailed ? Colors.redAccent : Theme.of(context).primaryColor)
+        : Theme.of(context).primaryColor.withOpacity(0.3);
+
     return Row(
       children: [
         Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isCompleted ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
+            color: bgColor,
             shape: BoxShape.circle,
-            border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+            border: Border.all(color: borderColor, width: 1.5),
           ),
           child: Center(
             child: isCompleted 
               ? Icon(Icons.check, size: 16, color: Theme.of(context).scaffoldBackgroundColor)
-              : Text('$step', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              : (isFailed 
+                  ? Icon(Icons.close, size: 16, color: Colors.white)
+                  : Text(
+                      '$step', 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        fontSize: 12, 
+                        color: (isCompleted || isFailed) ? Colors.white : (isInProgress ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4))
+                      )
+                    )),
           ),
         ),
         const SizedBox(width: 16),
@@ -315,7 +347,7 @@ class _KycFormViewState extends State<KycFormView> {
                 title, 
                 style: GoogleFonts.workSans(
                   fontWeight: FontWeight.bold, 
-                  color: isCompleted ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
+                  color: (isCompleted || isFailed || isInProgress) ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
                   fontSize: 15,
                 ),
               ),
@@ -323,7 +355,7 @@ class _KycFormViewState extends State<KycFormView> {
                 sub, 
                 style: GoogleFonts.workSans(
                   fontSize: 12, 
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  color: (isCompleted || isFailed || isInProgress) ? Theme.of(context).textTheme.bodyMedium?.color : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.4),
                 ),
               ),
             ],
@@ -333,12 +365,12 @@ class _KycFormViewState extends State<KycFormView> {
     );
   }
 
-  Widget _buildStepDivider(bool isCompleted) {
+  Widget _buildStepDivider(bool isActive) {
     return Container(
       margin: const EdgeInsets.only(left: 15, top: 2, bottom: 2),
       width: 2,
       height: 30,
-      color: isCompleted ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
+      color: isActive ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
     );
   }
 

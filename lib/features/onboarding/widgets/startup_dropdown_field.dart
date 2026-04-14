@@ -55,9 +55,10 @@ class StartupDropdownField extends StatelessWidget {
             ),
             filled: true,
             fillColor: Theme.of(context).cardColor,
+            isDense: true,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 18,
+              horizontal: 16,
+              vertical: 16,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),

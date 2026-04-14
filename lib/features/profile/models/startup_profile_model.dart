@@ -1,93 +1,146 @@
 class StartupProfileModel {
+  // 1. Core Info
   String startupName;
   String tagline;
-  String stage;
-  String industry;
-  String location;
-  String websiteLink;
-  String productLink;
-  String demoLink;
+  String description;
   String logoUrl;
-  
-  // Quick business snapshot
-  String problemStatement;
+  String websiteLink;
+
+  // 2. Industry & Stage
+  int? industryId;
+  String industry;
+  String subIndustry;
+  String stage;
+  DateTime? foundedDate;
+  String location;
+  String country;
+
+  // 3. Financials
+  double fundingAmountSought;
+  double currentFundingRaised;
+  DateTime? lastFundingDate;
+  double revenue;
+  double valuation;
+
+  // 4. Contact Info
+  String fullNameOfApplicant;
+  String roleOfApplicant;
+  String contactEmail;
+  String phoneNumber;
+  String linkedInUrl;
+
+  // 5. System Metadata
+  String profileStatus;
+  bool isVisible;
+  double profileScore;
+  DateTime? createdAt;
+  DateTime? updatedAt;
+  String kycStatus;
+
+  // 6. Additional fields for back-compat
   String solutionSummary;
-  String marketScope; // B2B / B2C / B2G
-  String productStatus;
-  String currentNeeds;
-
-  // Team snapshot
-  String founderNames; // Can be multi-line
-  String founderRoles;
-  String teamSize;
-
-  // Validation snapshot
-  String validationStatus; // No validation / Interviews / Pilot / Users / Revenue
-  String metricSummary;
+  String marketScope;
 
   StartupProfileModel({
     this.startupName = '',
     this.tagline = '',
-    this.stage = '',
-    this.industry = '',
-    this.location = '',
-    this.websiteLink = '',
-    this.productLink = '',
-    this.demoLink = '',
+    this.description = '',
     this.logoUrl = '',
-    this.problemStatement = '',
+    this.websiteLink = '',
+    this.industryId,
+    this.industry = '',
+    this.subIndustry = '',
+    this.stage = 'Idea',
+    this.foundedDate,
+    this.location = '',
+    this.country = '',
+    this.fundingAmountSought = 0,
+    this.currentFundingRaised = 0,
+    this.lastFundingDate,
+    this.revenue = 0,
+    this.valuation = 0,
+    this.fullNameOfApplicant = '',
+    this.roleOfApplicant = '',
+    this.contactEmail = '',
+    this.phoneNumber = '',
+    this.linkedInUrl = '',
+    this.profileStatus = 'Draft',
+    this.isVisible = false,
+    this.profileScore = 0,
+    this.createdAt,
+    this.updatedAt,
+    this.kycStatus = 'Chưa xác thực',
     this.solutionSummary = '',
     this.marketScope = '',
-    this.productStatus = '',
-    this.currentNeeds = '',
-    this.founderNames = '',
-    this.founderRoles = '',
-    this.teamSize = '',
-    this.validationStatus = '',
-    this.metricSummary = '',
   });
 
   StartupProfileModel copyWith({
     String? startupName,
     String? tagline,
-    String? stage,
-    String? industry,
-    String? location,
-    String? websiteLink,
-    String? productLink,
-    String? demoLink,
+    String? description,
     String? logoUrl,
-    String? problemStatement,
+    String? websiteLink,
+    int? industryId,
+    String? industry,
+    String? subIndustry,
+    String? stage,
+    DateTime? foundedDate,
+    String? location,
+    String? country,
+    double? fundingAmountSought,
+    double? currentFundingRaised,
+    DateTime? lastFundingDate,
+    double? revenue,
+    double? valuation,
+    String? fullNameOfApplicant,
+    String? roleOfApplicant,
+    String? contactEmail,
+    String? phoneNumber,
+    String? linkedInUrl,
+    String? profileStatus,
+    bool? isVisible,
+    double? profileScore,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? kycStatus,
     String? solutionSummary,
     String? marketScope,
-    String? productStatus,
-    String? currentNeeds,
-    String? founderNames,
-    String? founderRoles,
-    String? teamSize,
-    String? validationStatus,
-    String? metricSummary,
   }) {
     return StartupProfileModel(
       startupName: startupName ?? this.startupName,
       tagline: tagline ?? this.tagline,
-      stage: stage ?? this.stage,
-      industry: industry ?? this.industry,
-      location: location ?? this.location,
-      websiteLink: websiteLink ?? this.websiteLink,
-      productLink: productLink ?? this.productLink,
-      demoLink: demoLink ?? this.demoLink,
+      description: description ?? this.description,
       logoUrl: logoUrl ?? this.logoUrl,
-      problemStatement: problemStatement ?? this.problemStatement,
+      websiteLink: websiteLink ?? this.websiteLink,
+      industryId: industryId ?? this.industryId,
+      industry: industry ?? this.industry,
+      subIndustry: subIndustry ?? this.subIndustry,
+      stage: stage ?? this.stage,
+      foundedDate: foundedDate ?? this.foundedDate,
+      location: location ?? this.location,
+      country: country ?? this.country,
+      fundingAmountSought: fundingAmountSought ?? this.fundingAmountSought,
+      currentFundingRaised: currentFundingRaised ?? this.currentFundingRaised,
+      lastFundingDate: lastFundingDate ?? this.lastFundingDate,
+      revenue: revenue ?? this.revenue,
+      valuation: valuation ?? this.valuation,
+      fullNameOfApplicant: fullNameOfApplicant ?? this.fullNameOfApplicant,
+      roleOfApplicant: roleOfApplicant ?? this.roleOfApplicant,
+      contactEmail: contactEmail ?? this.contactEmail,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      linkedInUrl: linkedInUrl ?? this.linkedInUrl,
+      profileStatus: profileStatus ?? this.profileStatus,
+      isVisible: isVisible ?? this.isVisible,
+      profileScore: profileScore ?? this.profileScore,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      kycStatus: kycStatus ?? this.kycStatus,
       solutionSummary: solutionSummary ?? this.solutionSummary,
       marketScope: marketScope ?? this.marketScope,
-      productStatus: productStatus ?? this.productStatus,
-      currentNeeds: currentNeeds ?? this.currentNeeds,
-      founderNames: founderNames ?? this.founderNames,
-      founderRoles: founderRoles ?? this.founderRoles,
-      teamSize: teamSize ?? this.teamSize,
-      validationStatus: validationStatus ?? this.validationStatus,
-      metricSummary: metricSummary ?? this.metricSummary,
     );
   }
+
+  // Legacy mappings 
+  String get problemStatement => description;
+  set problemStatement(String val) => description = val;
 }

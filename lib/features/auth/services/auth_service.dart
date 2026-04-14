@@ -11,6 +11,7 @@ class AuthService {
   Future<ApiResponse<bool>> register(RegisterRequest request) async {
     try {
       final response = await _dio.post('/api/auth/register', data: request.toJson());
+      // Phù hợp với schema: { isSuccess, message, data: "string" }
       return ApiResponse.fromJson(response.data, (json) => true);
     } on DioException catch (e) {
       return _handleError(e);
@@ -21,6 +22,7 @@ class AuthService {
   Future<ApiResponse<AuthResponse>> verifyEmail(VerifyEmailRequest request) async {
     try {
       final response = await _dio.post('/api/auth/verify-email', data: request.toJson());
+      // Phù hợp với schema: { data: { data, accessToken } }
       return ApiResponse.fromJson(response.data, (json) => AuthResponse.fromJson(json as Map<String, dynamic>));
     } on DioException catch (e) {
       return _handleError(e);
@@ -50,7 +52,7 @@ class AuthService {
   // 5. Đăng xuất (Logout)
   Future<ApiResponse<bool>> logout() async {
     try {
-      final response = await _dio.post('/api/auth/logout'); // Token lấy từ Interceptor
+      final response = await _dio.post('/api/auth/logout');
       return ApiResponse.fromJson(response.data, (json) => true);
     } on DioException catch (e) {
       return _handleError(e);
@@ -68,13 +70,9 @@ class AuthService {
   }
 
   // 7. Thiết lập lại mật khẩu (Reset Password)
-  Future<ApiResponse<bool>> resetPassword(String email, String otp, String newPassword) async {
+  Future<ApiResponse<bool>> resetPassword(ResetPasswordRequest request) async {
     try {
-      final response = await _dio.post('/api/auth/reset-password', data: {
-        'email': email,
-        'otp': otp,
-        'newPassword': newPassword,
-      });
+      final response = await _dio.post('/api/auth/reset-password', data: request.toJson());
       return ApiResponse.fromJson(response.data, (json) => true);
     } on DioException catch (e) {
       return _handleError(e);
@@ -82,12 +80,29 @@ class AuthService {
   }
 
   // 8. Đổi mật khẩu (Change Password)
-  Future<ApiResponse<bool>> changePassword(String currentPassword, String newPassword) async {
+  Future<ApiResponse<bool>> changePassword(ChangePasswordRequest request) async {
     try {
-      final response = await _dio.put('/api/auth/change-password', data: {
-        'currentPassword': currentPassword,
-        'newPassword': newPassword,
-      });
+      final response = await _dio.put('/api/auth/change-password', data: request.toJson());
+      return ApiResponse.fromJson(response.data, (json) => true);
+    } on DioException catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  // 9. Refresh Token
+  Future<ApiResponse<AuthResponse>> refreshToken() async {
+    try {
+      final response = await _dio.post('/api/auth/refresh-token');
+      return ApiResponse.fromJson(response.data, (json) => AuthResponse.fromJson(json as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  // 10. Revoke All
+  Future<ApiResponse<bool>> revokeAll() async {
+    try {
+      final response = await _dio.post('/api/auth/revoke-all');
       return ApiResponse.fromJson(response.data, (json) => true);
     } on DioException catch (e) {
       return _handleError(e);
@@ -96,8 +111,7 @@ class AuthService {
 
   // Helper xử lý lỗi bọc ApiResponse
   ApiResponse<T> _handleError<T>(DioException e) {
-    if (e.response != null && e.response?.data != null) {
-      // Parse lỗi từ server theo cấu trúc ApiResponse
+    if (e.response != null && e.response?.data != null && e.response?.data is Map) {
       return ApiResponse.fromJson(e.response!.data, null);
     }
     return ApiResponse<T>(

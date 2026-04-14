@@ -23,10 +23,29 @@ class _StartupLoginViewState extends State<StartupLoginView> {
   void initState() {
     super.initState();
     _viewModel = LoginViewModel();
+    
+    // Listen for errors and show SnackBar
+    _viewModel.addListener(_onViewModelChange);
+  }
+
+  void _onViewModelChange() {
+    if (_viewModel.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_viewModel.error!),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      // Clear error after showing so it doesn't pop up again
+      _viewModel.clearError();
+    }
   }
 
   @override
   void dispose() {
+    _viewModel.removeListener(_onViewModelChange);
     _viewModel.dispose();
     super.dispose();
   }
@@ -58,33 +77,57 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 32),
+                      if (_viewModel.error != null) ...[
+                        const SizedBox(height: 16),
+                        FadeInDown(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _viewModel.error!,
+                                    style: GoogleFonts.workSans(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
                       FadeInDown(
                         child: Center(
                           child: Container(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
                                   color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-                                  blurRadius: 25,
+                                  blurRadius: 20,
                                   spreadRadius: 5,
                                 ),
                               ],
                             ),
                             child: const Icon(
                               Icons.lock_person_rounded,
-                              size: 50,
+                              size: 40,
                               color: StartupOnboardingTheme.goldAccent,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 32),
                       FadeInLeft(
                         duration: const Duration(milliseconds: 500),
                         child: Text(
@@ -101,7 +144,7 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 24),
                       FadeInUp(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 200),
@@ -177,7 +220,7 @@ class _StartupLoginViewState extends State<StartupLoginView> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 24),
                       FadeInUp(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 500),

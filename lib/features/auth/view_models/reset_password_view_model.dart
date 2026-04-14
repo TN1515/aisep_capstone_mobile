@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:aisep_capstone_mobile/core/view_models/base_view_model.dart';
 import 'package:aisep_capstone_mobile/features/auth/views/startup_login_view.dart';
 import 'package:aisep_capstone_mobile/features/auth/services/auth_service.dart';
+import 'package:aisep_capstone_mobile/features/auth/models/auth_request_models.dart';
 
 class ResetPasswordViewModel extends BaseViewModel {
   final AuthService _authService = AuthService();
@@ -26,9 +27,11 @@ class ResetPasswordViewModel extends BaseViewModel {
 
     try {
       final response = await _authService.resetPassword(
-        email, 
-        otp, 
-        passwordController.text
+        ResetPasswordRequest(
+          email: email,
+          newPassword: passwordController.text,
+          confirmNewPassword: confirmPasswordController.text,
+        ),
       );
 
       if (response.success) {

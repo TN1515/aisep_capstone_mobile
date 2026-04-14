@@ -15,11 +15,21 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      userId: json['userId'] ?? 0,
+      userId: json['userId'] ?? json['id'] ?? 0,
       email: json['email'] ?? '',
-      userType: json['userType'] ?? 'Startup',
-      emailVerified: json['emailVerified'] ?? false,
-      roles: List<String>.from(json['roles'] ?? []),
+      userType: json['userType'] ?? json['role'] ?? 'Startup',
+      emailVerified: json['emailVerified'] ?? json['isEmailVerified'] ?? false,
+      roles: List<String>.from(json['roles'] ?? (json['role'] != null ? [json['role']] : [])),
+    );
+  }
+
+  factory UserModel.fromSimpleData(String data) {
+    return UserModel(
+      userId: 0,
+      email: '',
+      userType: data, // Giả định chuỗi "data" này là role/userType
+      emailVerified: true,
+      roles: [data],
     );
   }
 

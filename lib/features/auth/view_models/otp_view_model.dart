@@ -6,7 +6,7 @@ import 'package:aisep_capstone_mobile/features/auth/services/auth_service.dart';
 import 'package:aisep_capstone_mobile/features/auth/models/auth_request_models.dart';
 import 'package:aisep_capstone_mobile/features/auth/views/startup_reset_password_view.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
-import 'package:aisep_capstone_mobile/features/startup_profile/views/create_startup_profile_view.dart';
+import 'package:aisep_capstone_mobile/features/profile/views/profile_setup_view.dart';
 import 'package:provider/provider.dart';
 
 class OtpViewModel extends BaseViewModel {
@@ -72,7 +72,7 @@ class OtpViewModel extends BaseViewModel {
           if (destination != LoginDestination.onboarding) {
             Widget screen = destination == LoginDestination.dashboard 
                 ? const DashboardView() 
-                : const CreateStartupProfileView();
+                : const ProfileSetupView();
 
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => screen),

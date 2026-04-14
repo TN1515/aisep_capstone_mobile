@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:aisep_capstone_mobile/features/startup_profile/services/startup_service.dart';
-import 'package:aisep_capstone_mobile/features/startup_profile/models/startup_models.dart';
+import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
+import 'package:aisep_capstone_mobile/features/profile/models/startup_models.dart';
 import 'package:aisep_capstone_mobile/features/profile/models/startup_profile_model.dart';
+import 'package:intl/intl.dart';
 
 class StartupProfileViewModel extends ChangeNotifier {
   final StartupService _service = StartupService();
@@ -19,28 +20,34 @@ class StartupProfileViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   File? get newLogoFile => _newLogoFile;
 
-  // Controllers for Edit Mode
-  late TextEditingController nameController;
-  late TextEditingController taglineController;
-  late TextEditingController websiteController;
-  late TextEditingController productController;
-  late TextEditingController demoController;
-  late TextEditingController problemController;
-  late TextEditingController solutionController;
-  late TextEditingController needsController;
-  late TextEditingController founderNamesController;
-  late TextEditingController founderRolesController;
-  late TextEditingController teamSizeController;
-  late TextEditingController metricController;
+  // 1. Core Info Controllers
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController taglineController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController websiteController = TextEditingController();
 
-  // Controllers for Onboarding/Create MVP
-  late TextEditingController roleController;
-  late TextEditingController emailController;
-
+  // 2. Industry & Stage
   String? selectedStage;
   int? selectedIndustryId;
   String? selectedIndustryName;
-  String? selectedLocation;
+  final TextEditingController subIndustryController = TextEditingController();
+  DateTime? foundedDate;
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
+
+  // 3. Financials
+  final TextEditingController fundingSoughtController = TextEditingController();
+  final TextEditingController fundingRaisedController = TextEditingController();
+  DateTime? lastFundingDate;
+  final TextEditingController revenueController = TextEditingController();
+  final TextEditingController valuationController = TextEditingController();
+
+  // 4. Contact Info
+  final TextEditingController applicantNameController = TextEditingController();
+  final TextEditingController applicantRoleController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController linkedinController = TextEditingController();
 
   List<String> stages = ['Idea', 'PreSeed', 'Seed', 'SeriesA', 'SeriesB', 'SeriesC', 'Growth'];
   List<IndustryDto> industryList = [
@@ -49,14 +56,12 @@ class StartupProfileViewModel extends ChangeNotifier {
     IndustryDto(id: 3, name: 'Công nghệ tài chính (Fintech)'),
     IndustryDto(id: 4, name: 'Công nghệ giáo dục (Edtech)'),
     IndustryDto(id: 5, name: 'Y tế & Chăm sóc sức khỏe'),
-    IndustryDto(id: 6, name: 'Nông nghiệp cao'),
+    IndustryDto(id: 6, name: 'Nông nghiệp (Agri/Foodtech)'),
     IndustryDto(id: 7, name: 'Năng lượng xanh'),
     IndustryDto(id: 8, name: 'Khác'),
   ];
   List<TeamMemberDto> teamMembers = [];
-  final List<String> locations = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Singapore', 'Khác'];
   
-  // Quick mapping for backward compatibility with UI model
   late StartupProfileModel profile;
 
   StartupProfileViewModel() {
@@ -78,18 +83,16 @@ class StartupProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Tải danh sách ngành nghề - Cập nhật thông minh
       final indResponse = await _service.getIndustries();
-      if (indResponse.success && indResponse.data != null && indResponse.data!.isNotEmpty) {
+      if (indResponse.success && indResponse.data != null) {
         industryList = indResponse.data!;
       }
 
-      // 2. Tải thông tin Profile cá nhân
       final response = await _service.getMyProfile();
       if (response.success && response.data != null) {
         _profileDto = response.data;
         _mapDtoToModel();
-        await loadTeamMembers(); // Tải team ngay sau khi có profile
+        await loadTeamMembers();
       }
     } catch (_) {
     } finally {
@@ -101,14 +104,11 @@ class StartupProfileViewModel extends ChangeNotifier {
   void _mapDtoToModel() {
     if (_profileDto == null) return;
     
-    // Mapping Stage from int to String if necessary
     String stageName = 'Idea';
     if (_profileDto!.stage != null) {
       if (_profileDto!.stage is int) {
         int idx = _profileDto!.stage as int;
-        if (idx >= 0 && idx < stages.length) {
-          stageName = stages[idx];
-        }
+        if (idx >= 0 && idx < stages.length) stageName = stages[idx];
       } else {
         stageName = _profileDto!.stage.toString();
       }
@@ -117,43 +117,68 @@ class StartupProfileViewModel extends ChangeNotifier {
     profile = StartupProfileModel(
       startupName: _profileDto!.companyName,
       tagline: _profileDto!.oneLiner,
-      stage: stageName,
-      industry: _profileDto!.industryName ?? 'Chưa xác định',
-      location: _profileDto!.location ?? 'Chưa cập nhật',
-      websiteLink: _profileDto!.website ?? '',
+      description: _profileDto!.description ?? '',
       logoUrl: _profileDto!.logoUrl ?? 'https://api.dicebear.com/7.x/identicon/svg?seed=${_profileDto!.companyName}',
-      problemStatement: _profileDto!.description ?? '',
+      websiteLink: _profileDto!.website ?? '',
+      industryId: _profileDto!.industryId,
+      industry: _profileDto!.industryName ?? 'Chưa xác định',
+      subIndustry: _profileDto!.subIndustry ?? '',
+      stage: stageName,
+      foundedDate: _profileDto!.foundedDate,
+      location: _profileDto!.location ?? 'Chưa cập nhật',
+      country: _profileDto!.country ?? 'Việt Nam',
+      fundingAmountSought: _profileDto!.fundingAmountSought ?? 0,
+      currentFundingRaised: _profileDto!.currentFundingRaised ?? 0,
+      lastFundingDate: _profileDto!.lastFundingDate,
+      revenue: _profileDto!.revenue ?? 0,
+      valuation: _profileDto!.valuation ?? 0,
+      fullNameOfApplicant: _profileDto!.fullNameOfApplicant ?? '',
+      roleOfApplicant: _profileDto!.roleOfApplicant ?? '',
+      contactEmail: _profileDto!.contactEmail ?? '',
+      phoneNumber: _profileDto!.phoneNumber ?? '',
+      linkedInUrl: _profileDto!.linkedInUrl ?? '',
+      profileStatus: _profileDto!.profileStatus,
+      isVisible: _profileDto!.isVisible,
+      profileScore: _profileDto!.profileScore,
+      createdAt: _profileDto!.createdAt,
+      updatedAt: _profileDto!.updatedAt,
+      kycStatus: _profileDto!.kycStatus ?? 'Chưa xác thực',
     );
 
-    selectedStage = _profileDto!.stage;
-    selectedIndustryId = _profileDto!.industryId;
-    selectedIndustryName = _profileDto!.industryName;
-    selectedLocation = _profileDto!.location;
+    selectedStage = profile.stage;
+    selectedIndustryId = profile.industryId;
+    selectedIndustryName = profile.industry;
+    foundedDate = profile.foundedDate;
+    lastFundingDate = profile.lastFundingDate;
     
     _initControllers();
   }
 
-  // MAPPING API: Tạo hồ sơ mới (POST)
-  Future<bool> createProfile(CreateStartupProfileRequest request) async {
-    _isLoading = true;
-    notifyListeners();
-    final response = await _service.createProfile(request);
-    
-    if (response.success) {
-      _profileDto = response.data;
-      _mapDtoToModel();
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = response.error;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+  void _initControllers() {
+    nameController.text = profile.startupName;
+    taglineController.text = profile.tagline;
+    descriptionController.text = profile.description;
+    websiteController.text = profile.websiteLink;
+    subIndustryController.text = profile.subIndustry;
+    locationController.text = profile.location;
+    countryController.text = profile.country;
+    fundingSoughtController.text = profile.fundingAmountSought.toString();
+    fundingRaisedController.text = profile.currentFundingRaised.toString();
+    revenueController.text = profile.revenue.toString();
+    valuationController.text = profile.valuation.toString();
+    applicantNameController.text = profile.fullNameOfApplicant;
+    applicantRoleController.text = profile.roleOfApplicant;
+    emailController.text = profile.contactEmail;
+    phoneController.text = profile.phoneNumber;
+    linkedinController.text = profile.linkedInUrl;
   }
 
-  // --- Team Members Logic ---
+  void resetMode() {
+    _isEditMode = false;
+    _newLogoFile = null;
+    notifyListeners();
+  }
+
   Future<void> loadTeamMembers() async {
     final response = await _service.getTeamMembers();
     if (response.success) {
@@ -162,53 +187,9 @@ class StartupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> addMember({
-    required String fullName,
-    required String role,
-    String? bio,
-    File? photo,
-  }) async {
-    _isLoading = true;
-    notifyListeners();
-    final response = await _service.addTeamMember(
-      fullName: fullName,
-      role: role,
-      bio: bio,
-      photo: photo,
-    );
-    
-    if (response.success && response.data != null) {
-      teamMembers.add(response.data!);
-      _isLoading = false;
-      return true;
-    } else {
-      _isLoading = false;
-      return false;
-    }
-  }
-
-  void _initControllers() {
-    nameController = TextEditingController(text: profile.startupName);
-    taglineController = TextEditingController(text: profile.tagline);
-    websiteController = TextEditingController(text: profile.websiteLink);
-    productController = TextEditingController(text: profile.productLink);
-    demoController = TextEditingController(text: profile.demoLink);
-    problemController = TextEditingController(text: profile.problemStatement);
-    solutionController = TextEditingController(text: profile.solutionSummary);
-    needsController = TextEditingController(text: profile.currentNeeds);
-    founderNamesController = TextEditingController(text: profile.founderNames);
-    founderRolesController = TextEditingController(text: profile.founderRoles);
-    teamSizeController = TextEditingController(text: profile.teamSize);
-    metricController = TextEditingController(text: profile.metricSummary);
-    
-    // MVP Controllers
-    roleController = TextEditingController(text: profileDto?.roleOfApplicant ?? '');
-    emailController = TextEditingController(text: profileDto?.contactEmail ?? '');
-  }
-
   void toggleEditMode() {
     if (_isEditMode) {
-      _mapDtoToModel(); // Reset to original data
+      _mapDtoToModel();
       _newLogoFile = null;
     }
     _isEditMode = !_isEditMode;
@@ -220,42 +201,95 @@ class StartupProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> saveProfile() async {
-    if (_profileDto == null) return;
+  Future<bool> toggleVisibility(bool isVisible) async {
+    _isLoading = true;
+    notifyListeners();
 
+    final response = await _service.toggleVisibility(isVisible);
+    
+    if (response.success) {
+      profile.isVisible = isVisible;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response.error;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> createProfile(CreateStartupProfileRequest request) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _service.createProfile(request);
+
+      if (response.success) {
+        await loadProfile();
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = response.error;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> saveProfile() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Ánh xạ Stage từ chuỗi sang Index (0-6)
-      int stageIndex = stages.indexOf(selectedStage ?? (profile.stage));
+      int stageIndex = stages.indexOf(selectedStage ?? 'Idea');
       if (stageIndex == -1) stageIndex = 0;
 
       final request = CreateStartupProfileRequest(
         companyName: nameController.text,
         oneLiner: taglineController.text,
-        stage: stageIndex,
-        fullNameOfApplicant: _profileDto?.companyName ?? nameController.text, // Tạm thời dùng CompanyName nếu null
-        roleOfApplicant: roleController.text,
-        contactEmail: emailController.text,
-        industryId: selectedIndustryId ?? (_profileDto?.industryId ?? 1),
+        description: descriptionController.text,
         website: websiteController.text,
-        description: problemController.text,
-        location: selectedLocation,
-        businessCode: _profileDto!.businessCode,
+        stage: stageIndex,
+        industryId: selectedIndustryId,
+        subIndustry: subIndustryController.text,
+        foundedDate: foundedDate,
+        location: locationController.text,
+        country: countryController.text,
+        fundingAmountSought: double.tryParse(fundingSoughtController.text),
+        currentFundingRaised: double.tryParse(fundingRaisedController.text),
+        lastFundingDate: lastFundingDate,
+        revenue: double.tryParse(revenueController.text),
+        valuation: double.tryParse(valuationController.text),
+        fullNameOfApplicant: applicantNameController.text,
+        roleOfApplicant: applicantRoleController.text,
+        contactEmail: emailController.text,
+        phoneNumber: phoneController.text,
+        linkedInUrl: linkedinController.text,
         logoFile: _newLogoFile,
       );
 
-      // MAPPING API: Gọi API Update (PUT)
       final response = await _service.updateProfile(request);
       
       if (response.success) {
-        await loadProfile(); // Load lại dữ liệu mới sau khi lưu
+        await loadProfile();
         _isEditMode = false;
         _newLogoFile = null;
+      } else {
+        _errorMessage = response.error;
       }
-    } catch (_) {
-      // Xử lý lỗi
+    } catch (e) {
+      _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -266,18 +300,20 @@ class StartupProfileViewModel extends ChangeNotifier {
   void dispose() {
     nameController.dispose();
     taglineController.dispose();
+    descriptionController.dispose();
     websiteController.dispose();
-    productController.dispose();
-    demoController.dispose();
-    problemController.dispose();
-    solutionController.dispose();
-    needsController.dispose();
-    founderNamesController.dispose();
-    founderRolesController.dispose();
-    teamSizeController.dispose();
-    metricController.dispose();
-    roleController.dispose();
+    subIndustryController.dispose();
+    locationController.dispose();
+    countryController.dispose();
+    fundingSoughtController.dispose();
+    fundingRaisedController.dispose();
+    revenueController.dispose();
+    valuationController.dispose();
+    applicantNameController.dispose();
+    applicantRoleController.dispose();
     emailController.dispose();
+    phoneController.dispose();
+    linkedinController.dispose();
     super.dispose();
   }
 }

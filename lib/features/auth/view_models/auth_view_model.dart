@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:aisep_capstone_mobile/core/services/token_service.dart';
-import 'package:aisep_capstone_mobile/features/startup_profile/services/startup_service.dart';
+import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
 import '../models/auth_request_models.dart';
 import '../models/auth_response_model.dart';
 import '../services/auth_service.dart';
@@ -30,6 +30,7 @@ class AuthViewModel extends ChangeNotifier {
       email: email,
       password: password,
       confirmPassword: confirmPassword,
+      userType: 'Startup',
     );
     final response = await _authService.register(request);
     
@@ -53,7 +54,7 @@ class AuthViewModel extends ChangeNotifier {
     if (response.success && response.data != null) {
       await _saveAuthData(response.data!);
       
-      // MAPPING API: Kiểm tra hồ sơ ngay sau khi có Token
+      // MAPPING API: Sử dụng userType từ UserModel (đã bóc từ data string)
       final destination = await _checkStartupProfile(response.data!.user.userType);
       _setBusy(false);
       return destination;
@@ -74,7 +75,6 @@ class AuthViewModel extends ChangeNotifier {
     if (response.success && response.data != null) {
       await _saveAuthData(response.data!);
       
-      // MAPPING API: Kiểm tra hồ sơ ngay sau khi Login thành công
       final destination = await _checkStartupProfile(response.data!.user.userType);
       _setBusy(false);
       return destination;
@@ -87,8 +87,9 @@ class AuthViewModel extends ChangeNotifier {
 
   /// MAPPING API: Gọi GET /api/startups/me để xác định đích đến
   Future<LoginDestination> _checkStartupProfile(String userType) async {
-    if (userType != 'Startup') {
-       return LoginDestination.dashboard; // Các role khác vào thẳng dashboard
+    // Chấp nhận cả 'Startup' hoặc chuỗi chứa 'Startup' tùy theo backend
+    if (!userType.toLowerCase().contains('startup')) {
+       return LoginDestination.dashboard; 
     }
 
     try {
@@ -96,7 +97,6 @@ class AuthViewModel extends ChangeNotifier {
       if (profileResponse.success && profileResponse.data != null) {
         return LoginDestination.dashboard;
       } else {
-        // data: null hoặc lỗi -> Coi như chưa có hồ sơ
         return LoginDestination.createProfile;
       }
     } catch (_) {
@@ -121,11 +121,20 @@ class AuthViewModel extends ChangeNotifier {
     return response.success;
   }
 
-  // 6. Đổi mật khẩu (Yêu cầu đăng nhập)
-  Future<bool> changePassword(String current, String newPwd) async {
+  // 6. Đổi mật khẩu
+  Future<bool> changePassword(String current, String newPwd, String confirmNewPwd) async {
     _setBusy(true);
-    final response = await _authService.changePassword(current, newPwd);
+    final response = await _authService.changePassword(
+      ChangePasswordRequest(
+        currentPassword: current,
+        newPassword: newPwd,
+        confirmNewPassword: confirmNewPwd,
+      ),
+    );
     _setBusy(false);
+    if (!response.success) {
+      _errorMessage = response.error;
+    }
     return response.success;
   }
 

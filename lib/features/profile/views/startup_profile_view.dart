@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/startup_onboarding_theme.dart';
 import '../view_models/startup_profile_view_model.dart';
 import '../widgets/profile_section_card.dart';
@@ -26,8 +27,10 @@ class _StartupProfileViewState extends State<StartupProfileView> {
   @override
   void initState() {
     super.initState();
-    // Khởi tạo ViewModel từ Provider để đồng bộ dữ liệu
     _viewModel = context.read<StartupProfileViewModel>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _viewModel.resetMode();
+    });
   }
 
   Future<void> _pickLogo() async {
@@ -56,7 +59,8 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
                     children: [
-                      if (viewModel.isEditMode) _buildEditForm(viewModel) else _buildViewMode(viewModel),
+                      const SizedBox(height: 24),
+                      if (viewModel.isEditMode) _buildEditForm(viewModel) else _buildPreviewMode(viewModel),
                       const SizedBox(height: 120),
                     ],
                   ),
@@ -69,27 +73,20 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               color: Colors.black45,
               child: const Center(child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent)),
             ),
-          if (viewModel.isEditMode) _buildStickyFooter(viewModel),
         ],
       ),
+      bottomNavigationBar: viewModel.isEditMode ? _buildStickyFooter(viewModel) : null,
     );
   }
 
   Widget _buildStickyFooter(StartupProfileViewModel viewModel) {
-    return Positioned(
-      bottom: 0, left: 0, right: 0,
+    return SafeArea(
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05), 
-              blurRadius: 20, 
-              offset: const Offset(0, -5)
-            )
-          ],
+          color: Theme.of(context).scaffoldBackgroundColor,
+          border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
         ),
         child: Row(
           children: [
@@ -98,18 +95,13 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 onPressed: () => viewModel.toggleEditMode(),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Theme.of(context).dividerColor.withOpacity(0.05),
                   side: BorderSide(color: Theme.of(context).dividerColor),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text(
-                  'Hủy bỏ', 
-                  style: GoogleFonts.workSans(
-                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  )
-                ),
+                child: Text('Hủy bỏ', style: GoogleFonts.workSans(
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                  fontWeight: FontWeight.bold,
+                )),
               ),
             ),
             const SizedBox(width: 12),
@@ -142,7 +134,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
             alignment: Alignment.bottomCenter,
             children: [
               Container(
-                height: 200, width: double.infinity,
+                height: 180, width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter, end: Alignment.bottomCenter,
@@ -152,23 +144,16 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Opacity(
-                      opacity: 0.6,
-                      child: Image.network(
-                        'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=1000',
-                        fit: BoxFit.cover,
-                      ),
+                    Image.network(
+                      'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=1000',
+                      fit: BoxFit.cover,
                     ),
-                    // Dark overlay for text readability
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.7),
-                          ],
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
                         ),
                       ),
                     ),
@@ -185,22 +170,16 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 right: 16,
                 child: Row(
                   children: [
-                    _buildFloatingActionCircle(
-                      LucideIcons.crown, 
-                      () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MembershipUpgradeView())),
-                    ),
+                    _buildFloatingActionCircle(LucideIcons.crown, () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MembershipUpgradeView()))),
                     const SizedBox(width: 12),
-                    _buildFloatingActionCircle(
-                      LucideIcons.settings, 
-                      () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsView())),
-                    ),
+                    _buildFloatingActionCircle(LucideIcons.settings, () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsView()))),
                   ],
                 ),
               ),
-              Positioned(bottom: -50, child: _buildProfileLogo(viewModel)),
+              Positioned(bottom: -40, child: _buildProfileLogo(viewModel)),
             ],
           ),
-          const SizedBox(height: 60),
+          const SizedBox(height: 50),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
@@ -208,32 +187,15 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 Text(
                   profile.startupName, 
                   textAlign: TextAlign.center, 
-                  style: GoogleFonts.outfit(
-                    fontSize: 28, 
-                    fontWeight: FontWeight.bold, 
-                    color: StartupOnboardingTheme.navyBg,
-                  ),
+                  style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.displayLarge?.color),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   profile.tagline, 
                   textAlign: TextAlign.center, 
-                  style: GoogleFonts.workSans(
-                    fontSize: 15, 
-                    color: StartupOnboardingTheme.navyBg.withOpacity(0.7), 
-                    fontWeight: FontWeight.w500
-                  )
+                  style: GoogleFonts.workSans(fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7), fontWeight: FontWeight.w500)
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8, runSpacing: 8, alignment: WrapAlignment.center,
-                  children: [
-                    _buildCompactChip(profile.stage, LucideIcons.rocket, StartupOnboardingTheme.goldAccent.withOpacity(0.15), StartupOnboardingTheme.goldAccent),
-                    _buildCompactChip(profile.industry, LucideIcons.box, Colors.white.withOpacity(0.1), Colors.white),
-                    _buildCompactChip(profile.location, LucideIcons.mapPin, Colors.white.withOpacity(0.1), Colors.white),
-                  ],
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 if (!viewModel.isEditMode) _buildActionButtons(),
               ],
             ),
@@ -249,12 +211,12 @@ class _StartupProfileViewState extends State<StartupProfileView> {
       child: Stack(
         children: [
           Container(
-            width: 100, height: 100,
+            width: 90, height: 90,
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               shape: BoxShape.circle,
               border: Border.all(color: StartupOnboardingTheme.goldAccent, width: 2),
-              boxShadow: [BoxShadow(color: StartupOnboardingTheme.goldAccent.withOpacity(0.2), blurRadius: 15, spreadRadius: 2)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: ClipOval(
               child: viewModel.newLogoFile != null
@@ -262,19 +224,12 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                   : Image.network(
                       viewModel.profile.logoUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(LucideIcons.building, size: 40, color: Colors.white24),
+                      errorBuilder: (context, error, stackTrace) => Icon(LucideIcons.building, size: 36, color: Theme.of(context).dividerColor),
                     ),
             ),
           ),
           if (viewModel.isEditMode)
-            Positioned(
-              bottom: 0, right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.black87, shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
-                child: const Icon(LucideIcons.camera, color: Colors.white, size: 16),
-              ),
-            ),
+            Positioned(bottom: 0, right: 0, child: Container(padding: const EdgeInsets.all(6), decoration: const BoxDecoration(color: StartupOnboardingTheme.goldAccent, shape: BoxShape.circle), child: const Icon(LucideIcons.camera, color: StartupOnboardingTheme.navyBg, size: 14))),
         ],
       ),
     );
@@ -284,157 +239,231 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton.icon(
-          onPressed: () => _viewModel.toggleEditMode(),
-          icon: const Icon(LucideIcons.edit3, size: 16),
-          label: const Text('Chỉnh sửa'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: StartupOnboardingTheme.goldAccent,
-            foregroundColor: StartupOnboardingTheme.navyBg,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _viewModel.toggleEditMode(),
+            icon: const Icon(LucideIcons.edit3, size: 16),
+            label: const Text('Chỉnh sửa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: StartupOnboardingTheme.goldAccent, 
+              foregroundColor: StartupOnboardingTheme.navyBg,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+            ),
           ),
         ),
         const SizedBox(width: 12),
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const KycFormView(isIncorporated: true)));
-          },
-          icon: const Icon(LucideIcons.shieldCheck, size: 16),
-          label: const Text('Xác thực'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: StartupOnboardingTheme.goldAccent,
-            side: const BorderSide(color: StartupOnboardingTheme.goldAccent),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const KycFormView(isIncorporated: true))),
+            icon: const Icon(LucideIcons.shieldCheck, size: 16),
+            label: const Text('Xác thực KYC'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: StartupOnboardingTheme.goldAccent, 
+              side: const BorderSide(color: StartupOnboardingTheme.goldAccent),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildViewMode(StartupProfileViewModel viewModel) {
+  Widget _buildPreviewMode(StartupProfileViewModel viewModel) {
+    final theme = Theme.of(context);
+    final p = viewModel.profile;
+    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
+    return Column(
+      children: [
+        _buildSectionHeader('TỔNG QUAN DOANH NGHIỆP'),
+        ProfileSectionCard(
+          title: 'Chi tiết Startup',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow(LucideIcons.globe, 'Website', p.websiteLink),
+              _buildInfoRow(LucideIcons.box, 'Lĩnh vực', p.industry),
+              _buildInfoRow(LucideIcons.rocket, 'Giai đoạn', p.stage),
+              _buildInfoRow(LucideIcons.calendar, 'Thành lập', p.foundedDate != null ? dateFormat.format(p.foundedDate!) : ''),
+              _buildInfoRow(LucideIcons.mapPin, 'Địa điểm', '${p.location}, ${p.country}'),
+              _buildInfoRow(LucideIcons.fileText, 'Mô tả', p.description.isEmpty ? 'Chưa có mô tả' : p.description, isLast: true),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+        _buildSectionHeader('THÔNG TIN TÀI CHÍNH'),
+        ProfileSectionCard(
+          title: 'Số liệu đầu tư',
+          child: Column(
+            children: [
+              _buildInfoRow(LucideIcons.trendingUp, 'Vốn mong muốn', currencyFormat.format(p.fundingAmountSought)),
+              _buildInfoRow(LucideIcons.banknote, 'Vốn đã huy động', currencyFormat.format(p.currentFundingRaised)),
+              _buildInfoRow(LucideIcons.pieChart, 'Định giá hiện tại', currencyFormat.format(p.valuation), isLast: true),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+        _buildSectionHeader('LIÊN HỆ & HỆ THỐNG'),
+        ProfileSectionCard(
+          title: 'Người đại diện & Trạng thái',
+          child: Column(
+            children: [
+              _buildInfoRow(LucideIcons.user, 'Họ tên', p.fullNameOfApplicant),
+              _buildInfoRow(LucideIcons.mail, 'Email', p.contactEmail),
+              _buildInfoRow(LucideIcons.shield, 'KYC Status', p.kycStatus),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 0),
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.eye, color: StartupOnboardingTheme.goldAccent, size: 18),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Hiển thị trên Marketplace', style: GoogleFonts.workSans(fontSize: 11, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5))),
+                          Text(p.isVisible ? 'Đang công khai' : 'Đang ẩn', style: GoogleFonts.workSans(fontSize: 14, color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: p.isVisible,
+                      activeColor: StartupOnboardingTheme.goldAccent,
+                      onChanged: (val) => viewModel.toggleVisibility(val),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+        _buildSectionHeader('ĐỘI NGŨ SÁNG LẬP'),
+        _buildTeamList(viewModel),
+      ],
+    );
+  }
+
+  Widget _buildEditForm(StartupProfileViewModel vm) {
     return Column(
       children: [
         ProfileSectionCard(
-          title: 'THÔNG TIN CƠ BẢN',
+          title: '1. THÔNG TIN CƠ BẢN',
           child: Column(
             children: [
-              _buildInfoRow(LucideIcons.globe, 'Website', viewModel.profile.websiteLink),
-              _buildInfoRow(LucideIcons.briefcase, 'Ngành nghề', viewModel.profile.industry),
-              _buildInfoRow(LucideIcons.mapPin, 'Trụ sở', viewModel.profile.location, isLast: true),
+              ProfileTextField(label: 'Tên Startup', controller: vm.nameController),
+              ProfileTextField(label: 'Tagline', controller: vm.taglineController),
+              ProfileTextField(label: 'Website', controller: vm.websiteController),
+              ProfileTextField(label: 'Mô tả chi tiết', controller: vm.descriptionController, maxLines: 4),
             ],
           ),
         ),
         ProfileSectionCard(
-          title: 'MÔ TẢ',
-          child: Text(
-            viewModel.profile.problemStatement.isEmpty ? 'Chưa có mô tả chi tiết.' : viewModel.profile.problemStatement,
-            style: GoogleFonts.workSans(color: Colors.white70, height: 1.5),
+          title: '2. LĨNH VỰC & GIAI ĐOẠN',
+          child: Column(
+            children: [
+              ProfileDropdownField(label: 'Giai đoạn', items: vm.stages, value: vm.selectedStage, onChanged: (v) => setState(() => vm.selectedStage = v)),
+              ProfileDropdownField(label: 'Lĩnh vực', items: vm.industryList.map((i) => i.name).toList(), value: vm.selectedIndustryName, onChanged: (v) {
+                final ind = vm.industryList.firstWhere((i) => i.name == v);
+                setState(() { vm.selectedIndustryName = v; vm.selectedIndustryId = ind.id; });
+              }),
+              ProfileTextField(label: 'Lĩnh vực chuyên sâu', controller: vm.subIndustryController),
+              ProfileTextField(label: 'Vùng/Thành phố', controller: vm.locationController),
+              ProfileTextField(label: 'Quốc gia', controller: vm.countryController),
+            ],
+          ),
+        ),
+        ProfileSectionCard(
+          title: '3. THÔNG TIN TÀI CHÍNH (\$)',
+          child: Column(
+            children: [
+              ProfileTextField(label: 'Vốn mong muốn', controller: vm.fundingSoughtController, keyboardType: TextInputType.number),
+              ProfileTextField(label: 'Vốn đã huy động', controller: vm.fundingRaisedController, keyboardType: TextInputType.number),
+              ProfileTextField(label: 'Doanh thu', controller: vm.revenueController, keyboardType: TextInputType.number),
+              ProfileTextField(label: 'Định giá', controller: vm.valuationController, keyboardType: TextInputType.number),
+            ],
+          ),
+        ),
+        ProfileSectionCard(
+          title: '4. THÔNG TIN LIÊN HỆ',
+          child: Column(
+            children: [
+              ProfileTextField(label: 'Họ tên người đại diện', controller: vm.applicantNameController),
+              ProfileTextField(label: 'Chức vụ', controller: vm.applicantRoleController),
+              ProfileTextField(label: 'Email liên hệ', controller: vm.emailController, keyboardType: TextInputType.emailAddress),
+              ProfileTextField(label: 'Số điện thoại', controller: vm.phoneController, keyboardType: TextInputType.phone),
+              ProfileTextField(label: 'Link LinkedIn', controller: vm.linkedinController),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildEditForm(StartupProfileViewModel viewModel) {
+  Widget _buildTeamList(StartupProfileViewModel vm) {
+    if (vm.teamMembers.isEmpty) return const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: Text('Chưa có thông tin đội ngũ', style: TextStyle(color: Colors.white70))));
     return Column(
-      children: [
-        ProfileSectionCard(
-          title: 'ĐỊNH DANH STARTUP',
-          child: Column(
-            children: [
-              ProfileTextField(label: 'Tên Startup', controller: viewModel.nameController),
-              ProfileTextField(label: 'Khẩu hiệu (Tagline)', controller: viewModel.taglineController),
-              ProfileDropdownField(
-                label: 'Giai đoạn',
-                items: viewModel.stages,
-                value: viewModel.selectedStage,
-                onChanged: (v) => setState(() => viewModel.selectedStage = v),
-              ),
-              ProfileDropdownField(
-                label: 'Ngành nghề',
-                items: viewModel.industryList.map((i) => i.name).toList(),
-                value: viewModel.selectedIndustryName,
-                onChanged: (v) {
-                  final ind = viewModel.industryList.firstWhere((i) => i.name == v);
-                  setState(() {
-                    viewModel.selectedIndustryName = v;
-                    viewModel.selectedIndustryId = ind.id;
-                  });
-                },
-              ),
-              ProfileDropdownField(
-                label: 'Trụ sở chính',
-                items: viewModel.locations,
-                value: viewModel.selectedLocation,
-                onChanged: (v) => setState(() => viewModel.selectedLocation = v),
-              ),
-            ],
-          ),
+      children: vm.teamMembers.map((m) => Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        color: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ListTile(
+          leading: CircleAvatar(backgroundImage: m.photoUrl != null ? NetworkImage(m.photoUrl!) : null, child: m.photoUrl == null ? const Icon(LucideIcons.user) : null),
+          title: Text(m.fullName, style: GoogleFonts.workSans(fontWeight: FontWeight.bold)),
+          subtitle: Text(m.role, style: GoogleFonts.workSans(fontSize: 12)),
         ),
-        ProfileSectionCard(
-          title: 'LIÊN KẾT & CHI TIẾT',
-          child: Column(
-            children: [
-              ProfileTextField(label: 'Website', controller: viewModel.websiteController, keyboardType: TextInputType.url),
-              ProfileTextField(label: 'Mô tả chi tiết', controller: viewModel.problemController, maxLines: 5),
-            ],
-          ),
-        ),
-      ],
+      )).toList(),
     );
   }
 
-  Widget _buildFloatingActionCircle(IconData icon, VoidCallback onTap) {
-    return Container(
-      decoration: const BoxDecoration(color: Colors.black26, shape: BoxShape.circle),
-      child: IconButton(icon: Icon(icon, color: Colors.white, size: 20), onPressed: onTap),
-    );
-  }
-
-  Widget _buildCompactChip(String label, IconData icon, Color bgColor, Color textColor) {
-    if (label.isEmpty || label == 'Chưa xác định' || label == 'Chưa cập nhật' || label == 'Idea') {
-       // Filter out empty or placeholder data
-       if (label == 'Idea' && icon == LucideIcons.rocket) return _buildRealChip(label, icon, bgColor, textColor);
-       if (label.isEmpty || label == 'Chưa xác định' || label == 'Chưa cập nhật') return const SizedBox.shrink();
-    }
-    return _buildRealChip(label, icon, bgColor, textColor);
-  }
-
-  Widget _buildRealChip(String label, IconData icon, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor, 
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: textColor.withOpacity(0.1)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: textColor),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
-        ],
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Align(
+        alignment: Alignment.centerLeft, 
+        child: Text(title, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: StartupOnboardingTheme.goldAccent, letterSpacing: 1.2))
       ),
     );
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value, {bool isLast = false}) {
+    final theme = Theme.of(context);
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: StartupOnboardingTheme.goldAccent, size: 18),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: GoogleFonts.workSans(fontSize: 12, color: Colors.white38, fontWeight: FontWeight.bold)),
-              Text(value.isEmpty ? 'Chưa cập nhật' : value, style: GoogleFonts.workSans(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
-            ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: StartupOnboardingTheme.goldAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, color: StartupOnboardingTheme.goldAccent, size: 16),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: GoogleFonts.workSans(fontSize: 10, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5), fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                const SizedBox(height: 2),
+                Text(value.isEmpty ? 'Chưa cập nhật' : value, style: GoogleFonts.workSans(fontSize: 14, color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.w600)),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFloatingActionCircle(IconData icon, VoidCallback onTap) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.black38, shape: BoxShape.circle, border: Border.all(color: Colors.white10)), 
+      child: IconButton(icon: Icon(icon, color: Colors.white, size: 18), onPressed: onTap)
     );
   }
 }
