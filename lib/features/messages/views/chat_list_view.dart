@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
+import '../models/chat_model.dart';
 import '../view_models/chat_view_model.dart';
 import '../widgets/chat_tile.dart';
 import 'chat_detail_view.dart';
@@ -12,34 +13,31 @@ class ChatListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ChatViewModel(),
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(LucideIcons.arrowLeft, color: Theme.of(context).iconTheme.color),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            'Tin nhắn',
-            style: Theme.of(context).appBarTheme.titleTextStyle,
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.arrowLeft, color: Theme.of(context).iconTheme.color),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: Consumer<ChatViewModel>(
-          builder: (context, viewModel, child) {
-            return Column(
-              children: [
-                _buildSearchSection(context, viewModel),
-                Expanded(
-                  child: _buildChatList(context, viewModel),
-                ),
-              ],
-            );
-          },
+        title: Text(
+          'Tin nhắn',
+          style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
+      ),
+      body: Consumer<ChatViewModel>(
+        builder: (context, viewModel, child) {
+          return Column(
+            children: [
+              _buildSearchSection(context, viewModel),
+              Expanded(
+                child: _buildChatList(context, viewModel),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -48,7 +46,7 @@ class ChatListView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
       child: Container(
-        height: 52, // Explicitly scaled height
+        height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -84,27 +82,129 @@ class ChatListView extends StatelessWidget {
       color: StartupOnboardingTheme.goldAccent,
       backgroundColor: Theme.of(context).cardColor,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         itemCount: viewModel.chats.length,
         itemBuilder: (context, index) {
           final chat = viewModel.chats[index];
-          return ChatTile(
-            chat: chat,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: viewModel,
-                    child: ChatDetailView(chat: chat),
-                  ),
-                ),
-              );
-            },
-          );
+          return _buildChatItem(context, chat);
         },
       ),
     );
+  }
+
+  Widget _buildChatItem(BuildContext context, ConversationModel chat) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+      ),
+      child: ListTile(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailView(
+              conversationId: chat.id,
+              partnerName: chat.partnerName,
+              partnerAvatar: chat.partnerAvatar,
+            ),
+          ),
+        ),
+        contentPadding: const EdgeInsets.all(16),
+        leading: _buildAvatar(chat),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                chat.partnerName,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.displayLarge?.color,
+                ),
+              ),
+            ),
+            if (chat.lastMessageTime != null)
+              Text(
+                _formatTime(chat.lastMessageTime!),
+                style: GoogleFonts.workSans(
+                  fontSize: 11,
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.4),
+                ),
+              ),
+          ],
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  chat.lastMessage ?? 'Bắt đầu cuộc trò chuyện',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.workSans(
+                    fontSize: 13,
+                    color: chat.unreadCount > 0 
+                        ? Theme.of(context).textTheme.bodyLarge?.color 
+                        : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
+                    fontWeight: chat.unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+              if (chat.unreadCount > 0)
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: StartupOnboardingTheme.goldAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    chat.unreadCount.toString(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(ConversationModel chat) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+        shape: BoxShape.circle,
+        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.2)),
+      ),
+      child: Center(
+        child: chat.partnerAvatar != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(26),
+                child: Image.network(chat.partnerAvatar!, fit: BoxFit.cover),
+              )
+            : Text(
+                chat.partnerName.substring(0, 1).toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: StartupOnboardingTheme.goldAccent,
+                ),
+              ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    return "${time.hour}:${time.minute.toString().padLeft(2, '0')}";
   }
 
   Widget _buildEmptyState(BuildContext context) {

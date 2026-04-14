@@ -72,15 +72,16 @@ class InvestorDiscoveryCard extends StatelessWidget {
                     const Spacer(),
                     GestureDetector(
                       onTap: () => ConnectionViewModel().toggleFavorite(investor.id),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: investor.isFavorite ? accentColor.withOpacity(0.1) : theme.dividerColor.withOpacity(0.05),
+                          color: investor.isFavorite ? Colors.red.withOpacity(0.1) : theme.dividerColor.withOpacity(0.05),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          investor.isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: investor.isFavorite ? const Color(0xFFEF4444) : accentColor.withOpacity(0.4),
+                          investor.isFavorite ? Icons.favorite : LucideIcons.heart,
+                          color: investor.isFavorite ? Colors.redAccent : theme.textTheme.bodySmall?.color?.withOpacity(0.4),
                           size: 18,
                         ),
                       ),
@@ -93,7 +94,12 @@ class InvestorDiscoveryCard extends StatelessWidget {
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: accentColor.withOpacity(0.1),
-                      child: Icon(LucideIcons.briefcase, color: accentColor),
+                      backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
+                          ? NetworkImage(investor.avatarUrl!)
+                          : null,
+                      child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
+                          ? Icon(LucideIcons.briefcase, color: accentColor)
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(

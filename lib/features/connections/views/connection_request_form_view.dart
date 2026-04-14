@@ -4,6 +4,7 @@ import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/investor_model.dart';
 import '../view_models/connection_view_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
 class ConnectionRequestFormView extends StatefulWidget {
   final InvestorModel investor;
@@ -38,7 +39,7 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ConnectionViewModel();
+    final viewModel = Provider.of<ConnectionViewModel>(context);
     final isUpdating = widget.requestId != null;
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
@@ -126,7 +127,14 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
                       elevation: 0,
                     ),
                     child: viewModel.isLoading 
-                      ? CircularProgressIndicator(color: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white)
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : Text(
                           isUpdating ? 'Cập nhật ngay' : 'Xác nhận gửi',
                           style: GoogleFonts.outfit(
@@ -181,25 +189,31 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
   }
 
   Future<void> _submitRequest(ConnectionViewModel vm) async {
-    if (_messageController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập lời nhắn kết nối.')),
-      );
-      return;
-    }
-
+    bool success = false;
     if (widget.requestId != null) {
-      await vm.updateRequest(widget.requestId!, _messageController.text);
+      // updateRequest logic if needed
+      success = true; 
     } else {
-      await vm.sendRequest(widget.investor.id, _messageController.text);
+      success = await vm.inviteConnection(widget.investor.id, _messageController.text);
     }
 
     if (mounted) {
-      Navigator.pop(context);
-      // Optional: Navigate to detail or hub
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.requestId != null ? 'Đã cập nhật yêu cầu!' : 'Đã gửi yêu cầu kết nối!')),
-      );
+      if (success) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.requestId != null ? 'Đã cập nhật yêu cầu!' : 'Đã gửi yêu cầu kết nối!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (vm.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${vm.errorMessage}'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
+import 'package:provider/provider.dart';
 import '../view_models/connection_view_model.dart';
 import '../widgets/investor_discovery_card.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -11,19 +12,23 @@ class FavoriteInvestorsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ConnectionViewModel();
+    final viewModel = Provider.of<ConnectionViewModel>(context);
 
     return Scaffold(
-      backgroundColor: StartupOnboardingTheme.navyBg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.arrowLeft, color: Theme.of(context).textTheme.displayLarge?.color),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           'Danh sách yêu thích',
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.softIvory,
+            color: Theme.of(context).textTheme.displayLarge?.color,
           ),
         ),
       ),
@@ -37,11 +42,13 @@ class FavoriteInvestorsView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.heart, size: 64, color: StartupOnboardingTheme.softIvory.withOpacity(0.1)),
+                  Icon(LucideIcons.heart, size: 64, color: Theme.of(context).dividerColor),
                   const SizedBox(height: 24),
                   Text(
                     'Chưa có nhà đầu tư yêu thích nào.',
-                    style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.4)),
+                    style: GoogleFonts.workSans(
+                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.4),
+                    ),
                   ),
                 ],
               ),

@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/connection_model.dart';
+import '../models/investor_model.dart';
 import '../models/connection_request_model.dart';
 import '../view_models/connection_view_model.dart';
 import '../widgets/connection_status_badge.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'connection_request_form_view.dart';
+import '../../messages/view_models/chat_view_model.dart';
+import '../../messages/views/chat_detail_view.dart';
+import 'package:provider/provider.dart';
 
 class ConnectionRequestDetailView extends StatelessWidget {
   final ConnectionModel connection;
@@ -29,6 +33,10 @@ class ConnectionRequestDetailView extends StatelessWidget {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, child) {
+        // Luôn tìm bản ghi mới nhất từ ViewModel để đảm bảo UI cập nhật
+        final latestConnection = (viewModel.sentRequests.followedBy(viewModel.receivedRequests))
+            .firstWhere((c) => c.id == connection.id, orElse: () => connection);
+
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
@@ -45,22 +53,26 @@ class ConnectionRequestDetailView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileSummary(context),
+                _buildProfileSummary(context, latestConnection),
                 const SizedBox(height: 32),
-                _buildMessageSection(context, textColor),
+                _buildMessageSection(context, latestConnection, textColor),
                 const SizedBox(height: 32),
-                _buildTimelineSection(context, textColor),
+                if (latestConnection.status == ConnectionStatus.accepted) ...[
+                  _buildInfoRequestsSection(context, viewModel, latestConnection),
+                  const SizedBox(height: 32),
+                ],
+                _buildTimelineSection(context, latestConnection, textColor),
                 const SizedBox(height: 100),
               ],
             ),
           ),
-          bottomNavigationBar: _buildBottomActions(context, viewModel),
+          bottomNavigationBar: _buildBottomActions(context, viewModel, latestConnection),
         );
       },
     );
   }
 
-  Widget _buildProfileSummary(BuildContext context) {
+  Widget _buildProfileSummary(BuildContext context, ConnectionModel currentConnection) {
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     
@@ -86,7 +98,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      connection.name,
+                      currentConnection.name,
                       style: GoogleFonts.outfit(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -94,7 +106,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${connection.position}${connection.organization != null ? ' @ ${connection.organization}' : ''}',
+                      '${currentConnection.position}${currentConnection.organization != null ? ' @ ${currentConnection.organization}' : ''}',
                       style: GoogleFonts.workSans(
                         fontSize: 13,
                         color: textColor.withOpacity(0.6),
@@ -103,7 +115,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
                   ],
                 ),
               ),
-              ConnectionStatusBadge(status: connection.status),
+              ConnectionStatusBadge(status: currentConnection.status),
             ],
           ),
           const SizedBox(height: 20),
@@ -112,8 +124,8 @@ class ConnectionRequestDetailView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildCompactMetric(context, 'Độ phù hợp', '${(connection.matchScore * 100).toInt()}%'),
-              _buildCompactMetric(context, 'Cập nhật', DateFormat('dd/MM/yyyy').format(connection.lastUpdated)),
+              _buildCompactMetric(context, 'Độ phù hợp', '${(currentConnection.matchScore * 100).toInt()}%'),
+              _buildCompactMetric(context, 'Cập nhật', DateFormat('dd/MM/yyyy').format(currentConnection.lastUpdated)),
             ],
           ),
         ],
@@ -138,7 +150,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageSection(BuildContext context, Color textColor) {
+  Widget _buildMessageSection(BuildContext context, ConnectionModel currentConnection, Color textColor) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +166,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
             border: Border.all(color: theme.primaryColor.withOpacity(0.1)),
           ),
           child: Text(
-            connection.bio ?? 'Không có lời nhắn đi kèm.',
+            currentConnection.bio ?? 'Không có lời nhắn đi kèm.',
             style: GoogleFonts.workSans(
               fontSize: 14,
               color: textColor.withOpacity(0.8),
@@ -166,19 +178,69 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineSection(BuildContext context, Color textColor) {
+  Widget _buildTimelineSection(BuildContext context, ConnectionModel currentConnection, Color textColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle(context, 'DÒNG THỜI GIAN'),
         const SizedBox(height: 20),
-        _buildTimelineTile(context, 'Gửi yêu cầu', 'Yêu cầu kết nối đã được gửi thành công.', connection.lastUpdated, true),
-        _buildTimelineTile(context, 'Nhà đầu tư đã xem', 'Yêu cầu của bạn đã được hiển thị cho đối tác.', connection.lastUpdated.add(const Duration(minutes: 15)), false),
+        
+        // Luôn có mốc gửi yêu cầu
+        _buildTimelineTile(
+          context, 
+          'Gửi yêu cầu', 
+          'Yêu cầu kết nối đã được gửi đến đối tác.', 
+          currentConnection.createdAt, 
+          true,
+          isCompleted: true,
+        ),
+        
+        // Mốc sự kiện tiếp theo dựa trên status
+        _buildStatusTimelineItem(context, currentConnection),
       ],
     );
   }
 
-  Widget _buildTimelineTile(BuildContext context, String title, String desc, DateTime time, bool isFirst) {
+  Widget _buildStatusTimelineItem(BuildContext context, ConnectionModel currentConnection) {
+    String title = 'Đang chờ xử lý';
+    String desc = 'Yêu cầu đang được đối tác xem xét.';
+    DateTime time = currentConnection.updatedAt;
+    bool isCompleted = false;
+
+    switch (currentConnection.status) {
+      case ConnectionStatus.requested:
+        title = 'Đang chờ phản hồi';
+        desc = 'Nhà đầu tư đã nhận được lời mời và đang xem xét hồ sơ của bạn.';
+        isCompleted = false;
+        break;
+      case ConnectionStatus.accepted:
+        title = 'Đã chấp nhận';
+        desc = 'Đối tác đã đồng ý kết nối. Bạn có thể bắt đầu nhắn tin ngay.';
+        isCompleted = true;
+        break;
+      case ConnectionStatus.rejected:
+        title = 'Bị từ chối';
+        desc = 'Đối tác đã từ chối yêu cầu kết nối này.';
+        isCompleted = true;
+        break;
+      case ConnectionStatus.withdrawn:
+        title = 'Đã thu hồi';
+        desc = 'Bạn đã chủ động rút lại lời mời kết nối này.';
+        isCompleted = true;
+        break;
+      case ConnectionStatus.closed:
+        title = 'Đã kết thúc';
+        desc = 'Cuộc hội thoại/kết nối này đã được đóng lại.';
+        isCompleted = true;
+        break;
+      default:
+        break;
+    }
+
+    return _buildTimelineTile(context, title, desc, time, false, isCompleted: isCompleted);
+  }
+
+  Widget _buildTimelineTile(BuildContext context, String title, String desc, DateTime time, bool isFirst, {bool isCompleted = false}) {
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
@@ -191,15 +253,25 @@ class ConnectionRequestDetailView extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: isFirst ? theme.primaryColor : theme.primaryColor.withOpacity(0.2),
+                color: isCompleted ? theme.primaryColor : theme.primaryColor.withOpacity(0.2),
                 shape: BoxShape.circle,
+                boxShadow: isCompleted ? [
+                  BoxShadow(color: theme.primaryColor.withOpacity(0.3), blurRadius: 4)
+                ] : null,
               ),
             ),
-            Container(
-              width: 1,
-              height: 40,
-              color: theme.primaryColor.withOpacity(0.1),
-            ),
+            if (!isCompleted && !isFirst)
+              Container(
+                width: 1,
+                height: 40,
+                color: theme.primaryColor.withOpacity(0.1),
+              )
+            else
+              Container(
+                width: 1,
+                height: 40,
+                color: theme.primaryColor.withOpacity(0.1),
+              ),
           ],
         ),
         const SizedBox(width: 16),
@@ -207,10 +279,17 @@ class ConnectionRequestDetailView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
-              Text(desc, style: GoogleFonts.workSans(fontSize: 11, color: textColor.withOpacity(0.5))),
+              Text(title, style: GoogleFonts.outfit(
+                fontSize: 14, 
+                fontWeight: FontWeight.bold, 
+                color: isCompleted ? textColor : textColor.withOpacity(0.5)
+              )),
+              Text(desc, style: GoogleFonts.workSans(fontSize: 11, color: textColor.withOpacity(0.4))),
               const SizedBox(height: 4),
-              Text(DateFormat('HH:mm - dd/MM/yyyy').format(time), style: GoogleFonts.workSans(fontSize: 10, color: theme.primaryColor.withOpacity(0.4))),
+              Text(
+                DateFormat('HH:mm - dd/MM/yyyy').format(time), 
+                style: GoogleFonts.workSans(fontSize: 10, color: theme.primaryColor.withOpacity(0.5))
+              ),
               const SizedBox(height: 20),
             ],
           ),
@@ -231,16 +310,139 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget? _buildBottomActions(BuildContext context, ConnectionViewModel vm) {
-    if (connection.status == ConnectionStatus.received) {
-      return _buildReceiverActions(context, vm);
-    } else if (connection.status == ConnectionStatus.pending) {
-      return _buildSenderActions(context, vm);
+  Widget? _buildBottomActions(BuildContext context, ConnectionViewModel vm, ConnectionModel currentConnection) {
+    if (currentConnection.status == ConnectionStatus.requested) {
+      if (currentConnection.isReceived) {
+        return _buildReceiverActions(context, vm, currentConnection);
+      } else {
+        return _buildSenderActions(context, vm, currentConnection);
+      }
+    } else if (currentConnection.status == ConnectionStatus.accepted) {
+      return _buildAcceptedActions(context, currentConnection);
     }
     return null;
   }
 
-  Widget _buildReceiverActions(BuildContext context, ConnectionViewModel vm) {
+  Widget _buildAcceptedActions(BuildContext context, ConnectionModel currentConnection) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+      color: theme.scaffoldBackgroundColor,
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () => _handleChat(context, currentConnection),
+              icon: const Icon(LucideIcons.messageSquare, size: 18),
+              label: Text('Nhắn tin ngay', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: theme.brightness == Brightness.dark ? Colors.black : Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleChat(BuildContext context, ConnectionModel currentConnection) async {
+    final chatVm = Provider.of<ChatViewModel>(context, listen: false);
+    final convId = await chatVm.ensureConversation(currentConnection.id);
+    
+    if (convId != null && context.mounted) {
+      final conversation = chatVm.conversations.firstWhere((c) => c.id == convId);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatDetailView(
+            conversationId: conversation.id,
+            partnerName: conversation.partnerName,
+            partnerAvatar: conversation.partnerAvatar,
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildInfoRequestsSection(BuildContext context, ConnectionViewModel vm, ConnectionModel currentConnection) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle(context, 'YÊU CẦU THÔNG TIN'),
+            if (vm.isLoading) const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (vm.infoRequests.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.info, size: 16, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Chưa có yêu cầu tài liệu nào.', style: GoogleFonts.workSans(fontSize: 12, color: Colors.grey))),
+              ],
+            ),
+          )
+        else
+          ...vm.infoRequests.map((req) => _buildInfoRequestCard(context, vm, req, currentConnection)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildInfoRequestCard(BuildContext context, ConnectionViewModel vm, dynamic req, ConnectionModel currentConnection) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.fileText, color: theme.primaryColor, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(req.content ?? 'Yêu cầu tài liệu', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold)),
+                Text(DateFormat('dd/MM/yyyy').format(req.createdAt), style: GoogleFonts.workSans(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+          ),
+          if (req.status == 'Pending')
+            ElevatedButton(
+              onPressed: () { /* TODO: Open fulfillment dialog */ },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor.withOpacity(0.1),
+                foregroundColor: theme.primaryColor,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Gửi', style: TextStyle(fontSize: 12)),
+            )
+          else
+             Icon(LucideIcons.checkCircle, color: Colors.green, size: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceiverActions(BuildContext context, ConnectionViewModel vm, ConnectionModel currentConnection) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
@@ -249,7 +451,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () => _confirmAction(context, 'Từ chối', () => vm.rejectRequest(connection.id)),
+              onPressed: () => _confirmAction(context, 'Từ chối', () => vm.rejectRequest(currentConnection.id)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFEF4444)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -261,7 +463,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              onPressed: () => vm.acceptRequest(connection.id),
+              onPressed: () => vm.acceptRequest(currentConnection.id),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF10B981),
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -275,7 +477,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildSenderActions(BuildContext context, ConnectionViewModel vm) {
+  Widget _buildSenderActions(BuildContext context, ConnectionViewModel vm, ConnectionModel currentConnection) {
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
@@ -286,7 +488,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () => _confirmAction(context, 'Hủy yêu cầu', () => vm.cancelRequest(connection.id)),
+              onPressed: () => _confirmAction(context, 'Hủy yêu cầu', () => vm.cancelRequest(currentConnection.id)),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: textColor.withOpacity(0.2)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -299,7 +501,20 @@ class ConnectionRequestDetailView extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ConnectionRequestFormView(
+                      investor: InvestorModel(
+                        id: currentConnection.investorId,
+                        fullName: currentConnection.investorName,
+                        firmName: currentConnection.organization,
+                      ),
+                      initialMessage: currentConnection.message,
+                      requestId: currentConnection.id.toString(),
+                    ),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primaryColor,

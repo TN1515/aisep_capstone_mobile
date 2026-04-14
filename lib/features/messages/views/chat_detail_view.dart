@@ -8,9 +8,16 @@ import '../view_models/chat_view_model.dart';
 import 'package:intl/intl.dart';
 
 class ChatDetailView extends StatefulWidget {
-  final ChatModel chat;
+  final int conversationId;
+  final String partnerName;
+  final String? partnerAvatar;
 
-  const ChatDetailView({super.key, required this.chat});
+  const ChatDetailView({
+    super.key, 
+    required this.conversationId,
+    required this.partnerName,
+    this.partnerAvatar,
+  });
 
   @override
   State<ChatDetailView> createState() => _ChatDetailViewState();
@@ -19,6 +26,14 @@ class ChatDetailView extends StatefulWidget {
 class _ChatDetailViewState extends State<ChatDetailView> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatViewModel>(context, listen: false).loadMessages(widget.conversationId);
+    });
+  }
 
   @override
   void dispose() {
@@ -59,7 +74,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    widget.chat.investorName,
+                    widget.partnerName,
                     style: GoogleFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -68,7 +83,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    widget.chat.organizationName ?? 'Investor',
+                    'Trực tuyến',
                     style: GoogleFonts.workSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -86,9 +101,13 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           Expanded(
             child: Consumer<ChatViewModel>(
               builder: (context, viewModel, child) {
-                final messages = viewModel.getMessages(widget.chat.id);
+                final messages = viewModel.getMessages(widget.conversationId);
                 WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
                 
+                if (viewModel.isLoading && messages.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 if (messages.isEmpty) {
                   return _buildEmptyChatState();
                 }
@@ -121,13 +140,13 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.2)),
       ),
       child: Center(
-        child: widget.chat.avatarUrl != null
+        child: widget.partnerAvatar != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.network(widget.chat.avatarUrl!, fit: BoxFit.cover),
+                child: Image.network(widget.partnerAvatar!, fit: BoxFit.cover),
               )
             : Text(
-                widget.chat.investorName.substring(0, 1).toUpperCase(),
+                widget.partnerName.substring(0, 1).toUpperCase(),
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -155,7 +174,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Hãy gửi lời chào đầu tiên tới ${widget.chat.investorName}!',
+            'Hãy gửi lời chào đầu tiên tới ${widget.partnerName}!',
             style: GoogleFonts.workSans(
               fontSize: 14,
               color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
@@ -257,7 +276,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             onTap: () {
               final text = _messageController.text;
               if (text.isNotEmpty) {
-                Provider.of<ChatViewModel>(context, listen: false).sendMessage(widget.chat.id, text);
+                Provider.of<ChatViewModel>(context, listen: false).sendMessage(widget.conversationId, text);
                 _messageController.clear();
                 _scrollToBottom();
               }

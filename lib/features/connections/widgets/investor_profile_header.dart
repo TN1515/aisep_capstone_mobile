@@ -14,25 +14,36 @@ class InvestorProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = StartupOnboardingTheme.goldAccent;
-    final Color textColor = StartupOnboardingTheme.softIvory;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final Color accentColor = theme.primaryColor;
+    final Color textColor = theme.textTheme.displayLarge?.color ?? Colors.white;
+    final Color surfaceColor = theme.cardColor;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: surfaceColor,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: (isDark ? Colors.black : Colors.grey).withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
+        gradient: isDark ? null : LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            accentColor.withOpacity(0.05),
+            surfaceColor,
+          ],
+        ),
       ),
       child: Column(
         children: [
@@ -82,13 +93,13 @@ class InvestorProfileHeader extends StatelessWidget {
               color: textColor.withOpacity(0.6),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildMetric(LucideIcons.sparkles, '${(investor.matchScore * 100).toInt()}%', 'Phù hợp'),
+              _buildMetric(context, LucideIcons.sparkles, '${(investor.matchScore * 100).toInt()}%', 'Phù hợp'),
               const SizedBox(width: 40),
-              _buildMetric(LucideIcons.globe, investor.marketScope, 'Phạm vi'),
+              _buildMetric(context, LucideIcons.globe, investor.marketScope, 'Phạm vi'),
             ],
           ),
         ],
@@ -96,19 +107,23 @@ class InvestorProfileHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildMetric(IconData icon, String value, String label) {
+  Widget _buildMetric(BuildContext context, IconData icon, String value, String label) {
+    final theme = Theme.of(context);
+    final accentColor = theme.primaryColor;
+    final textColor = theme.textTheme.displayLarge?.color ?? Colors.white;
+
     return Column(
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: StartupOnboardingTheme.goldAccent),
+            Icon(icon, size: 14, color: accentColor),
             const SizedBox(width: 4),
             Text(
               value,
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: textColor,
               ),
             ),
           ],
@@ -118,7 +133,7 @@ class InvestorProfileHeader extends StatelessWidget {
           label,
           style: GoogleFonts.workSans(
             fontSize: 10,
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.4),
+            color: textColor.withOpacity(0.4),
           ),
         ),
       ],

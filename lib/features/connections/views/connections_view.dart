@@ -20,6 +20,15 @@ class ConnectionsView extends StatefulWidget {
 
 class _ConnectionsViewState extends State<ConnectionsView> {
   @override
+  void initState() {
+    super.initState();
+    // Trigger a refresh when the user enters the hub to ensure data is up to date
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectionViewModel().refreshAll();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final viewModel = ConnectionViewModel();
 

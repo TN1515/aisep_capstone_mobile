@@ -1,189 +1,110 @@
 import 'package:flutter/material.dart';
 import '../models/connection_model.dart';
 import '../models/investor_model.dart';
-import '../models/connection_request_model.dart';
+import '../models/information_request_model.dart';
+import '../services/connection_service.dart';
 
 class ConnectionViewModel extends ChangeNotifier {
-  // Singleton pattern for easy sharing across the module
+  final ConnectionService _service = ConnectionService();
+
+  // Singleton instance
   static final ConnectionViewModel instance = ConnectionViewModel._internal();
   factory ConnectionViewModel() => instance;
   ConnectionViewModel._internal() {
-    _loadMockData();
+    refreshAll();
   }
 
-  List<ConnectionModel> _receivedRequests = [];
-  List<ConnectionModel> _sentRequests = [];
-  List<ConnectionModel> _activeConnections = [];
+  // Connection Lists
+  List<ConnectionModel> _receivedConnections = [];
+  List<ConnectionModel> _sentConnections = [];
   List<ConnectionModel> _history = [];
+  List<InvestorModel> _investors = [];
+  List<InvestorModel> _aiInvestors = [];
+  List<InfoRequestModel> _infoRequests = [];
+  InvestorModel? _currentDetailedInvestor;
   
-  // Discovery State
-  List<InvestorModel> _interestedInvestors = [];
-  List<InvestorModel> _discoveryResults = [];
-  
+  // State
   bool _isLoading = false;
-  String _searchQuery = '';
+  String? _errorMessage;
   
-  // Advanced Filter States
-  final Set<String> _selectedStages = {};
-  final Set<String> _selectedIndustries = {};
+  // Search & Filter State
+  String _searchQuery = '';
+  Set<String> _selectedStages = {};
+  Set<String> _selectedIndustries = {};
   String? _selectedDealSize;
   
   // Getters
-  List<ConnectionModel> get receivedRequests => _receivedRequests;
-  List<ConnectionModel> get sentRequests => _sentRequests;
-  List<ConnectionModel> get activeConnections => _activeConnections;
+  List<ConnectionModel> get receivedRequests => _receivedConnections;
+  List<ConnectionModel> get sentRequests => _sentConnections;
   List<ConnectionModel> get history => _history;
-  List<InvestorModel> get interestedInvestors => _interestedInvestors;
-  List<InvestorModel> get discoveryResults => _discoveryResults.isEmpty && _searchQuery.isEmpty ? _interestedInvestors : _discoveryResults;
-  List<InvestorModel> get favoriteInvestors => _interestedInvestors.where((i) => i.isFavorite).toList();
+  List<InvestorModel> get discoveryResults => _investors;
+  List<InvestorModel> get aiRecommendations => _aiInvestors;
+  List<InvestorModel> get favoriteInvestors => _investors.where((i) => i.isFavorite).toList();
+  List<InfoRequestModel> get infoRequests => _infoRequests;
+  InvestorModel? get currentDetailedInvestor => _currentDetailedInvestor;
   
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  String get searchQuery => _searchQuery;
   Set<String> get selectedStages => _selectedStages;
   Set<String> get selectedIndustries => _selectedIndustries;
   String? get selectedDealSize => _selectedDealSize;
-  
-  bool get isLoading => _isLoading;
-  String get searchQuery => _searchQuery;
 
-  void _loadMockData() {
+  Future<void> refreshAll() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    // 1. Mock Discovery / Interested Investors
-    _interestedInvestors = [
-      InvestorModel(
-        id: 'inv_1',
-        name: 'Nguyễn Văn A',
-        organization: 'VinaCapital',
-        position: 'Investment Director',
-        isVerified: true,
-        isFavorite: true,
-        thesis: 'Tập trung vào các startup công nghệ giai đoạn Series A tại Đông Nam Á.',
-        preferredIndustries: ['Fintech', 'AI', 'SaaS'],
-        preferredStages: ['Series A', 'Late Seed'],
-        preferredGeographies: ['Vietnam', 'Singapore'],
-        marketScope: 'Regional',
-        supportOffered: 'Strategic advice, network access, and follow-on funding.',
-        matchScore: 0.95,
-      ),
-      InvestorModel(
-        id: 'inv_2',
-        name: 'Trần Thị B',
-        organization: 'CyberAgent Capital',
-        position: 'Partner',
-        isFavorite: false,
-        thesis: 'Săn tìm các đơn vị tiên phong trong lĩnh vực chuyển đổi số.',
-        preferredIndustries: ['eCommerce', 'Logistics', 'EdTech'],
-        preferredStages: ['Seed', 'Pre-Series A'],
-        preferredGeographies: ['Vietnam', 'Indonesia'],
-        marketScope: 'Global',
-        supportOffered: 'Go-to-market strategy and operational support.',
-        matchScore: 0.88,
-      ),
-      InvestorModel(
-        id: 'inv_3',
-        name: 'Mekong Venture',
-        organization: 'Mekong Capital',
-        position: 'Investment Team',
-        isFavorite: false,
-        thesis: 'Đầu tư vào các doanh nghiệp tiêu dùng có tốc độ tăng trưởng cao.',
-        preferredIndustries: ['Consumer', 'Retail', 'Healthcare'],
-        preferredStages: ['Growth', 'Series B'],
-        preferredGeographies: ['Vietnam'],
-        marketScope: 'Domestic',
-        supportOffered: 'Excellence in Execution and talent acquisition.',
-        matchScore: 0.75,
-      ),
-    ];
-
-    // 2. Mock Received Requests
-    _receivedRequests = [
-      ConnectionModel(
-        id: 'req_r_1',
-        name: 'Lê Mai Anh',
-        organization: 'Mekong Capital',
-        position: 'Investment Officer',
-        role: ConnectionRole.investor,
-        status: ConnectionStatus.received,
-        bio: 'Hỗ trợ các doanh nghiệp trong lĩnh vực tiêu dùng và bán lẻ.',
-        tags: ['Consumer', 'Retail'],
-        matchScore: 0.91,
-        lastUpdated: DateTime.now().subtract(const Duration(hours: 12)),
-        requestId: 'cr_1',
-      ),
-    ];
-
-    // 3. Mock Sent Requests
-    _sentRequests = [
-      ConnectionModel(
-        id: 'req_s_1',
-        name: 'Nguyễn Văn A',
-        organization: 'IDG Ventures',
-        position: 'General Partner',
-        role: ConnectionRole.investor,
-        status: ConnectionStatus.pending,
-        bio: 'Tìm kiếm cơ hội trong lĩnh vực EdTech.',
-        tags: ['EdTech', 'Media'],
-        matchScore: 0.82,
-        lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
-        requestId: 'cr_2',
-      ),
-    ];
-
-    // 4. Mock History / Active
-    _history = [
-      ConnectionModel(
-        id: 'h_1',
-        name: 'Phan Anh Tuấn',
-        organization: 'Do Ventures',
-        position: 'Associate',
-        role: ConnectionRole.investor,
-        status: ConnectionStatus.rejected,
-        bio: 'Đang theo dõi các dự án EdTech.',
-        tags: ['EdTech', 'B2C'],
-        matchScore: 0.75,
-        lastUpdated: DateTime.now().subtract(const Duration(days: 10)),
-      ),
-      ConnectionModel(
-        id: 'h_2',
-        name: 'Elena Gilbert',
-        organization: 'Mystic Ventures',
-        position: 'Managing Director',
-        role: ConnectionRole.investor,
-        status: ConnectionStatus.active,
-        bio: 'Chuyên gia về Logistics và Chuỗi cung ứng.',
-        tags: ['Logistics', 'Supply Chain'],
-        matchScore: 0.94,
-        lastUpdated: DateTime.now().subtract(const Duration(days: 30)),
-      ),
-    ];
+    await Future.wait([
+      loadInvestors(),
+      loadAiRecommendations(),
+      _loadReceived(),
+      _loadSent(),
+    ]);
 
     _isLoading = false;
     notifyListeners();
   }
 
-  // --- ACTIONS ---
+  // 1. Investor Discovery (Search)
+  Future<void> loadInvestors() async {
+    final response = await _service.getInvestors(
+      keyword: _searchQuery.isEmpty ? null : _searchQuery,
+      stage: _selectedStages.isEmpty ? null : _selectedStages.join(','),
+      industry: _selectedIndustries.isEmpty ? null : _selectedIndustries.join(','),
+    );
 
-  void setSearchQuery(String query) {
-    _searchQuery = query;
-    if (query.isEmpty) {
-      _discoveryResults = [];
-    } else {
-      _discoveryResults = _interestedInvestors
-          .where((i) => i.name.toLowerCase().contains(query.toLowerCase()) || 
-                       (i.organization?.toLowerCase().contains(query.toLowerCase()) ?? false))
-          .toList();
+    if (response.isSuccess) {
+      _investors = response.data ?? [];
     }
+  }
+
+  Future<void> loadAiRecommendations() async {
+    final response = await _service.getAiRecommendations();
+    if (response.isSuccess) {
+      _aiInvestors = response.data ?? [];
+    }
+  }
+
+  Future<void> loadInvestorDetail(int id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final response = await _service.getInvestorById(id);
+    if (response.isSuccess && response.data != null) {
+      _currentDetailedInvestor = response.data;
+    } else {
+      _errorMessage = response.message;
+    }
+    
+    _isLoading = false;
     notifyListeners();
   }
 
-  void toggleFavorite(String investorId) {
-    final index = _interestedInvestors.indexWhere((i) => i.id == investorId);
-    if (index != -1) {
-      _interestedInvestors[index] = _interestedInvestors[index].copyWith(
-        isFavorite: !_interestedInvestors[index].isFavorite,
-      );
-      notifyListeners();
-    }
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    loadInvestors().then((_) => notifyListeners());
   }
 
   void toggleStage(String stage) {
@@ -192,7 +113,7 @@ class ConnectionViewModel extends ChangeNotifier {
     } else {
       _selectedStages.add(stage);
     }
-    notifyListeners();
+    loadInvestors().then((_) => notifyListeners());
   }
 
   void toggleIndustry(String industry) {
@@ -201,7 +122,7 @@ class ConnectionViewModel extends ChangeNotifier {
     } else {
       _selectedIndustries.add(industry);
     }
-    notifyListeners();
+    loadInvestors().then((_) => notifyListeners());
   }
 
   void setSelectedDealSize(String? size) {
@@ -213,47 +134,122 @@ class ConnectionViewModel extends ChangeNotifier {
     _selectedStages.clear();
     _selectedIndustries.clear();
     _selectedDealSize = null;
+    loadInvestors().then((_) => notifyListeners());
+  }
+
+  // 2. Connection Lifecycle
+  Future<void> _loadReceived() async {
+    final response = await _service.getReceivedConnections();
+    if (response.isSuccess) {
+      final all = response.data ?? [];
+      // Include all states to ensure Detail View can reflect status changes (Accepted, Rejected, Withdrawn, etc.)
+      _receivedConnections = all.map((c) => c.copyWith(isReceived: true)).toList();
+    }
+  }
+
+  Future<void> _loadSent() async {
+    final response = await _service.getSentConnections();
+    if (response.isSuccess) {
+      final all = response.data ?? [];
+      // Include all states to ensure Detail View can reflect status changes (Accepted, Rejected, Withdrawn, etc.)
+      _sentConnections = all.map((c) => c.copyWith(isReceived: false)).toList();
+    }
+  }
+
+  void _updateHistory(List<ConnectionModel> items) {
+    // Tạm thời xóa logic mapping cũ, chờ API mới từ người dùng
+    _history = [];
     notifyListeners();
   }
 
-  Future<void> sendRequest(String investorId, String message) async {
+  // Legacy Method Names for UI Compatibility
+  Future<bool> acceptRequest(dynamic id) => acceptConnection(int.tryParse(id.toString()) ?? 0);
+  Future<bool> rejectRequest(dynamic id, [String reason = '']) => rejectConnection(int.tryParse(id.toString()) ?? 0, reason);
+  Future<void> cancelRequest(dynamic id) => withdrawConnection(int.tryParse(id.toString()) ?? 0);
+  Future<void> updateRequest(dynamic id, String message) async {} 
+  Future<void> sendRequest(int investorId, String message) => inviteConnection(investorId, message);
+  
+  void toggleFavorite(int investorId) {
+    toggleWatchlist(investorId);
+  }
+
+  Future<bool> toggleWatchlist(int investorId) async {
+    // Optimistic UI update
+    final index = _investors.indexWhere((i) => i.id == investorId);
+    if (index != -1) {
+      final isNowFavorite = !_investors[index].isFavorite;
+      _investors[index] = _investors[index].copyWith(isFavorite: isNowFavorite);
+      notifyListeners();
+      
+      final response = await _service.addToWatchlist(investorId);
+      if (!response.isSuccess) {
+        // Rollback on failure
+        _investors[index] = _investors[index].copyWith(isFavorite: !isNowFavorite);
+        notifyListeners();
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> inviteConnection(int investorId, String message) async {
     _isLoading = true;
     notifyListeners();
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+
+    final response = await _service.inviteConnection(investorId, message);
+    
     _isLoading = false;
+    if (response.isSuccess) {
+      await _loadSent();
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> acceptConnection(int id) async {
+    final response = await _service.acceptConnection(id);
+    if (response.isSuccess) {
+      await refreshAll();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> rejectConnection(int id, String reason) async {
+    final response = await _service.rejectConnection(id, reason);
+    if (response.isSuccess) {
+      await refreshAll();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> withdrawConnection(int id) async {
+    final response = await _service.withdrawConnection(id);
+    if (response.isSuccess) {
+      await _loadSent();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  // 3. Information Requests
+  Future<void> loadInfoRequests(int connectionId) async {
+    final response = await _service.getInfoRequests(connectionId);
+    if (response.isSuccess) {
+      _infoRequests = response.data ?? [];
+    }
     notifyListeners();
   }
 
-  Future<void> updateRequest(String requestId, String newMessage) async {
-    _isLoading = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> cancelRequest(String requestId) async {
-    _isLoading = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> acceptRequest(String requestId) async {
-    _isLoading = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> rejectRequest(String requestId) async {
-    _isLoading = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoading = false;
-    notifyListeners();
+  Future<bool> fulfillRequest(int requestId, String content, List<String> attachments) async {
+    final response = await _service.fulfillInfoRequest(requestId, content, attachments);
+    return response.isSuccess;
   }
 }
