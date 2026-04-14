@@ -3,31 +3,41 @@ import 'package:aisep_capstone_mobile/features/onboarding/views/startup_onboardi
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import 'package:aisep_capstone_mobile/core/services/token_service.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
-import 'package:aisep_capstone_mobile/features/startup_profile/views/create_startup_profile_view.dart';
-import 'package:aisep_capstone_mobile/features/startup_profile/services/startup_service.dart';
+import 'package:aisep_capstone_mobile/features/profile/views/profile_setup_view.dart';
+import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
 import 'package:provider/provider.dart';
 import 'package:aisep_capstone_mobile/features/consulting/view_models/consulting_view_model.dart';
 import 'package:aisep_capstone_mobile/features/settings/view_models/settings_view_model.dart';
 import 'package:aisep_capstone_mobile/features/kyc/view_models/kyc_view_model.dart';
 import 'package:aisep_capstone_mobile/features/auth/view_models/auth_view_model.dart';
 import 'package:aisep_capstone_mobile/features/profile/view_models/startup_profile_view_model.dart';
+import 'package:aisep_capstone_mobile/features/evaluation/view_models/evaluation_view_model.dart';
+import 'package:aisep_capstone_mobile/features/connections/view_models/connection_view_model.dart';
+import 'package:aisep_capstone_mobile/features/messages/view_models/chat_view_model.dart';
 import 'package:aisep_capstone_mobile/core/navigation/navigator_service.dart';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Mặc định luôn hiện Onboarding khi run ứng dụng theo yêu cầu
+  const bool showOnboarding = true;
+  
   // Chỉ kiểm tra Token nhanh ở tầng native
   final bool isLoggedIn = await TokenService.hasToken();
   
-  runApp(MyApp(isLoggedIn: isLoggedIn));
+  runApp(MyApp(isLoggedIn: isLoggedIn, isFirstTime: showOnboarding));
 }
 
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
+  final bool isFirstTime;
   
   const MyApp({
     super.key,
     required this.isLoggedIn,
+    required this.isFirstTime,
   });
 
   @override
@@ -39,19 +49,30 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => KycViewModel()),
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => StartupProfileViewModel()),
+        ChangeNotifierProvider(create: (_) => EvaluationViewModel()),
+        ChangeNotifierProvider(create: (_) => ConnectionViewModel()),
+        ChangeNotifierProvider(create: (_) => ChatViewModel()),
       ],
       child: Consumer<SettingsViewModel>(
         builder: (context, settingsViewModel, child) {
-          return MaterialApp(
-            title: 'AISEP Startup',
-            debugShowCheckedModeBanner: false,
-            navigatorKey: NavigatorService.navigatorKey,
-            theme: StartupOnboardingTheme.lightTheme,
-            darkTheme: StartupOnboardingTheme.darkTheme,
-            themeMode: settingsViewModel.settings.isDarkMode 
-                ? ThemeMode.dark 
-                : ThemeMode.light,
-            home: _RootWrapper(isLoggedIn: isLoggedIn),
+          return GestureDetector(
+            onTap: () {
+              FocusScopeNode currentFocus = FocusScope.of(context);
+              if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+                FocusManager.instance.primaryFocus?.unfocus();
+              }
+            },
+            child: MaterialApp(
+              title: 'AISEP Startup',
+              debugShowCheckedModeBanner: false,
+              navigatorKey: NavigatorService.navigatorKey,
+              theme: StartupOnboardingTheme.lightTheme,
+              darkTheme: StartupOnboardingTheme.darkTheme,
+              themeMode: settingsViewModel.settings.isDarkMode 
+                  ? ThemeMode.dark 
+                  : ThemeMode.light,
+              home: _RootWrapper(isLoggedIn: isLoggedIn, isFirstTime: isFirstTime),
+            ),
           );
         },
       ),
@@ -62,7 +83,8 @@ class MyApp extends StatelessWidget {
 /// Widget trung gian kiểm tra trạng thái hồ sơ sau khi đã có Token
 class _RootWrapper extends StatefulWidget {
   final bool isLoggedIn;
-  const _RootWrapper({required this.isLoggedIn});
+  final bool isFirstTime;
+  const _RootWrapper({required this.isLoggedIn, required this.isFirstTime});
 
   @override
   State<_RootWrapper> createState() => _RootWrapperState();
@@ -75,7 +97,9 @@ class _RootWrapperState extends State<_RootWrapper> {
   @override
   void initState() {
     super.initState();
-    if (widget.isLoggedIn) {
+    if (widget.isFirstTime) {
+      _hasProfile = false;
+    } else if (widget.isLoggedIn) {
       _checkProfile();
     } else {
       _hasProfile = false;
@@ -119,7 +143,7 @@ class _RootWrapperState extends State<_RootWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isLoggedIn && !_isChecking) {
+    if (widget.isFirstTime || !widget.isLoggedIn) {
       return const StartupOnboardingScreen();
     }
 
@@ -142,6 +166,6 @@ class _RootWrapperState extends State<_RootWrapper> {
       return const DashboardView();
     }
     
-    return const CreateStartupProfileView();
+    return const ProfileSetupView();
   }
 }

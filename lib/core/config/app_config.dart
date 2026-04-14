@@ -5,7 +5,10 @@ class AppConfig {
 
   /// Đọc Base URL của API từ môi trường
   static String get apiBaseUrl {
-    String baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    String baseUrl = const String.fromEnvironment(
+      'API_BASE_URL', 
+      defaultValue: 'http://localhost:5294',
+    );
     
     // Tự động dọn dẹp /api ở cuối nếu có để tránh lặp đường dẫn (ví dụ trong prod.json)
     if (baseUrl.endsWith('/api/')) {
