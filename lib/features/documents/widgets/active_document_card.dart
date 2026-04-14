@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/document_model.dart';
 import 'package:intl/intl.dart';
 
@@ -49,7 +48,7 @@ class ActiveDocumentCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          document.fileName,
+                          document.displayTitle,
                           style: GoogleFonts.outfit(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -60,16 +59,14 @@ class ActiveDocumentCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      _buildVisibilityIndicator(context),
-                      const SizedBox(width: 8),
-                      _buildStatusChip(context),
+                      _buildReviewStatusChip(context),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Text(
-                        'v${document.version ?? '1.0'}',
+                        document.documentType.label,
                         style: GoogleFonts.workSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -113,60 +110,6 @@ class ActiveDocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVisibilityIndicator(BuildContext context) {
-    final theme = Theme.of(context);
-    IconData icon;
-    Color color;
-    String label;
-
-    switch (document.visibility) {
-      case DocumentVisibility.investor:
-        icon = LucideIcons.trendingUp;
-        color = Colors.blueAccent;
-        label = 'Cho Investor';
-        break;
-      case DocumentVisibility.advisor:
-        icon = LucideIcons.shield;
-        color = Colors.purpleAccent;
-        label = 'Cho Advisor';
-        break;
-      case DocumentVisibility.both:
-        icon = LucideIcons.users;
-        color = Colors.orangeAccent;
-        label = 'Tất cả';
-        break;
-      case DocumentVisibility.private:
-        icon = LucideIcons.eyeOff;
-        color = theme.textTheme.bodyLarge?.color?.withOpacity(0.3) ?? Colors.grey;
-        label = 'Riêng tư';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 10),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: GoogleFonts.workSans(
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFileIcon(BuildContext context) {
     IconData icon;
     Color color;
@@ -192,26 +135,27 @@ class ActiveDocumentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget _buildReviewStatusChip(BuildContext context) {
     String label;
     Color color;
 
-    switch (document.status) {
-      case DocumentStatus.verified:
-      case DocumentStatus.aiCompleted:
-        label = 'Đã hoàn tất';
+    switch (document.reviewStatus) {
+      case DocumentReviewStatus.approved:
+        label = 'Đã duyệt';
         color = Colors.greenAccent;
         break;
-      case DocumentStatus.pendingBlockchain:
-      case DocumentStatus.aiEvaluating:
-      case DocumentStatus.hashing:
-        label = 'Đang xử lý';
-        color = theme.primaryColor;
+      case DocumentReviewStatus.verified:
+        label = 'Đã xác minh';
+        color = Colors.blueAccent;
         break;
-      default:
-        label = 'Mới';
-        color = theme.textTheme.bodyLarge?.color?.withOpacity(0.5) ?? Colors.grey;
+      case DocumentReviewStatus.rejected:
+        label = 'Bị từ chối';
+        color = Colors.redAccent;
+        break;
+      case DocumentReviewStatus.pending:
+        label = 'Chờ duyệt';
+        color = Colors.orangeAccent;
+        break;
     }
 
     return Container(
@@ -224,7 +168,7 @@ class ActiveDocumentCard extends StatelessWidget {
       child: Text(
         label,
         style: GoogleFonts.workSans(
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: FontWeight.bold,
           color: color,
         ),

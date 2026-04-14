@@ -6,19 +6,22 @@ import '../models/document_model.dart';
 
 class BlockchainStatusCard extends StatelessWidget {
   final DocumentModel document;
-  final VoidCallback onVerify;
+  final VoidCallback onAction; // Unified action based on status
+  final VoidCallback? onTap;
 
   const BlockchainStatusCard({
     super.key,
     required this.document,
-    required this.onVerify,
+    required this.onAction,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool isVerified = document.status == DocumentStatus.verified || document.status == DocumentStatus.aiCompleted;
-    final bool isPending = document.status == DocumentStatus.pendingBlockchain || document.status == DocumentStatus.hashing;
+    final status = document.proofStatus;
+    final bool isAnchored = status == ProofStatus.anchored;
+    final bool isPending = status == ProofStatus.pending;
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return Container(
@@ -28,7 +31,7 @@ class BlockchainStatusCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: isVerified 
+          color: isAnchored 
             ? Colors.greenAccent.withOpacity(0.2) 
             : isPending 
               ? theme.primaryColor.withOpacity(0.2)
@@ -40,14 +43,14 @@ class BlockchainStatusCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _buildStatusIcon(context, isVerified, isPending),
+              _buildStatusIcon(context, status),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      document.fileName,
+                      document.displayTitle,
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -58,54 +61,60 @@ class BlockchainStatusCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isVerified ? 'Tài liệu đã được xác thực on-chain' : isPending ? 'Đang chờ xác thực...' : 'Chưa được xác thực',
+                      status.label,
                       style: GoogleFonts.workSans(
                         fontSize: 12,
-                        color: textColor.withOpacity(0.5),
+                        color: status.color.withOpacity(0.8),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (isVerified)
+              if (isAnchored)
                 const Icon(LucideIcons.checkCircle2, color: Colors.greenAccent, size: 20),
             ],
           ),
           const SizedBox(height: 24),
-          if (document.txHash != null) ...[
-            _buildInfoRow(context, 'Transaction Hash', document.txHash!),
+          if (document.transactionHash != null && document.transactionHash!.isNotEmpty) ...[
+            _buildInfoRow(context, 'Transaction Hash', document.transactionHash!),
             const SizedBox(height: 12),
           ],
-          if (document.fileHash != null) ...[
+          if (document.fileHash != null && document.fileHash!.isNotEmpty) ...[
             _buildInfoRow(context, 'File Hash (SHA256)', document.fileHash!),
             const SizedBox(height: 12),
           ],
           const SizedBox(height: 16),
-          _buildActionButton(context, isVerified, isPending),
+          _buildActionButton(context, status),
         ],
       ),
     );
   }
 
-  Widget _buildStatusIcon(BuildContext context, bool isVerified, bool isPending) {
+  Widget _buildStatusIcon(BuildContext context, ProofStatus status) {
     final theme = Theme.of(context);
-    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isVerified 
-          ? Colors.greenAccent.withOpacity(0.1) 
-          : isPending 
-            ? theme.primaryColor.withOpacity(0.1)
-            : theme.scaffoldBackgroundColor,
+        color: status.color.withOpacity(0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(
-        isVerified ? LucideIcons.shieldCheck : isPending ? LucideIcons.refreshCw : LucideIcons.shieldAlert,
-        color: isVerified ? Colors.greenAccent : isPending ? theme.primaryColor : textColor.withOpacity(0.3),
+        _getIcon(status),
+        color: status.color,
         size: 24,
       ),
     );
+  }
+
+  IconData _getIcon(ProofStatus status) {
+    switch (status) {
+      case ProofStatus.anchored: return LucideIcons.shieldCheck;
+      case ProofStatus.pending: return LucideIcons.refreshCw;
+      case ProofStatus.hashComputed: return LucideIcons.binary;
+      case ProofStatus.failed: return LucideIcons.shieldAlert;
+      case ProofStatus.none: return LucideIcons.shield;
+    }
   }
 
   Widget _buildInfoRow(BuildContext context, String label, String value) {
@@ -152,33 +161,41 @@ class BlockchainStatusCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, bool isVerified, bool isPending) {
-    if (isPending) return const SizedBox.shrink();
+  Widget _buildActionButton(BuildContext context, ProofStatus status) {
     final theme = Theme.of(context);
+    String label = 'Bảo vệ sở hữu trí tuệ';
+    IconData icon = LucideIcons.zap;
+    
+    if (status == ProofStatus.anchored) {
+      label = 'Xác minh tính toàn vẹn';
+      icon = LucideIcons.checkSquare;
+    } else if (status == ProofStatus.pending) {
+      label = 'Đang kiểm tra giao dịch...';
+      icon = LucideIcons.loader2;
+    } else if (status == ProofStatus.hashComputed) {
+      label = 'Gửi lên Blockchain';
+      icon = LucideIcons.share2;
+    }
 
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: OutlinedButton(
-        onPressed: onVerify,
+        onPressed: status == ProofStatus.pending ? null : onAction,
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: isVerified ? Colors.greenAccent.withOpacity(0.3) : theme.primaryColor.withOpacity(0.5)),
+          side: BorderSide(color: status.color.withOpacity(0.5)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isVerified ? LucideIcons.externalLink : LucideIcons.zap, 
-              size: 16, 
-              color: isVerified ? Colors.greenAccent : theme.primaryColor
-            ),
+            Icon(icon, size: 16, color: status.color),
             const SizedBox(width: 12),
             Text(
-              isVerified ? 'Xem trên Blockchain' : 'Yêu cầu xác thực ngay',
+              label,
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
-                color: isVerified ? Colors.greenAccent : theme.primaryColor,
+                color: status.color,
               ),
             ),
           ],

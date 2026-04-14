@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../models/document_model.dart';
 import '../view_models/document_view_model.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
-import 'package:aisep_capstone_mobile/core/utils/toast_utils.dart';
 
 class EditMetadataView extends StatefulWidget {
   final DocumentModel document;
@@ -17,26 +16,21 @@ class EditMetadataView extends StatefulWidget {
 }
 
 class _EditMetadataViewState extends State<EditMetadataView> {
-  late TextEditingController _nameController;
-  late TextEditingController _descController;
-  late String _selectedType;
-  late DocumentVisibility _selectedVisibility;
-
-  final List<String> _types = ['Pitch Deck', 'Tài chính', 'Pháp lý', 'Nghiên cứu', 'Khác'];
+  late TextEditingController _titleController;
+  late DocumentType _selectedType;
+  late bool _isArchived;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.document.fileName);
-    _descController = TextEditingController(text: widget.document.description ?? '');
-    _selectedType = widget.document.type;
-    _selectedVisibility = widget.document.visibility;
+    _titleController = TextEditingController(text: widget.document.title ?? widget.document.fileName);
+    _selectedType = widget.document.documentType;
+    _isArchived = widget.document.isArchived;
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _descController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -81,15 +75,11 @@ class _EditMetadataViewState extends State<EditMetadataView> {
               ),
             ),
             const SizedBox(height: 32),
-            _buildTextField(context, 'Tên tài liệu', _nameController, LucideIcons.fileText),
+            _buildTextField(context, 'Tiêu đề hiển thị', _titleController, LucideIcons.fileText),
             const SizedBox(height: 20),
-            _buildDropdownField(context, 'Loại tài liệu', _selectedType, _types, (val) {
-              if (val != null) setState(() => _selectedType = val);
-            }, LucideIcons.tag),
+            _buildTypeDropdown(context, textColor),
             const SizedBox(height: 20),
-            _buildTextField(context, 'Mô tả', _descController, LucideIcons.alignLeft, maxLines: 3),
-            const SizedBox(height: 20),
-            _buildVisibilitySelector(context),
+            _buildArchiveSwitch(context, textColor),
             const SizedBox(height: 32),
             _buildSubmitButton(context),
           ],
@@ -98,7 +88,7 @@ class _EditMetadataViewState extends State<EditMetadataView> {
     );
   }
 
-  Widget _buildTextField(BuildContext context, String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildTextField(BuildContext context, String label, TextEditingController controller, IconData icon) {
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
@@ -115,7 +105,6 @@ class _EditMetadataViewState extends State<EditMetadataView> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          maxLines: maxLines,
           style: GoogleFonts.workSans(color: textColor),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 18, color: theme.primaryColor.withOpacity(0.5)),
@@ -130,14 +119,13 @@ class _EditMetadataViewState extends State<EditMetadataView> {
     );
   }
 
-  Widget _buildDropdownField(BuildContext context, String label, String value, List<String> items, Function(String?) onChanged, IconData icon) {
+  Widget _buildTypeDropdown(BuildContext context, Color textColor) {
     final theme = Theme.of(context);
-    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          'Loại tài liệu',
           style: GoogleFonts.workSans(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -153,23 +141,16 @@ class _EditMetadataViewState extends State<EditMetadataView> {
             border: Border.all(color: theme.dividerColor),
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
+            child: DropdownButton<DocumentType>(
+              value: _selectedType,
+              isExpanded: true,
               dropdownColor: theme.cardColor,
               icon: Icon(LucideIcons.chevronDown, size: 18, color: theme.primaryColor),
-              items: items.map((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Row(
-                    children: [
-                      Icon(icon, size: 16, color: theme.primaryColor.withOpacity(0.5)),
-                      const SizedBox(width: 12),
-                      Text(item, style: GoogleFonts.workSans(color: textColor)),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: onChanged,
+              items: DocumentType.values.map((t) => DropdownMenuItem(
+                value: t,
+                child: Text(t.label, style: GoogleFonts.workSans(color: textColor)),
+              )).toList(),
+              onChanged: (v) => setState(() => _selectedType = v!),
             ),
           ),
         ),
@@ -177,64 +158,52 @@ class _EditMetadataViewState extends State<EditMetadataView> {
     );
   }
 
-  Widget _buildVisibilitySelector(BuildContext context) {
+  Widget _buildArchiveSwitch(BuildContext context, Color textColor) {
     final theme = Theme.of(context);
-    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quyền riêng tư',
-          style: GoogleFonts.workSans(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: theme.primaryColor.withOpacity(0.7),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.archive, size: 20, color: theme.primaryColor.withOpacity(0.5)),
+          const SizedBox(width: 12),
+          Text(
+            'Lưu trữ tài liệu',
+            style: GoogleFonts.workSans(color: textColor, fontWeight: FontWeight.w500),
           ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          children: DocumentVisibility.values.map((v) {
-            final isSelected = _selectedVisibility == v;
-            return ChoiceChip(
-              label: Text(_getVisibilityLabel(v), style: GoogleFonts.workSans(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) setState(() => _selectedVisibility = v);
-              },
-              selectedColor: theme.primaryColor,
-              backgroundColor: theme.dividerColor.withOpacity(0.05),
-              labelStyle: TextStyle(color: isSelected ? (theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white) : textColor),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            );
-          }).toList(),
-        ),
-      ],
+          const Spacer(),
+          Switch(
+            value: _isArchived,
+            onChanged: (v) => setState(() => _isArchived = v),
+            activeColor: theme.primaryColor,
+          ),
+        ],
+      ),
     );
-  }
-
-  String _getVisibilityLabel(DocumentVisibility v) {
-    switch (v) {
-      case DocumentVisibility.private: return 'Cá nhân';
-      case DocumentVisibility.investor: return 'Nhà đầu tư';
-      case DocumentVisibility.advisor: return 'Cố vấn';
-      case DocumentVisibility.both: return 'Công khai';
-    }
   }
 
   Widget _buildSubmitButton(BuildContext context) {
     final theme = Theme.of(context);
+    final viewModel = context.read<DocumentViewModel>();
+    
     return ElevatedButton(
-      onPressed: () {
-        context.read<DocumentViewModel>().updateDocumentMetadata(
+      onPressed: viewModel.isLoading ? null : () async {
+        final success = await viewModel.updateMetadata(
           widget.document.id,
-          fileName: _nameController.text,
-          type: _selectedType,
-          description: _descController.text,
-          visibility: _selectedVisibility,
+          title: _titleController.text,
+          type: _selectedType.value,
+          isArchived: _isArchived,
         );
-        Navigator.pop(context);
-        ToastUtils.showTopToast(context, 'Đã cập nhật metadata thành công.');
+        if (success && mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cập nhật metadata thành công')),
+          );
+        }
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: theme.primaryColor,
@@ -242,10 +211,12 @@ class _EditMetadataViewState extends State<EditMetadataView> {
         minimumSize: const Size(double.infinity, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      child: Text(
-        'Lưu thay đổi',
-        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-      ),
+      child: viewModel.isLoading
+        ? const CircularProgressIndicator(color: Colors.white)
+        : Text(
+            'Lưu thay đổi',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          ),
     );
   }
 }
