@@ -7,6 +7,7 @@ class TokenService {
   static const _refreshTokenKey = 'refresh_token';
   static const _userIdKey = 'user_id';
   static const _userTypeKey = 'user_type';
+  static const _emailKey = 'user_email';
 
   /// Lưu trữ cả cặp Token
   static Future<void> saveTokens({
@@ -23,9 +24,13 @@ class TokenService {
   static Future<void> saveUserInfo({
     required String userId,
     required String userType,
+    String? email,
   }) async {
     await _storage.write(key: _userIdKey, value: userId);
     await _storage.write(key: _userTypeKey, value: userType);
+    if (email != null) {
+      await _storage.write(key: _emailKey, value: email);
+    }
   }
 
   static Future<String?> getAccessToken() async {
@@ -40,11 +45,16 @@ class TokenService {
     return await _storage.read(key: _userIdKey);
   }
 
+  static Future<String?> getEmail() async {
+    return await _storage.read(key: _emailKey);
+  }
+
   static Future<void> clearAuthData() async {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userIdKey);
     await _storage.delete(key: _userTypeKey);
+    await _storage.delete(key: _emailKey);
   }
 
   static Future<bool> hasToken() async {
