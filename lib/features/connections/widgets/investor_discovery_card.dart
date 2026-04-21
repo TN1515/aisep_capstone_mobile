@@ -4,6 +4,7 @@ import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/investor_model.dart';
 import '../view_models/connection_view_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/config/app_config.dart';
 
 class InvestorDiscoveryCard extends StatelessWidget {
   final InvestorModel investor;
@@ -43,59 +44,50 @@ class InvestorDiscoveryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _buildMatchScore(context),
-                    const SizedBox(width: 12),
-                    if (investor.isVerified)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.verified, color: Color(0xFF10B981), size: 12),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Đã xác thực',
-                              style: GoogleFonts.workSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF10B981),
+                if ((investor.matchScore * 100).toInt() > 0 || investor.isVerified) ...[
+                  Row(
+                    children: [
+                      if ((investor.matchScore * 100).toInt() > 0)
+                        _buildMatchScore(context),
+                      if ((investor.matchScore * 100).toInt() > 0 && investor.isVerified)
+                        const SizedBox(width: 12),
+                      if (investor.isVerified)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.verified, color: Color(0xFF10B981), size: 12),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Đã xác thực',
+                                style: GoogleFonts.workSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF10B981),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => ConnectionViewModel().toggleFavorite(investor.id),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: investor.isFavorite ? Colors.red.withOpacity(0.1) : theme.dividerColor.withOpacity(0.05),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          investor.isFavorite ? Icons.favorite : LucideIcons.heart,
-                          color: investor.isFavorite ? Colors.redAccent : theme.textTheme.bodySmall?.color?.withOpacity(0.4),
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: accentColor.withOpacity(0.1),
                       backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
-                          ? NetworkImage(investor.avatarUrl!)
+                          ? NetworkImage(
+                              investor.avatarUrl!.startsWith('http')
+                                  ? investor.avatarUrl!
+                                  : '${AppConfig.apiBaseUrl}${investor.avatarUrl!.startsWith('/') ? '' : '/'}${investor.avatarUrl!}'
+                            )
                           : null,
                       child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
                           ? Icon(LucideIcons.briefcase, color: accentColor)
@@ -115,7 +107,7 @@ class InvestorDiscoveryCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${investor.position}${investor.organization != null ? ' @ ${investor.organization}' : ''}',
+                            '${investor.position}${investor.organization != null ? ' • ${investor.organization}' : ''}',
                             style: GoogleFonts.workSans(
                               fontSize: 12,
                               color: textColor.withOpacity(0.6),
@@ -124,9 +116,26 @@ class InvestorDiscoveryCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => ConnectionViewModel().toggleFavorite(investor.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: investor.isFavorite ? Colors.red.withOpacity(0.1) : theme.dividerColor.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          investor.isFavorite ? Icons.favorite : LucideIcons.heart,
+                          color: investor.isFavorite ? Colors.redAccent : theme.textTheme.bodySmall?.color?.withOpacity(0.4),
+                          size: 18,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(
                   investor.thesis,
                   style: GoogleFonts.workSans(

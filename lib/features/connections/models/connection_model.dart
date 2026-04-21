@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aisep_capstone_mobile/core/utils/datetime_utils.dart';
 
 // Trạng thái kết nối (ConnectionStatus từ Backend)
 enum ConnectionStatus {
@@ -44,9 +45,12 @@ extension ConnectionStatusExtension on ConnectionStatus {
       case '1':
       case 'accepted': 
       case 'active':
+      case 'connected':
+      case 'approved':
         return ConnectionStatus.accepted;
       case '2':
       case 'rejected': 
+      case 'declined':
       case 'cancelled':
         return ConnectionStatus.rejected;
       case '3':
@@ -148,24 +152,41 @@ class ConnectionModel {
   factory ConnectionModel.fromJson(Map<String, dynamic> json) {
     // Highly resilient parsing to support various backend DTO naming conventions (PascalCase, camelCase)
     final idVal = json['id'] ?? json['Id'] ?? json['connectionID'] ?? json['ConnectionID'];
-    final statusVal = json['status'] ?? json['Status'] ?? json['connectionStatus'] ?? json['ConnectionStatus'];
-    final msgVal = json['message'] ?? json['Message'] ?? json['personalizedMessage'] ?? json['PersonalizedMessage'];
-    final createdVal = json['createdAt'] ?? json['CreatedAt'] ?? json['requestedAt'] ?? json['RequestedAt'];
-    final updatedVal = json['updatedAt'] ?? json['UpdatedAt'] ?? json['respondedAt'] ?? json['RespondedAt'];
+    final statusVal = json['status'] ?? json['Status'] ?? json['connectionStatus'] ?? json['ConnectionStatus'] ?? json['requestStatus'] ?? json['RequestStatus'];
+    final msgVal = json['message'] ?? json['Message'] ?? json['personalizedMessage'] ?? json['PersonalizedMessage'] ?? json['note'] ?? json['Note'];
+    final createdVal = json['createdAt'] ?? json['CreatedAt'] ?? json['requestedAt'] ?? json['RequestedAt'] ?? json['createdDate'] ?? json['CreatedDate'];
+    final updatedVal = json['updatedAt'] ?? json['UpdatedAt'] ?? json['respondedAt'] ?? json['RespondedAt'] ?? json['modifiedDate'] ?? json['ModifiedDate'];
+
+    // Nested parsing support: check if investor info is wrapped in "investor", "partner", "user", "advisor"
+    final partnerData = json['investor'] ?? json['Investor'] ?? json['partner'] ?? json['Partner'] ?? json['user'] ?? json['User'] ?? json['advisor'] ?? json['Advisor'];
+    final Map<String, dynamic> targetJson = (partnerData is Map<String, dynamic>) ? partnerData : json;
+
+    // Super-resilient avatar key search
+    final avatarUrlVal = json['avatarUrl'] ?? json['AvatarUrl'] ?? json['AvatarURL'] ?? 
+                        json['profileImage'] ?? json['ProfileImage'] ?? 
+                        json['imageUrl'] ?? json['ImageUrl'] ?? 
+                        json['picture'] ?? json['Picture'] ??
+                        targetJson['avatarUrl'] ?? targetJson['AvatarUrl'] ?? targetJson['AvatarURL'] ??
+                        targetJson['investorAvatarUrl'] ?? targetJson['InvestorAvatarUrl'] ??
+                        targetJson['profileImage'] ?? targetJson['ProfileImage'] ??
+                        targetJson['imageUrl'] ?? targetJson['ImageUrl'] ??
+                        targetJson['profilePicture'] ?? targetJson['ProfilePicture'] ??
+                        targetJson['logo'] ?? targetJson['Logo'] ??
+                        targetJson['picture'] ?? targetJson['Picture'];
 
     return ConnectionModel(
       id: int.tryParse(idVal?.toString() ?? '0') ?? 0,
-      investorId: int.tryParse((json['investorId'] ?? json['InvestorId'] ?? json['investorID'] ?? json['InvestorID'])?.toString() ?? '0') ?? 0,
-      investorName: (json['fullName'] ?? json['FullName'] ?? json['investorName'] ?? json['InvestorName'] ?? json['name'] ?? json['Name'] ?? 'Unknown').toString(),
-      investorOrganization: (json['firmName'] ?? json['FirmName'] ?? json['investorOrganization'] ?? json['InvestorOrganization'] ?? json['organization'] ?? json['Organization'])?.toString(),
-      investorAvatarUrl: (json['avatarUrl'] ?? json['AvatarUrl'] ?? json['investorAvatarUrl'] ?? json['InvestorAvatarUrl'] ?? json['AvatarURL'])?.toString(),
+      investorId: int.tryParse((targetJson['investorId'] ?? targetJson['InvestorId'] ?? targetJson['investorID'] ?? targetJson['InvestorID'] ?? targetJson['partnerId'] ?? targetJson['PartnerId'] ?? targetJson['id'] ?? targetJson['Id'])?.toString() ?? '0') ?? 0,
+      investorName: (targetJson['fullName'] ?? targetJson['FullName'] ?? targetJson['investorName'] ?? targetJson['InvestorName'] ?? targetJson['name'] ?? targetJson['Name'] ?? targetJson['partnerName'] ?? targetJson['PartnerName'] ?? 'Unknown').toString(),
+      investorOrganization: (targetJson['firmName'] ?? targetJson['FirmName'] ?? targetJson['investorOrganization'] ?? targetJson['InvestorOrganization'] ?? targetJson['organization'] ?? targetJson['Organization'])?.toString(),
+      investorAvatarUrl: avatarUrlVal?.toString(),
       message: msgVal?.toString(),
       status: ConnectionStatusExtension.fromString(statusVal?.toString()),
-      role: (json['role'] ?? json['Role'])?.toString() == 'Advisor' ? ConnectionRole.advisor : ConnectionRole.investor,
-      isVerified: (json['isVerified'] ?? json['IsVerified']) == true,
-      tags: (json['tags'] ?? json['Tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      createdAt: createdVal != null ? DateTime.parse(createdVal.toString()) : DateTime.now(),
-      updatedAt: updatedVal != null ? DateTime.parse(updatedVal.toString()) : DateTime.now(),
+      role: (json['role'] ?? json['Role'] ?? targetJson['role'] ?? targetJson['Role'])?.toString() == 'Advisor' ? ConnectionRole.advisor : ConnectionRole.investor,
+      isVerified: (targetJson['isVerified'] ?? targetJson['IsVerified'] ?? targetJson['profileStatus'] == 'Approved' ?? targetJson['ProfileStatus'] == 'Approved') == true,
+      tags: (targetJson['tags'] ?? targetJson['Tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      createdAt: DateTimeUtils.parseApiDate(createdVal),
+      updatedAt: DateTimeUtils.parseApiDate(updatedVal),
       conversationId: (json['conversationId'] ?? json['ConversationId']) != null ? int.tryParse((json['conversationId'] ?? json['ConversationId']).toString()) : null,
     );
   }
@@ -192,8 +213,8 @@ class ConnectionModel {
   // --- Legacy Compatibility ---
   String get name => investorName;
   String? get organization => investorOrganization;
-  String get position => 'Nhà đầu tư';
+  String get position => role == ConnectionRole.advisor ? 'Cố vấn' : 'Nhà đầu tư';
   DateTime get lastUpdated => updatedAt;
   String? get bio => message;
-  double get matchScore => 0.95;
+  double get matchScore => 0.0; // Use real data or default to 0 to trigger hidden indicator
 }

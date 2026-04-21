@@ -4,6 +4,7 @@ import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/connection_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/config/app_config.dart';
 
 class ConnectionCard extends StatelessWidget {
   final ConnectionModel connection;
@@ -60,14 +61,23 @@ class ConnectionCard extends StatelessWidget {
                     Stack(
                       children: [
                         CircleAvatar(
-                          radius: 28,
+                          radius: 24,
                           backgroundColor: accentColor.withOpacity(0.1),
-                          child: Icon(
-                            connection.role == ConnectionRole.investor 
-                              ? LucideIcons.briefcase 
-                              : LucideIcons.graduationCap,
-                            color: accentColor,
-                          ),
+                          backgroundImage: (connection.investorAvatarUrl != null && connection.investorAvatarUrl!.isNotEmpty)
+                              ? NetworkImage(
+                                  connection.investorAvatarUrl!.startsWith('http')
+                                      ? connection.investorAvatarUrl!
+                                      : '${AppConfig.apiBaseUrl}${connection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${connection.investorAvatarUrl!}'
+                                )
+                              : null,
+                          child: (connection.investorAvatarUrl == null || connection.investorAvatarUrl!.isEmpty)
+                              ? Icon(
+                                  connection.role == ConnectionRole.investor 
+                                    ? LucideIcons.briefcase 
+                                    : LucideIcons.graduationCap,
+                                  color: accentColor,
+                                )
+                              : null,
                         ),
                         if (connection.isVerified)
                           Positioned(
@@ -102,7 +112,7 @@ class ConnectionCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${connection.position}${connection.organization != null ? ' @ ${connection.organization}' : ''}',
+                            '${connection.position}${connection.organization != null ? ' • ${connection.organization}' : ''}',
                             style: GoogleFonts.workSans(
                               fontSize: 12,
                               color: textColor.withOpacity(0.6),

@@ -21,6 +21,8 @@ class InvestorProfileView extends StatefulWidget {
 }
 
 class _InvestorProfileViewState extends State<InvestorProfileView> {
+  bool _isInitializingChat = false;
+
   @override
   void initState() {
     super.initState();
@@ -120,7 +122,7 @@ class _InvestorProfileViewState extends State<InvestorProfileView> {
                         ],
                       ),
                       
-                      const SizedBox(height: 120),
+                      const SizedBox(height: 150), // Extra space for FAB + Hint
                     ]),
                   ),
                 ),
@@ -142,7 +144,24 @@ class _InvestorProfileViewState extends State<InvestorProfileView> {
             bottom: 30,
             left: 24,
             right: 24,
-            child: _buildCTA(context, status, connection, chatVM, investor),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildCTA(context, status, connection, chatVM, investor),
+                if (status == ConnectionStatus.accepted)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      "Kết nối đã sẵn sàng, bạn có thể trao đổi trực tiếp.",
+                      style: GoogleFonts.workSans(
+                        fontSize: 12,
+                        color: theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -176,13 +195,15 @@ class _InvestorProfileViewState extends State<InvestorProfileView> {
     String label = 'Gửi yêu cầu kết nối';
     VoidCallback? onPressed = () => _navigateToRequestForm(context, investor);
     Color? bgColor = theme.primaryColor;
+    IconData? icon;
 
     if (status == ConnectionStatus.requested) {
       label = 'Đang chờ phản hồi';
       onPressed = null;
       bgColor = Colors.grey;
     } else if (status == ConnectionStatus.accepted) {
-      label = 'Nhắn tin';
+      label = 'Bắt đầu Chat';
+      icon = LucideIcons.messageSquare;
       onPressed = () => _handleChat(context, connection!, chatVM, investor);
     }
 
@@ -190,7 +211,7 @@ class _InvestorProfileViewState extends State<InvestorProfileView> {
       height: 56,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: _isInitializingChat ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
           foregroundColor: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
@@ -198,10 +219,21 @@ class _InvestorProfileViewState extends State<InvestorProfileView> {
           elevation: 8,
           shadowColor: bgColor?.withOpacity(0.3),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        child: _isInitializingChat 
+          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 18),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  label,
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
       ),
     );
   }
@@ -221,22 +253,45 @@ class _InvestorProfileViewState extends State<InvestorProfileView> {
   }
 
   Future<void> _handleChat(BuildContext context, ConnectionModel connection, ChatViewModel chatVM, InvestorModel investor) async {
-    final convId = await chatVM.ensureConversation(
-      connection.id, 
-      partnerName: investor.fullName,
-      partnerAvatar: investor.avatarUrl,
-    );
-    if (convId != null && context.mounted) {
+    // 1. If we already have a conversationId, just navigate directly
+    // This saves an API call and ensures the button works instantly across restarts
+    if (connection.conversationId != null && connection.conversationId! > 0) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ChatDetailView(
-            conversationId: convId, 
+            conversationId: connection.conversationId!, 
             partnerName: investor.fullName,
             partnerAvatar: investor.avatarUrl,
           ),
         ),
       );
+      return;
+    }
+
+    // 2. Otherwise, use the initialization logic (first time only)
+    setState(() => _isInitializingChat = true);
+    
+    final convId = await chatVM.ensureConversation(
+      connectionId: connection.id, 
+      partnerName: investor.fullName,
+      partnerAvatar: investor.avatarUrl,
+    );
+    
+    if (context.mounted) {
+      setState(() => _isInitializingChat = false);
+      if (convId != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailView(
+              conversationId: convId, 
+              partnerName: investor.fullName,
+              partnerAvatar: investor.avatarUrl,
+            ),
+          ),
+        );
+      }
     }
   }
 

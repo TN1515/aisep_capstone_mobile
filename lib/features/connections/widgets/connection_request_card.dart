@@ -5,6 +5,7 @@ import '../models/connection_model.dart';
 import 'connection_status_badge.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/config/app_config.dart';
 
 class ConnectionRequestCard extends StatelessWidget {
   final ConnectionModel connection;
@@ -105,7 +106,11 @@ class ConnectionRequestCard extends StatelessWidget {
                               radius: 24,
                               backgroundColor: statusColor.withOpacity(0.1),
                               backgroundImage: (connection.investorAvatarUrl != null && connection.investorAvatarUrl!.isNotEmpty)
-                                  ? NetworkImage(connection.investorAvatarUrl!)
+                                  ? NetworkImage(
+                                      connection.investorAvatarUrl!.startsWith('http')
+                                          ? connection.investorAvatarUrl!
+                                          : '${AppConfig.apiBaseUrl}${connection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${connection.investorAvatarUrl!}'
+                                    )
                                   : null,
                               child: (connection.investorAvatarUrl == null || connection.investorAvatarUrl!.isEmpty)
                                   ? Icon(LucideIcons.user, color: statusColor, size: 20)
@@ -126,7 +131,7 @@ class ConnectionRequestCard extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '${connection.position}${connection.organization != null ? ' @ ${connection.organization}' : ''}',
+                                  '${connection.position}${connection.organization != null ? ' • ${connection.organization}' : ''}',
                                   style: GoogleFonts.workSans(
                                     fontSize: 11,
                                     color: textColor.withOpacity(0.6),

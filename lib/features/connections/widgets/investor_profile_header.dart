@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/investor_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/config/app_config.dart';
 
 class InvestorProfileHeader extends StatelessWidget {
   final InvestorModel investor;
@@ -58,7 +59,16 @@ class InvestorProfileHeader extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundColor: accentColor.withOpacity(0.1),
-                  child: Icon(LucideIcons.user, color: accentColor, size: 40),
+                  backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(
+                          investor.avatarUrl!.startsWith('http')
+                              ? investor.avatarUrl!
+                              : '${AppConfig.apiBaseUrl}${investor.avatarUrl!.startsWith('/') ? '' : '/'}${investor.avatarUrl!}'
+                        )
+                      : null,
+                  child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
+                      ? Icon(LucideIcons.user, color: accentColor, size: 40)
+                      : null,
                 ),
               ),
               if (investor.isVerified)
@@ -87,7 +97,7 @@ class InvestorProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${investor.position}${investor.organization != null ? ' @ ${investor.organization}' : ''}',
+            '${investor.position}${investor.organization != null ? ' • ${investor.organization}' : ''}',
             style: GoogleFonts.workSans(
               fontSize: 14,
               color: textColor.withOpacity(0.6),

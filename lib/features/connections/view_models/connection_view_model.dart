@@ -1,11 +1,14 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../models/connection_model.dart';
 import '../models/investor_model.dart';
 import '../models/information_request_model.dart';
 import '../services/connection_service.dart';
+import '../../messages/services/message_service.dart';
 
 class ConnectionViewModel extends ChangeNotifier {
   final ConnectionService _service = ConnectionService();
+  final MessageService _messageService = MessageService();
 
   // Singleton instance
   static final ConnectionViewModel instance = ConnectionViewModel._internal();
@@ -37,6 +40,14 @@ class ConnectionViewModel extends ChangeNotifier {
   List<ConnectionModel> get receivedRequests => _receivedConnections;
   List<ConnectionModel> get sentRequests => _sentConnections;
   List<ConnectionModel> get history => _history;
+  
+  List<ConnectionModel> get allConnections {
+    final Map<int, ConnectionModel> distinct = {};
+    for (var c in _receivedConnections) { distinct[c.id] = c; }
+    for (var c in _sentConnections) { distinct[c.id] = c; }
+    for (var c in _history) { distinct[c.id] = c; }
+    return distinct.values.toList();
+  }
   List<InvestorModel> get discoveryResults => _investors;
   List<InvestorModel> get aiRecommendations => _aiInvestors;
   List<InvestorModel> get favoriteInvestors => _investors.where((i) => i.isFavorite).toList();
@@ -55,15 +66,20 @@ class ConnectionViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    await Future.wait([
-      loadInvestors(),
-      loadAiRecommendations(),
-      _loadReceived(),
-      _loadSent(),
-    ]);
-
-    _isLoading = false;
-    notifyListeners();
+    try {
+      await Future.wait([
+        loadInvestors(),
+        loadAiRecommendations(),
+        _loadReceived(),
+        _loadSent(),
+      ]);
+    } catch (e) {
+      log('ConnectionViewModel: Error during refreshAll: $e');
+      _errorMessage = 'Không thể tải dữ liệu kết nối. Vui lòng thử lại.';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // 1. Investor Discovery (Search)
@@ -137,6 +153,10 @@ class ConnectionViewModel extends ChangeNotifier {
     loadInvestors().then((_) => notifyListeners());
   }
 
+  // Public API for connection loading
+  Future<void> loadReceivedConnections() => _loadReceived();
+  Future<void> loadSentConnections() => _loadSent();
+
   // 2. Connection Lifecycle
   Future<void> _loadReceived() async {
     final response = await _service.getReceivedConnections();
@@ -144,6 +164,9 @@ class ConnectionViewModel extends ChangeNotifier {
       final all = response.data ?? [];
       // Include all states to ensure Detail View can reflect status changes (Accepted, Rejected, Withdrawn, etc.)
       _receivedConnections = all.map((c) => c.copyWith(isReceived: true)).toList();
+      
+      // Proactively initialize chats for accepted connections
+      _initAcceptedConversations(_receivedConnections);
     }
   }
 
@@ -153,6 +176,54 @@ class ConnectionViewModel extends ChangeNotifier {
       final all = response.data ?? [];
       // Include all states to ensure Detail View can reflect status changes (Accepted, Rejected, Withdrawn, etc.)
       _sentConnections = all.map((c) => c.copyWith(isReceived: false)).toList();
+
+      // Proactively initialize chats for accepted connections
+      _initAcceptedConversations(_sentConnections);
+    }
+  }
+
+  Future<void> _initAcceptedConversations(List<ConnectionModel> connections) async {
+    final acceptedWithoutChat = connections.where((c) => 
+      c.status == ConnectionStatus.accepted && (c.conversationId == null || c.conversationId == 0)
+    ).toList();
+
+    if (acceptedWithoutChat.isEmpty) {
+      log('ConnectionViewModel: No accepted stable connections without chats found.');
+      return;
+    }
+
+    log('ConnectionViewModel: Found ${acceptedWithoutChat.length} connections needing chat initialization.');
+
+    for (var conn in acceptedWithoutChat) {
+      // Run in background without await for each to avoid blocking
+      _messageService.createConversation(connectionId: conn.id).then((response) {
+        if (response.isSuccess && response.data != null) {
+          final newConvId = response.data!.id;
+          
+          // Update the ID in local lists so the UI reflects that chat is initialized
+          bool updated = false;
+          
+          final sentIdx = _sentConnections.indexWhere((c) => c.id == conn.id);
+          if (sentIdx != -1) {
+            _sentConnections[sentIdx] = _sentConnections[sentIdx].copyWith(conversationId: newConvId);
+            updated = true;
+          }
+          
+          final receivedIdx = _receivedConnections.indexWhere((c) => c.id == conn.id);
+          if (receivedIdx != -1) {
+            _receivedConnections[receivedIdx] = _receivedConnections[receivedIdx].copyWith(conversationId: newConvId);
+            updated = true;
+          }
+          
+          if (updated) {
+            notifyListeners();
+          }
+          
+          log('ConnectionViewModel: Successfully auto-initialized conversation for connection ${conn.id} with ID $newConvId');
+        } else {
+          log('ConnectionViewModel: Failed to auto-initialize conversation for connection ${conn.id}: ${response.error}');
+        }
+      });
     }
   }
 
@@ -166,7 +237,26 @@ class ConnectionViewModel extends ChangeNotifier {
   Future<bool> acceptRequest(dynamic id) => acceptConnection(int.tryParse(id.toString()) ?? 0);
   Future<bool> rejectRequest(dynamic id, [String reason = '']) => rejectConnection(int.tryParse(id.toString()) ?? 0, reason);
   Future<void> cancelRequest(dynamic id) => withdrawConnection(int.tryParse(id.toString()) ?? 0);
-  Future<void> updateRequest(dynamic id, String message) async {} 
+  Future<bool> updateRequest(dynamic id, String message) async {
+    final int connectionId = int.tryParse(id.toString()) ?? 0;
+    if (connectionId == 0) return false;
+
+    _isLoading = true;
+    notifyListeners();
+
+    final response = await _service.updateConnectionMessage(connectionId, message);
+    
+    _isLoading = false;
+    if (response.isSuccess) {
+      await _loadSent();
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response.message;
+      notifyListeners();
+      return false;
+    }
+  }
   Future<void> sendRequest(int investorId, String message) => inviteConnection(investorId, message);
   
   void toggleFavorite(int investorId) {

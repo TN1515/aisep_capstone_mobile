@@ -72,6 +72,21 @@ class ConnectionService {
     }
   }
 
+  Future<ApiResponse<ConnectionModel>> updateConnectionMessage(int id, String message) async {
+    try {
+      final response = await _dio.put(
+        '/api/connections/$id',
+        data: {'message': message},
+      );
+      return ApiResponse.fromJson(
+        response.data, 
+        (json) => ConnectionModel.fromJson(json as Map<String, dynamic>)
+      );
+    } catch (e) {
+      return ApiResponse.fromDioError(e);
+    }
+  }
+
   Future<ApiResponse<List<ConnectionModel>>> getSentConnections({String? status}) async {
     try {
       final response = await _dio.get(

@@ -11,7 +11,9 @@ import 'package:intl/intl.dart';
 import 'connection_request_form_view.dart';
 import '../../messages/view_models/chat_view_model.dart';
 import '../../messages/views/chat_detail_view.dart';
+import '../../messages/models/chat_model.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/config/app_config.dart';
 
 class ConnectionRequestDetailView extends StatelessWidget {
   final ConnectionModel connection;
@@ -90,7 +92,16 @@ class ConnectionRequestDetailView extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: theme.primaryColor.withOpacity(0.1),
-                child: Icon(LucideIcons.user, color: theme.primaryColor, size: 24),
+                backgroundImage: (currentConnection.investorAvatarUrl != null && currentConnection.investorAvatarUrl!.isNotEmpty)
+                    ? NetworkImage(
+                        currentConnection.investorAvatarUrl!.startsWith('http')
+                            ? currentConnection.investorAvatarUrl!
+                            : '${AppConfig.apiBaseUrl}${currentConnection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${currentConnection.investorAvatarUrl!}'
+                      )
+                    : null,
+                child: (currentConnection.investorAvatarUrl == null || currentConnection.investorAvatarUrl!.isEmpty)
+                    ? Icon(LucideIcons.user, color: theme.primaryColor, size: 24)
+                    : null,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -106,7 +117,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${currentConnection.position}${currentConnection.organization != null ? ' @ ${currentConnection.organization}' : ''}',
+                      '${currentConnection.position}${currentConnection.organization != null ? ' • ${currentConnection.organization}' : ''}',
                       style: GoogleFonts.workSans(
                         fontSize: 13,
                         color: textColor.withOpacity(0.6),
@@ -328,19 +339,33 @@ class ConnectionRequestDetailView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
       color: theme.scaffoldBackgroundColor,
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () => _handleChat(context, currentConnection),
-              icon: const Icon(LucideIcons.messageSquare, size: 18),
-              label: Text('Nhắn tin ngay', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: theme.brightness == Brightness.dark ? Colors.black : Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleChat(context, currentConnection),
+                  icon: const Icon(LucideIcons.messageSquare, size: 18),
+                  label: Text('Bắt đầu Chat', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor,
+                    foregroundColor: theme.brightness == Brightness.dark ? Colors.black : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Kết nối đã sẵn sàng, bạn có thể trao đổi trực tiếp.",
+            style: GoogleFonts.workSans(
+              fontSize: 12,
+              color: theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -350,10 +375,33 @@ class ConnectionRequestDetailView extends StatelessWidget {
 
   void _handleChat(BuildContext context, ConnectionModel currentConnection) async {
     final chatVm = Provider.of<ChatViewModel>(context, listen: false);
-    final convId = await chatVm.ensureConversation(currentConnection.id);
+
+    // 1. If we already have a conversationId, just navigate directly
+    if (currentConnection.conversationId != null && currentConnection.conversationId! > 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatDetailView(
+            conversationId: currentConnection.conversationId!,
+            partnerName: currentConnection.investorName, // Assuming partner is investor for Startup role
+            partnerAvatar: currentConnection.investorAvatarUrl,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 2. Otherwise, use initialization logic
+    final convId = await chatVm.ensureConversation(connectionId: currentConnection.id);
     
     if (convId != null && context.mounted) {
-      final conversation = chatVm.conversations.firstWhere((c) => c.id == convId);
+      final conversation = chatVm.conversations.firstWhere((c) => c.id == convId, 
+          orElse: () => ConversationModel(
+            id: convId, 
+            partnerName: currentConnection.investorName, 
+            status: ConversationStatus.Active, 
+            connectionId: currentConnection.id
+          ));
       Navigator.push(
         context,
         MaterialPageRoute(

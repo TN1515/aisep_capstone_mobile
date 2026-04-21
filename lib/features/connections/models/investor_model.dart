@@ -45,7 +45,12 @@ class InvestorModel {
     final fullNameVal = json['fullName'] ?? json['FullName'] ?? json['name'] ?? json['Name'];
     final firmNameVal = json['firmName'] ?? json['FirmName'] ?? json['organization'] ?? json['Organization'];
     final bioVal = json['bio'] ?? json['Bio'];
-    final avatarUrlVal = json['avatarUrl'] ?? json['AvatarUrl'] ?? json['AvatarURL'];
+    final avatarUrlVal = json['avatarUrl'] ?? json['AvatarUrl'] ?? json['AvatarURL'] ?? 
+                        json['profileImage'] ?? json['ProfileImage'] ?? 
+                        json['imageUrl'] ?? json['ImageUrl'] ?? 
+                        json['logo'] ?? json['Logo'] ??
+                        json['picture'] ?? json['Picture'] ??
+                        json['profilePicture'] ?? json['ProfilePicture'];
     final isVerifiedVal = json['isVerified'] ?? json['IsVerified'] ?? json['profileStatus'] == 'Approved' ?? json['ProfileStatus'] == 'Approved';
     final marketScopeVal = json['marketScope'] ?? json['MarketScope'];
     final supportOfferedVal = json['supportOffered'] ?? json['SupportOffered'];

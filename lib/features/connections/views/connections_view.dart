@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../messages/view_models/chat_view_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../view_models/connection_view_model.dart';
@@ -33,7 +35,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
     final viewModel = ConnectionViewModel();
 
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: AnimatedBuilder(
         animation: viewModel,
         builder: (context, child) {
@@ -66,7 +68,6 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                   Tab(text: 'Khám phá'),
                   Tab(text: 'Đã nhận'),
                   Tab(text: 'Đã gửi'),
-                  Tab(text: 'Lịch sử'),
                 ],
               ),
             ),
@@ -75,7 +76,6 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                 _buildInterestedList(viewModel),
                 _buildReceivedList(viewModel),
                 _buildSentList(viewModel),
-                _buildHistoryList(viewModel),
               ],
             ),
           );
@@ -89,7 +89,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
       children: [
         // Search & Filter Header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
           child: Row(
             children: [
               Expanded(
@@ -135,7 +135,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
 
         // Investor List
         Expanded(
@@ -180,23 +180,34 @@ class _ConnectionsViewState extends State<ConnectionsView> {
 
   Widget _buildRequestList(List<ConnectionModel> items, String emptyMsg) {
     if (items.isEmpty) return _buildEmptyState(emptyMsg);
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final connection = items[index];
-        return ConnectionRequestCard(
-          connection: connection,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ConnectionRequestDetailView(connection: connection),
-              ),
-            );
-          },
-        );
+    
+    final vm = ConnectionViewModel.instance;
+    final chatVm = Provider.of<ChatViewModel>(context, listen: false);
+    
+    return RefreshIndicator(
+      onRefresh: () async {
+        await vm.refreshAll();
+        await chatVm.refresh();
       },
+      color: Theme.of(context).primaryColor,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(24),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final connection = items[index];
+          return ConnectionRequestCard(
+            connection: connection,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ConnectionRequestDetailView(connection: connection),
+                ),
+              ).then((_) => vm.refreshAll()); // Refresh when coming back
+            },
+          );
+        },
+      ),
     );
   }
 

@@ -5,6 +5,7 @@ import '../models/investor_model.dart';
 import '../view_models/connection_view_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/config/app_config.dart';
 
 class ConnectionRequestFormView extends StatefulWidget {
   final InvestorModel investor;
@@ -161,7 +162,16 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
         CircleAvatar(
           radius: 24,
           backgroundColor: theme.primaryColor.withOpacity(0.1),
-          child: Icon(LucideIcons.user, color: theme.primaryColor, size: 20),
+          backgroundImage: (widget.investor.avatarUrl != null && widget.investor.avatarUrl!.isNotEmpty)
+              ? NetworkImage(
+                  widget.investor.avatarUrl!.startsWith('http')
+                      ? widget.investor.avatarUrl!
+                      : '${AppConfig.apiBaseUrl}${widget.investor.avatarUrl!.startsWith('/') ? '' : '/'}${widget.investor.avatarUrl!}'
+                )
+              : null,
+          child: (widget.investor.avatarUrl == null || widget.investor.avatarUrl!.isEmpty)
+              ? Icon(LucideIcons.user, color: theme.primaryColor, size: 20)
+              : null,
         ),
         const SizedBox(width: 16),
         Column(
@@ -191,8 +201,7 @@ class _ConnectionRequestFormViewState extends State<ConnectionRequestFormView> {
   Future<void> _submitRequest(ConnectionViewModel vm) async {
     bool success = false;
     if (widget.requestId != null) {
-      // updateRequest logic if needed
-      success = true; 
+      success = await vm.updateRequest(widget.requestId, _messageController.text);
     } else {
       success = await vm.inviteConnection(widget.investor.id, _messageController.text);
     }
