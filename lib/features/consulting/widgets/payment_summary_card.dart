@@ -23,20 +23,30 @@ class PaymentSummaryCard extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: StartupOnboardingTheme.navySurface,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            StartupOnboardingTheme.navySurface,
-            StartupOnboardingTheme.navySurface.withOpacity(0.8),
+            theme.cardColor,
+            theme.cardColor.withOpacity(isDark ? 0.8 : 0.95),
           ],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -45,7 +55,9 @@ class PaymentSummaryCard extends StatelessWidget {
             children: [
               Text(
                 'Tổng thanh toán',
-                style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory.withOpacity(0.5)),
+                style: GoogleFonts.workSans(
+                  color: theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -66,28 +78,32 @@ class PaymentSummaryCard extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.goldAccent,
+              color: theme.primaryColor,
             ),
           ),
           const SizedBox(height: 24),
-          _buildInfoRow(LucideIcons.hash, 'Mã giao dịch', txHash ?? 'N/A'),
+          _buildInfoRow(LucideIcons.hash, 'Mã giao dịch', txHash ?? 'N/A', context),
           const SizedBox(height: 12),
-          _buildInfoRow(LucideIcons.calendar, 'Thời gian', paymentDate != null ? dateFormat.format(paymentDate!) : 'N/A'),
+          _buildInfoRow(LucideIcons.calendar, 'Thời gian', paymentDate != null ? dateFormat.format(paymentDate!) : 'N/A', context),
           const SizedBox(height: 12),
-          _buildInfoRow(LucideIcons.shieldCheck, 'Phương thức', 'Thanh toán SEPAY (QR)'),
+          _buildInfoRow(LucideIcons.shieldCheck, 'Phương thức', 'Thanh toán SEPAY (QR)', context),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value, BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 14, color: StartupOnboardingTheme.softIvory.withOpacity(0.3)),
+        Icon(icon, size: 14, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.3)),
         const SizedBox(width: 8),
         Text(
           label,
-          style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.softIvory.withOpacity(0.5)),
+          style: GoogleFonts.workSans(
+            fontSize: 12, 
+            color: theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+          ),
         ),
         const Spacer(),
         Text(
@@ -95,7 +111,7 @@ class PaymentSummaryCard extends StatelessWidget {
           style: GoogleFonts.workSans(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.softIvory,
+            color: theme.textTheme.bodyLarge?.color,
           ),
         ),
       ],

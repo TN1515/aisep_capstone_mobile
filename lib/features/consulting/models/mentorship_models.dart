@@ -1,4 +1,5 @@
 import 'advisor_model.dart';
+import 'package:aisep_capstone_mobile/core/utils/datetime_utils.dart';
 
 enum MentorshipStatus {
   requested(0),
@@ -110,9 +111,7 @@ class MentorshipDto {
       expectedDuration: json['expectedDuration'] ?? '',
       expectedScope: json['expectedScope'] ?? '',
       price: json['price'] ?? 0,
-      createdAt: json['requestedAt'] != null 
-          ? DateTime.tryParse(json['requestedAt']) ?? DateTime.now()
-          : (json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) ?? DateTime.now() : DateTime.now()),
+      createdAt: DateTimeUtils.parseApiDate(json['requestedAt'] ?? json['createdAt']),
       sessions: (json['sessions'] as List?)?.map((s) => MentorshipSession.fromJson(s)).toList() ?? [],
       reports: (json['reports'] as List?)?.map((r) => MentorshipReport.fromJson(r)).toList() ?? [],
     );
@@ -137,7 +136,7 @@ class MentorshipSession {
   factory MentorshipSession.fromJson(Map<String, dynamic> json) {
     return MentorshipSession(
       id: json['sessionID'] ?? 0,
-      scheduledStartAt: DateTime.tryParse(json['scheduledStartAt'] ?? '') ?? DateTime.now(),
+      scheduledStartAt: DateTimeUtils.parseApiDate(json['scheduledStartAt']),
       durationMinutes: json['durationMinutes'] ?? 0,
       meetingURL: json['meetingURL'],
       status: json['sessionStatus'] ?? 'Scheduled',
@@ -160,7 +159,7 @@ class MentorshipReport {
     return MentorshipReport(
       summary: json['reportSummary'] ?? '',
       recommendations: json['recommendations'] ?? '',
-      submittedAt: DateTime.tryParse(json['submittedAt'] ?? '') ?? DateTime.now(),
+      submittedAt: DateTimeUtils.parseApiDate(json['submittedAt']),
     );
   }
 }

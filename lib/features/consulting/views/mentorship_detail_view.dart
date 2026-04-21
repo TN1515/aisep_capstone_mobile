@@ -9,13 +9,25 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-class MentorshipDetailView extends StatelessWidget {
+import 'package:aisep_capstone_mobile/features/messages/view_models/chat_view_model.dart';
+import 'package:aisep_capstone_mobile/features/messages/views/chat_detail_view.dart';
+import 'package:aisep_capstone_mobile/features/messages/models/chat_model.dart';
+
+class MentorshipDetailView extends StatefulWidget {
   final MentorshipDto mentorship;
 
   const MentorshipDetailView({Key? key, required this.mentorship}) : super(key: key);
 
   @override
+  State<MentorshipDetailView> createState() => _MentorshipDetailViewState();
+}
+
+class _MentorshipDetailViewState extends State<MentorshipDetailView> {
+  bool _isInitializingChat = false;
+
+  @override
   Widget build(BuildContext context) {
+    final mentorship = widget.mentorship;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0);
 
@@ -71,6 +83,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildStatusHeader(BuildContext context) {
+    final mentorship = widget.mentorship;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -103,6 +116,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildAdvisorSection(BuildContext context) {
+    final mentorship = widget.mentorship;
     return Row(
       children: [
         CircleAvatar(
@@ -126,10 +140,12 @@ class MentorshipDetailView extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(LucideIcons.messageCircle, color: Theme.of(context).primaryColor),
-        ),
+        _isInitializingChat 
+          ? const SizedBox(width: 48, height: 48, child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))))
+          : IconButton(
+              onPressed: () => _handleChat(context),
+              icon: Icon(LucideIcons.messageCircle, color: Theme.of(context).primaryColor),
+            ),
       ],
     );
   }
@@ -156,6 +172,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildInfoGrid(BuildContext context) {
+    final mentorship = widget.mentorship;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -188,6 +205,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildSessionsSection(BuildContext context) {
+    final mentorship = widget.mentorship;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -243,6 +261,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildReportsSection(BuildContext context) {
+    final mentorship = widget.mentorship;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -290,6 +309,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildTimeline(BuildContext context) {
+    final mentorship = widget.mentorship;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -356,8 +376,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   Widget _buildBottomActions(BuildContext context, NumberFormat currencyFormat) {
-    // We assume the caller or a global state determines if current user is Advisor
-    // For this mapping, we'll provide buttons that the Advisor role would need
+    final mentorship = widget.mentorship;
     
     if (mentorship.status == MentorshipStatus.accepted) {
       return Container(
@@ -385,12 +404,14 @@ class MentorshipDetailView extends StatelessWidget {
                 children: [
                    Expanded(
                     child: OutlinedButton(
-                      onPressed: () {}, // Navigate to Chat
+                      onPressed: _isInitializingChat ? null : () => _handleChat(context),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 54),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Icon(LucideIcons.messageCircle),
+                      child: _isInitializingChat 
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(LucideIcons.messageCircle),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -453,9 +474,11 @@ class MentorshipDetailView extends StatelessWidget {
        return Container(
         padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom + 16),
         child: ElevatedButton.icon(
-          onPressed: () {}, // Navigate to Chat
-          icon: const Icon(LucideIcons.messageSquare),
-          label: const Text('Nhắn tin trao đổi'),
+          onPressed: _isInitializingChat ? null : () => _handleChat(context),
+          icon: _isInitializingChat 
+            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            : const Icon(LucideIcons.messageSquare),
+          label: Text(_isInitializingChat ? 'Đang kết nối...' : 'Nhắn tin trao đổi'),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 54),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -468,6 +491,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   void _handleResponse(BuildContext context, MentorshipStatus status) async {
+    final mentorship = widget.mentorship;
     final viewModel = context.read<ConsultingViewModel>();
     try {
       await viewModel.respondToMentorshipRequest(mentorship.id, status);
@@ -483,6 +507,7 @@ class MentorshipDetailView extends StatelessWidget {
   }
 
   void _handlePayment(BuildContext context) async {
+    final mentorship = widget.mentorship;
     final viewModel = context.read<ConsultingViewModel>();
     try {
       final paymentInfo = await viewModel.createMentorshipPaymentLink(mentorship.id);
@@ -499,6 +524,51 @@ class MentorshipDetailView extends StatelessWidget {
       }
     } catch (e) {
       ToastUtils.showTopToast(context, 'Không thể tạo liên kết thanh toán');
+    }
+  }
+
+  void _handleChat(BuildContext context) async {
+    if (_isInitializingChat) return;
+    
+    setState(() => _isInitializingChat = true);
+    final mentorship = widget.mentorship;
+    final chatVm = Provider.of<ChatViewModel>(context, listen: false);
+
+    try {
+      final convId = await chatVm.ensureConversation(mentorshipId: mentorship.id);
+      
+      if (convId != null && context.mounted) {
+        final conversation = chatVm.conversations.firstWhere((c) => c.id == convId, 
+            orElse: () => ConversationModel(
+              id: convId, 
+              partnerName: mentorship.advisorName ?? 'Advisor', 
+              status: ConversationStatus.Active, 
+              connectionId: 0,
+              mentorshipId: mentorship.id,
+              partnerAvatar: mentorship.advisorAvatar,
+            ));
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailView(
+              conversationId: conversation.id,
+              partnerName: conversation.partnerName,
+              partnerAvatar: conversation.partnerAvatar ?? mentorship.advisorAvatar,
+            ),
+          ),
+        );
+      } else if (context.mounted) {
+        ToastUtils.showTopToast(context, 'Không thể khởi tạo cuộc trò chuyện');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ToastUtils.showTopToast(context, 'Có lỗi xảy ra: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isInitializingChat = false);
+      }
     }
   }
 

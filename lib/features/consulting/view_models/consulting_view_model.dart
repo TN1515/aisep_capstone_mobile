@@ -6,11 +6,15 @@ import '../models/mentorship_models.dart';
 import '../models/consulting_session_model.dart';
 import '../services/mentorship_service.dart';
 import '../services/payment_service.dart';
+import '../../profile/services/startup_service.dart';
+import '../../profile/models/startup_models.dart';
+import 'package:intl/intl.dart';
 
 class ConsultingViewModel extends ChangeNotifier {
   final MentorshipService _mentorshipService = MentorshipService();
   final PaymentService _paymentService = PaymentService();
   final MessageService _messageService = MessageService();
+  final StartupService _startupService = StartupService();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -27,10 +31,37 @@ class ConsultingViewModel extends ChangeNotifier {
   List<MentorshipDto> _mentorships = [];
   List<MentorshipDto> get mentorships => _mentorships;
 
+  // Sub-filter states
+  String _selectedRequestFilter = 'Tất cả';
+  String get selectedRequestFilter => _selectedRequestFilter;
+
+  String _selectedSessionFilter = 'Tất cả';
+  String get selectedSessionFilter => _selectedSessionFilter;
+
+  String _selectedReportFilter = 'Tất cả';
+  String get selectedReportFilter => _selectedReportFilter;
+
+  StartupProfileDto? _profile;
+
   // Subscription progress data
   int get usedRequests => _mentorships.length;
-  int get maxRequests => 10; // Default limit for PRO, should be dynamic in future
-  String get planName => 'PRO';
+  
+  int get maxRequests {
+    if (_profile?.subscriptionPlan == null) return 2; // Mặc định Free là 2
+    return StartupSubscriptionPlan.fromInt(_profile!.subscriptionPlan!).requestLimit;
+  }
+  
+  String get planName {
+    if (_profile?.subscriptionPlan == null) return 'FREE';
+    final plan = StartupSubscriptionPlan.fromInt(_profile!.subscriptionPlan!);
+    return plan.name.toUpperCase();
+  }
+
+  String get expiryDate {
+    if (_profile?.subscriptionEndDate == null) return 'Vĩnh viễn';
+    return DateFormat('dd/MM/yyyy').format(_profile!.subscriptionEndDate!);
+  }
+  
   double get subscriptionProgress => maxRequests > 0 ? (usedRequests / maxRequests).clamp(0.0, 1.0) : 0.0;
 
   List<ConsultingSessionModel> get sessions => _mentorships.map((m) => ConsultingSessionModel(
@@ -79,6 +110,19 @@ class ConsultingViewModel extends ChangeNotifier {
   ConsultingViewModel() {
     fetchAdvisors();
     fetchMentorships();
+    fetchSubscriptionStatus();
+  }
+
+  Future<void> fetchSubscriptionStatus() async {
+    try {
+      final response = await _startupService.getMyProfile();
+      if (response.success && response.data != null) {
+        _profile = response.data;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching subscription: $e');
+    }
   }
 
   Future<void> fetchAdvisors() async {
@@ -128,6 +172,21 @@ class ConsultingViewModel extends ChangeNotifier {
   void setSelectedExpertise(String expertise) {
     _selectedExpertise = expertise;
     fetchAdvisors();
+  }
+
+  void setSelectedRequestFilter(String filter) {
+    _selectedRequestFilter = filter;
+    notifyListeners();
+  }
+
+  void setSelectedSessionFilter(String filter) {
+    _selectedSessionFilter = filter;
+    notifyListeners();
+  }
+
+  void setSelectedReportFilter(String filter) {
+    _selectedReportFilter = filter;
+    notifyListeners();
   }
 
   Future<void> createMentorshipRequest(CreateMentorshipRequest request) async {
@@ -250,7 +309,7 @@ class ConsultingViewModel extends ChangeNotifier {
       // 2. Nếu chấp nhận, tự động tạo hội thoại Chat
       if (status == MentorshipStatus.accepted) {
         await _messageService.createConversation(
-          connectionId: mentorshipId,
+          mentorshipId: mentorshipId,
           initialMessage: 'Chào bạn, tôi đã chấp nhận yêu cầu tư vấn của bạn. Chúng ta có thể trao đổi thêm tại đây.',
         );
       }

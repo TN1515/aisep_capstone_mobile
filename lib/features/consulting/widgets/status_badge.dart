@@ -23,7 +23,7 @@ class StatusBadge extends StatelessWidget {
         text = 'Chờ xác nhận';
         break;
       case ConsultingStatus.confirmed:
-        color = StartupOnboardingTheme.goldAccent;
+        color = Theme.of(context).primaryColor;
         text = 'Đã xác nhận';
         break;
       case ConsultingStatus.payable:
