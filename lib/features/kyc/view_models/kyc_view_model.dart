@@ -37,6 +37,7 @@ class KycViewModel extends ChangeNotifier {
 
   // --- API & Auto-save State ---
   StartupKYCStatusDto? _kycStatusDto;
+  String? _originalApprovedType; 
   bool _isLoading = false;
   bool _isSavingDraft = false;
   String? _errorMessage;
@@ -61,7 +62,11 @@ class KycViewModel extends ChangeNotifier {
   String? get uploadedFileName {
     final files = selectedFiles;
     if (files.isEmpty) return null;
-    return basename(files.first.file.path);
+    final first = files.first;
+    if (first.file != null) {
+      return basename(first.file!.path);
+    }
+    return first.remoteName;
   }
 
   bool get isLoading => _isLoading;
@@ -115,7 +120,13 @@ class KycViewModel extends ChangeNotifier {
   }
 
   Future<void> saveKycDraft() async {
-    if (_isLoading || status == KycStatus.pending || status == KycStatus.verified) return;
+    if (_isLoading || status == KycStatus.pending) return;
+
+    // Nếu đã verified, chỉ lưu nháp nếu người dùng đổi sang loại hình khác loại đã duyệt
+    if (status == KycStatus.verified) {
+      final currentType = isIncorporated ? 'WITH_LEGAL_ENTITY' : 'WITHOUT_LEGAL_ENTITY';
+      if (currentType == _originalApprovedType) return;
+    }
 
     _isSavingDraft = true;
     notifyListeners();
@@ -186,7 +197,11 @@ class KycViewModel extends ChangeNotifier {
     try {
       final files = isIncorporated ? _selectedFilesInc : _selectedFilesNoInc;
       final evidence = files.firstWhere((e) => e.kind == kind);
-      return basename(evidence.file.path);
+      
+      if (evidence.file != null) {
+        return basename(evidence.file!.path);
+      }
+      return evidence.remoteName;
     } catch (_) {
       return null;
     }
@@ -228,6 +243,11 @@ class KycViewModel extends ChangeNotifier {
   }
 
   void _populateFormFromDto(StartupKYCStatusDto dto) {
+    // Lưu lại loại hình đã được duyệt để so sánh khi auto-save
+    if (dto.status == KYCStatus.APPROVED) {
+      _originalApprovedType = dto.startupVerificationType;
+    }
+
     // 1. Cập nhật loại hình hiện tại từ Server
     final String? type = dto.startupVerificationType;
     if (type != null) {
@@ -250,6 +270,17 @@ class KycViewModel extends ChangeNotifier {
     if (dto.workEmail != null) workEmailControllerNoInc.text = dto.workEmail!;
     if (dto.representativeRole != null) selectedRoleNoInc = dto.representativeRole!;
     if (dto.publicLink != null) linkControllerNoInc.text = dto.publicLink!;
+
+    // 3. Nạp thông tin file minh chứng
+    if (dto.evidenceFiles != null) {
+      _selectedFilesInc.clear();
+      _selectedFilesNoInc.clear();
+      dto.evidenceFiles!.forEach((kind, name) {
+        final kycFile = KYCEvidenceFile(kind: kind, remoteName: name);
+        _selectedFilesInc.add(kycFile);
+        _selectedFilesNoInc.add(kycFile);
+      });
+    }
 
     notifyListeners();
   }

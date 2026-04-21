@@ -56,19 +56,27 @@ class KYCService {
     try {
       final Map<String, dynamic> formDataMap = additionalData ?? {};
 
-      // Xử lý tệp tin minh chứng
+      // Xử lý tệp tin minh chứng (chỉ upload những file mới có local path)
       if (evidenceFiles.isNotEmpty) {
         List<MultipartFile> multipartFileList = [];
+        List<String> kindKeys = [];
+        
         for (var kycFile in evidenceFiles) {
-          multipartFileList.add(
-            await MultipartFile.fromFile(
-              kycFile.file.path,
-              filename: basename(kycFile.file.path),
-            )
-          );
+          if (kycFile.file != null) {
+            multipartFileList.add(
+              await MultipartFile.fromFile(
+                kycFile.file!.path,
+                filename: basename(kycFile.file!.path),
+              )
+            );
+            kindKeys.add(kycFile.kind.key);
+          }
         }
-        formDataMap['EvidenceFiles'] = multipartFileList;
-        formDataMap['EvidenceFileKinds'] = evidenceFiles.map((e) => e.kind.key).toList();
+        
+        if (multipartFileList.isNotEmpty) {
+          formDataMap['EvidenceFiles'] = multipartFileList;
+          formDataMap['EvidenceFileKinds'] = kindKeys;
+        }
       }
 
       final formData = FormData.fromMap(formDataMap);

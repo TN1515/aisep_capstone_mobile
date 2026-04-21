@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class StartupDropdownField extends StatelessWidget {
   final String label;
@@ -25,24 +26,26 @@ class StartupDropdownField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            label,
-            style: GoogleFonts.workSans(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.9),
+        if (label.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              label,
+              style: GoogleFonts.workSans(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: StartupOnboardingTheme.navyBg.withOpacity(0.5),
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-        ),
         DropdownButtonFormField<String>(
           value: value?.isEmpty == true ? null : value,
           onChanged: onChanged,
           validator: validator,
           isExpanded: true,
           dropdownColor: Theme.of(context).cardColor,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: StartupOnboardingTheme.goldAccent),
+          icon: const Icon(LucideIcons.chevronDown, color: StartupOnboardingTheme.goldAccent, size: 20),
           style: GoogleFonts.workSans(
             fontSize: 16,
             color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -50,7 +53,7 @@ class StartupDropdownField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.workSans(
-              fontSize: 16,
+              fontSize: 14,
               color: StartupOnboardingTheme.slateGray.withOpacity(0.5),
             ),
             filled: true,

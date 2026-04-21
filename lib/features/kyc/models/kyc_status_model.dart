@@ -63,6 +63,7 @@ class StartupKYCStatusDto {
   final String? workEmail;
   final String? publicLink;
   final String? startupVerificationType;
+  final Map<EvidenceFileKind, String>? evidenceFiles;
 
   StartupKYCStatusDto({
     required this.status,
@@ -77,6 +78,7 @@ class StartupKYCStatusDto {
     this.workEmail,
     this.publicLink,
     this.startupVerificationType,
+    this.evidenceFiles,
   });
 
   factory StartupKYCStatusDto.fromJson(Map<String, dynamic> json) {
@@ -97,11 +99,43 @@ class StartupKYCStatusDto {
     }
 
     // Helper to get value from multiple possible sources
-    String? getValue(String key) {
+    dynamic getValue(String key) {
       String pascalKey = key[0].toUpperCase() + key.substring(1);
       return draftMap?[key] ?? draftMap?[pascalKey] ?? 
              summary?[key] ?? summary?[pascalKey] ?? 
              json[key] ?? json[pascalKey];
+    }
+
+    // Trích xuất file info
+    Map<EvidenceFileKind, String>? extractFiles() {
+      final Map<EvidenceFileKind, String> results = {};
+      bool found = false;
+
+      // Cách 1: Tìm trong map evidenceFiles hoặc evidenceFileNames (nếu backend trả về dạng map)
+      final fileData = getValue('evidenceFiles') ?? getValue('evidenceFileNames');
+      if (fileData is Map) {
+        for (var entry in fileData.entries) {
+          try {
+            final key = entry.key.toString();
+            final kind = EvidenceFileKind.values.firstWhere((e) => e.key == key || e.name == key);
+            results[kind] = entry.value.toString();
+            found = true;
+          } catch (_) {}
+        }
+      }
+
+      // Cách 2: Tìm các trường đơn lẻ (ví dụ: BusinessRegistration, Other) 
+      // Phòng trường hợp backend trả về flat list hoặc fields riêng lẻ
+      for (var kind in EvidenceFileKind.values) {
+        if (!results.containsKey(kind)) {
+          final val = getValue(kind.key) ?? getValue(kind.name);
+          if (val != null && val is String && val.isNotEmpty) {
+            results[kind] = val;
+            found = true;
+          }
+        }
+      }
+      return found ? results : null;
     }
 
     return StartupKYCStatusDto(
@@ -110,26 +144,29 @@ class StartupKYCStatusDto {
       updatedAt: (json['updatedAt'] ?? json['lastUpdated']) != null 
           ? DateTime.parse(json['updatedAt'] ?? json['lastUpdated']) 
           : null,
-      legalFullName: getValue('legalFullName'),
-      enterpriseCode: getValue('enterpriseCode'),
-      projectName: getValue('projectName'),
-      taxOrDescription: getValue('taxOrDescription'),
-      representativeFullName: getValue('representativeFullName'),
-      representativeRole: getValue('representativeRole'),
-      workEmail: getValue('workEmail'),
-      publicLink: getValue('publicLink'),
-      startupVerificationType: getValue('startupVerificationType'),
+      legalFullName: getValue('legalFullName') as String?,
+      enterpriseCode: getValue('enterpriseCode') as String?,
+      projectName: getValue('projectName') as String?,
+      taxOrDescription: getValue('taxOrDescription') as String?,
+      representativeFullName: getValue('representativeFullName') as String?,
+      representativeRole: getValue('representativeRole') as String?,
+      workEmail: getValue('workEmail') as String?,
+      publicLink: getValue('publicLink') as String?,
+      startupVerificationType: getValue('startupVerificationType') as String?,
+      evidenceFiles: extractFiles(),
     );
   }
 }
 
-/// Model đóng gói thông tin file để upload
+/// Model đóng gói thông tin file để upload hoặc hiển thị thông tin đã tải lên
 class KYCEvidenceFile {
-  final File file;
+  final File? file;        // Local file (for new upload)
+  final String? remoteName; // Filename from server (for viewing)
   final EvidenceFileKind kind;
 
   KYCEvidenceFile({
-    required this.file,
+    this.file,
+    this.remoteName,
     required this.kind,
   });
 }

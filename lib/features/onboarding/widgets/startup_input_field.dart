@@ -9,6 +9,7 @@ class StartupInputField extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? suffixIcon;
   final bool autofocus;
+  final FocusNode? focusNode;
   final String? Function(String?)? validator;
   final int maxLines;
 
@@ -20,6 +21,7 @@ class StartupInputField extends StatelessWidget {
     this.keyboardType,
     this.suffixIcon,
     this.autofocus = false,
+    this.focusNode,
     this.validator,
     this.maxLines = 1,
   });
@@ -29,21 +31,24 @@ class StartupInputField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            label,
-            style: GoogleFonts.workSans(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.9),
+        if (label.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              label,
+              style: GoogleFonts.workSans(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: StartupOnboardingTheme.navyBg.withOpacity(0.5),
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-        ),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           autofocus: autofocus,
+          focusNode: focusNode,
           validator: validator,
           maxLines: maxLines,
           style: GoogleFonts.workSans(
@@ -53,7 +58,7 @@ class StartupInputField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.workSans(
-              fontSize: 16,
+              fontSize: 14,
               color: StartupOnboardingTheme.slateGray.withOpacity(0.5),
             ),
             suffixIcon: suffixIcon,

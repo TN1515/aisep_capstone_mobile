@@ -646,8 +646,8 @@ class _KycFormViewState extends State<KycFormView> {
   }
 
   Widget _buildFooter() {
-    bool isDone = _viewModel.status == KycStatus.pending || _viewModel.status == KycStatus.verified;
-    bool canSubmit = _viewModel.canSubmit() && !isDone;
+    bool isPending = _viewModel.status == KycStatus.pending;
+    bool canSubmit = _viewModel.canSubmit() && !isPending;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -668,10 +668,11 @@ class _KycFormViewState extends State<KycFormView> {
           children: [
             SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton(
                 onPressed: canSubmit ? () => _viewModel.submitKyc(context) : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDone ? Colors.grey.withOpacity(0.1) : Theme.of(context).primaryColor,
+                  backgroundColor: isPending ? Colors.grey.withOpacity(0.1) : Theme.of(context).primaryColor,
                   disabledBackgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
                   disabledForegroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
                 ),
@@ -681,7 +682,7 @@ class _KycFormViewState extends State<KycFormView> {
                       width: 20, 
                       child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).scaffoldBackgroundColor)
                     )
-                  : Text(isDone ? 'Đang trong quá trình xét duyệt' : 'Gửi hồ sơ xác thực'),
+                  : Text(isPending ? 'Đang trong quá trình xét duyệt' : 'Gửi hồ sơ xác thực'),
               ),
             ),
           ],
