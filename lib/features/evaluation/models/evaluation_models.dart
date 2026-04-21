@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aisep_capstone_mobile/core/utils/datetime_utils.dart';
 
 enum EvaluationStatus {
   queued,
@@ -7,6 +8,27 @@ enum EvaluationStatus {
   retry,
   completed,
   failed,
+}
+
+enum DocumentSourceType {
+  pitchDeck,
+  businessPlan,
+}
+
+extension DocumentSourceTypeExtension on DocumentSourceType {
+  String get apiKey {
+    switch (this) {
+      case DocumentSourceType.pitchDeck: return 'pitch_deck';
+      case DocumentSourceType.businessPlan: return 'business_plan';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case DocumentSourceType.pitchDeck: return 'Pitch Deck';
+      case DocumentSourceType.businessPlan: return 'Business Plan';
+    }
+  }
 }
 
 extension EvaluationStatusExtension on EvaluationStatus {
@@ -70,12 +92,8 @@ class EvaluationStatusResult {
       failureReason: getValue<dynamic>('failureReason')?.toString(),
       isReportReady: getValue<dynamic>('isReportReady') == true,
       isReportValid: getValue<dynamic>('isReportValid') == true,
-      submittedAt: getValue<dynamic>('submittedAt') != null 
-          ? DateTime.parse(getValue<dynamic>('submittedAt').toString()) 
-          : DateTime.now(),
-      updatedAt: getValue<dynamic>('updatedAt') != null 
-          ? DateTime.parse(getValue<dynamic>('updatedAt').toString()) 
-          : DateTime.now(),
+      submittedAt: DateTimeUtils.parseApiDate(getValue<dynamic>('submittedAt')),
+      updatedAt: DateTimeUtils.parseApiDate(getValue<dynamic>('updatedAt')),
     );
   }
 
@@ -140,6 +158,7 @@ class EvaluationReportResult {
   final bool isReportValid;
   final OverallResult overallResult;
   final List<CriteriaResult> criteriaResults;
+  final Classification classification;
   final Narrative narrative;
   final String? validationMessage;
 
@@ -149,6 +168,7 @@ class EvaluationReportResult {
     required this.isReportValid,
     required this.overallResult,
     required this.criteriaResults,
+    required this.classification,
     required this.narrative,
     this.validationMessage,
   });
@@ -167,8 +187,29 @@ class EvaluationReportResult {
       criteriaResults: (reportData['criteria_results'] as List? ?? [])
           .map((e) => CriteriaResult.fromJson(e))
           .toList(),
+      classification: Classification.fromJson(reportData['classification'] ?? {}),
       narrative: Narrative.fromJson(reportData['narrative'] ?? {}),
       validationMessage: getValue('validationMessage')?.toString(),
+    );
+  }
+}
+
+class Classification {
+  final String industry;
+  final String stage;
+  final List<String> businessModel;
+
+  Classification({
+    required this.industry,
+    required this.stage,
+    required this.businessModel,
+  });
+
+  factory Classification.fromJson(Map<String, dynamic> json) {
+    return Classification(
+      industry: json['industry']?.toString() ?? 'N/A',
+      stage: json['stage']?.toString() ?? 'N/A',
+      businessModel: List<String>.from(json['business_model'] ?? json['businessModel'] ?? []),
     );
   }
 }

@@ -21,15 +21,19 @@ class EvaluationViewModel extends ChangeNotifier {
 
   Timer? _pollingTimer;
 
-  Future<void> loadHistory() async {
+  Future<void> loadHistory(int? startupId) async {
+    if (startupId == null) return;
+    
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final startupId = await TokenService.getUserId();
-      if (startupId != null) {
-        _history = await _service.getHistory(startupId);
+      final response = await _service.getHistory(startupId.toString());
+      if (response.success && response.data != null) {
+        _history = response.data!;
+      } else {
+        _errorMessage = response.error ?? 'Lỗi tải lịch sử đánh giá';
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -52,10 +56,16 @@ class EvaluationViewModel extends ChangeNotifier {
         documentIds: documentIds,
       );
 
-      final submitResult = await _service.submitEvaluation(request);
+      final response = await _service.submitEvaluation(request);
+      
+      if (!response.success) {
+        throw Exception(response.error ?? 'Gửi yêu cầu thất bại');
+      }
+
+      final submitResult = response.data!;
       
       // Load history to refresh list with new item
-      await loadHistory();
+      await loadHistory(startupId);
       
       if (submitResult.status == EvaluationStatus.processing || submitResult.status == EvaluationStatus.queued) {
         startPolling(submitResult.runId);
@@ -73,7 +83,13 @@ class EvaluationViewModel extends ChangeNotifier {
     // Polling interval adjusted to 7 seconds as planned
     _pollingTimer = Timer.periodic(const Duration(seconds: 7), (timer) async {
       try {
-        final statusItem = await _service.getEvaluationStatus(runId);
+        final response = await _service.getEvaluationStatus(runId);
+        
+        if (!response.success || response.data == null) {
+          throw Exception(response.error ?? 'Lỗi lấy trạng thái');
+        }
+
+        final statusItem = response.data!;
         
         // Update history item
         final index = _history.indexWhere((e) => e.runId == runId);
@@ -86,7 +102,9 @@ class EvaluationViewModel extends ChangeNotifier {
           notifyListeners();
         }
 
-        if (statusItem.status == EvaluationStatus.completed || statusItem.status == EvaluationStatus.failed) {
+        if (statusItem.status == EvaluationStatus.completed || 
+            statusItem.status == EvaluationStatus.failed || 
+            statusItem.status == EvaluationStatus.partial_completed) {
           timer.cancel();
         }
       } catch (e) {
@@ -104,7 +122,33 @@ class EvaluationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _currentReport = await _service.getEvaluationReport(runId);
+      final response = await _service.getEvaluationReport(runId);
+      if (response.success) {
+        _currentReport = response.data;
+      } else {
+        _errorMessage = response.error ?? 'Lỗi tải báo cáo';
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadSourceReport(int runId, DocumentSourceType sourceType) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _currentReport = null;
+    notifyListeners();
+
+    try {
+      final response = await _service.getEvaluationSourceReport(runId, sourceType.apiKey);
+      if (response.success) {
+        _currentReport = response.data;
+      } else {
+        _errorMessage = response.error ?? 'Lỗi tải báo cáo nguồn';
+      }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
