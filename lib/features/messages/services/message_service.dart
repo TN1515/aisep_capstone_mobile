@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/chat_model.dart';
@@ -7,20 +8,30 @@ class MessageService {
 
   // 1. Khởi tạo hội thoại
   Future<ApiResponse<ConversationModel>> createConversation({
-    required int connectionId,
+    int? connectionId,
+    int? mentorshipId,
     String? initialMessage,
   }) async {
     try {
+      final Map<String, dynamic> body = {};
+      if (connectionId != null && connectionId > 0) {
+        body['connectionId'] = connectionId;
+      }
+      if (mentorshipId != null && mentorshipId > 0) {
+        body['mentorshipId'] = mentorshipId;
+      }
+
       final response = await _dio.post(
         '/api/conversations',
-        data: {
-          'connectionId': connectionId,
-          if (initialMessage != null) 'initialMessage': initialMessage,
-        },
+        data: body,
       );
       return ApiResponse.fromJson(
         response.data, 
-        (json) => ConversationModel.fromJson(json as Map<String, dynamic>)
+        (json) {
+          final mapped = json as Map<String, dynamic>;
+          // Ensure ID is mapped correctly if it's top-level or nested
+          return ConversationModel.fromJson(mapped);
+        }
       );
     } catch (e) {
       return ApiResponse.fromDioError(e);
@@ -43,10 +54,26 @@ class MessageService {
       return ApiResponse.fromJson(
         response.data, 
         (json) {
-          final items = (json is Map && (json.containsKey('items') || json.containsKey('Items')))
-              ? (json['items'] ?? json['Items'])
-              : json;
-          return (items as List).map((i) => ConversationModel.fromJson(i)).toList();
+          dev.log('MessageService: Parsing conversations response keys: ${json is Map ? json.keys.toList() : 'Direct List'}');
+          
+          dynamic items;
+          if (json is List) {
+            items = json;
+          } else if (json is Map) {
+            // Check all common backend response keys for lists
+            items = json['items'] ?? json['Items'] ?? 
+                    json['data'] ?? json['Data'] ?? 
+                    json['results'] ?? json['Results'] ??
+                    json['content'] ?? json['Content'] ??
+                    json['list'] ?? json['List'] ?? json;
+          }
+
+          if (items is List) {
+            return items.map((i) => ConversationModel.fromJson(i)).toList();
+          }
+          
+          dev.log('MessageService: Warning - Could not identify list in response. Raw data: $json');
+          return <ConversationModel>[];
         }
       );
     } catch (e) {
@@ -72,10 +99,26 @@ class MessageService {
       return ApiResponse.fromJson(
         response.data, 
         (json) {
-          final items = (json is Map && (json.containsKey('items') || json.containsKey('Items')))
-              ? (json['items'] ?? json['Items'])
-              : json;
-          return (items as List).map((i) => MessageModel.fromJson(i, currentUserId)).toList();
+          dev.log('MessageService: Parsing messages response keys: ${json is Map ? json.keys.toList() : 'Direct List'}');
+          
+          dynamic items;
+          if (json is List) {
+            items = json;
+          } else if (json is Map) {
+            // Check all common backend response keys for lists
+            items = json['items'] ?? json['Items'] ?? 
+                    json['data'] ?? json['Data'] ?? 
+                    json['results'] ?? json['Results'] ??
+                    json['content'] ?? json['Content'] ??
+                    json['messages'] ?? json['Messages'] ?? json;
+          }
+
+          if (items is List) {
+            return items.map((i) => MessageModel.fromJson(i, currentUserId)).toList();
+          }
+          
+          dev.log('MessageService: Warning - Could not identify messages list. Raw data: $json');
+          return <MessageModel>[];
         }
       );
     } catch (e) {
@@ -83,10 +126,13 @@ class MessageService {
     }
   }
 
-  // 4. Đánh giá đã đọc
+  // 4. Đánh giá đã đọc (Read ALL)
   Future<ApiResponse<void>> markAsRead(int conversationId) async {
     try {
-      final response = await _dio.put('/api/conversations/$conversationId/read');
+      final response = await _dio.post(
+        '/api/messages/read-all',
+        data: {'conversationId': conversationId},
+      );
       return ApiResponse.fromJson(response.data, null);
     } catch (e) {
       return ApiResponse.fromDioError(e);
@@ -101,8 +147,11 @@ class MessageService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/conversations/$conversationId/messages',
-        data: {'content': content},
+        '/api/messages',
+        data: {
+          'conversationId': conversationId,
+          'content': content,
+        },
       );
       return ApiResponse.fromJson(
         response.data, 

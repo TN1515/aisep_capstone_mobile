@@ -19,6 +19,8 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -29,18 +31,19 @@ class NotificationTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: notification.isRead 
               ? Theme.of(context).cardColor 
-              : StartupOnboardingTheme.goldAccent.withOpacity(0.08),
+              : StartupOnboardingTheme.goldAccent.withOpacity(isDark ? 0.15 : 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: notification.isRead 
-                ? Theme.of(context).dividerColor.withOpacity(0.1) 
-                : StartupOnboardingTheme.goldAccent.withOpacity(0.2),
+                ? Theme.of(context).dividerColor.withOpacity(isDark ? 0.1 : 0.05) 
+                : StartupOnboardingTheme.goldAccent.withOpacity(0.3),
           ),
           boxShadow: notification.isRead ? [] : [
             BoxShadow(
-              color: StartupOnboardingTheme.goldAccent.withOpacity(0.05),
+              color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
               blurRadius: 10,
               spreadRadius: 0,
+              offset: const Offset(0, 4),
             )
           ],
         ),
@@ -63,18 +66,25 @@ class NotificationTile extends StatelessWidget {
                             fontSize: 15,
                             fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.bold,
                             color: notification.isRead 
-                                ? Theme.of(context).textTheme.displayLarge?.color?.withOpacity(0.9)
+                                ? Theme.of(context).textTheme.displayLarge?.color?.withOpacity(0.8)
                                 : Theme.of(context).textTheme.displayLarge?.color,
                           ),
                         ),
                       ),
                       if (!notification.isRead)
                         Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
                             color: StartupOnboardingTheme.goldAccent,
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+                                blurRadius: 4,
+                              )
+                            ],
                           ),
                         ),
                     ],
@@ -91,13 +101,34 @@ class NotificationTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    _formatTimestamp(notification.timestamp),
-                    style: GoogleFonts.workSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: StartupOnboardingTheme.slateGray.withOpacity(0.5),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatTimestamp(notification.timestamp),
+                        style: GoogleFonts.workSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                        ),
+                      ),
+                      if (notification.relatedEntityId != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Chi tiết',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: StartupOnboardingTheme.goldAccent,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -113,42 +144,51 @@ class NotificationTile extends StatelessWidget {
     Color color;
 
     switch (notification.type) {
-      case NotificationType.document:
-        icon = LucideIcons.fileText;
-        color = Colors.blueAccent;
-        break;
-      case NotificationType.ai:
+      case NotificationType.AI_EVALUATION:
         icon = LucideIcons.zap;
         color = StartupOnboardingTheme.goldAccent;
         break;
-      case NotificationType.connection:
-        icon = LucideIcons.users;
+      case NotificationType.CONNECTION_REQUEST:
+        icon = LucideIcons.userPlus;
+        color = Colors.blueAccent;
+        break;
+      case NotificationType.CONNECTION_ACCEPTED:
+        icon = LucideIcons.checkCircle;
         color = Colors.greenAccent;
         break;
-      case NotificationType.kyc:
+      case NotificationType.MESSAGE:
+        icon = LucideIcons.mail;
+        color = Colors.indigoAccent;
+        break;
+      case NotificationType.KYC_STATUS:
         icon = LucideIcons.shieldCheck;
         color = Colors.orangeAccent;
         break;
+      case NotificationType.MENTORSHIP:
+        icon = LucideIcons.coffee;
+        color = Colors.purpleAccent;
+        break;
       default:
-        icon = LucideIcons.info;
-        color = Theme.of(context).textTheme.bodyLarge?.color ?? StartupOnboardingTheme.softIvory;
+        icon = LucideIcons.bell;
+        color = StartupOnboardingTheme.goldAccent;
     }
 
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(icon, color: color, size: 18),
+      child: Icon(icon, color: color, size: 20),
     );
   }
 
   String _formatTimestamp(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inHours < 1) return '${diff.inMinutes} phút trước';
-    if (diff.inDays < 1) return '${diff.inHours} giờ trước';
+    if (diff.inMinutes < 1) return 'Vừa xong';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
     if (diff.inDays < 7) return '${diff.inDays} ngày trước';
     return DateFormat('dd/MM/yyyy').format(dt);
   }

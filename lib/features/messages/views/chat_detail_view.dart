@@ -31,7 +31,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ChatViewModel>(context, listen: false).loadMessages(widget.conversationId);
+      final viewModel = Provider.of<ChatViewModel>(context, listen: false);
+      viewModel.loadMessages(widget.conversationId);
+      viewModel.markAsRead(widget.conversationId);
     });
   }
 
@@ -82,12 +84,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     ),
                   ),
                   const SizedBox(height: 1),
-                  Text(
-                    'Trực tuyến',
-                    style: GoogleFonts.workSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: StartupOnboardingTheme.goldAccent.withOpacity(0.8),
+                  Consumer<ChatViewModel>(
+                    builder: (context, vm, _) => Text(
+                      vm.isLoading ? 'Đang cập nhật...' : 'Trực tuyến',
+                      style: GoogleFonts.workSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: vm.isLoading 
+                            ? Colors.grey.withOpacity(0.5)
+                            : StartupOnboardingTheme.goldAccent.withOpacity(0.8),
+                      ),
                     ),
                   ),
                 ],
@@ -186,7 +192,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   }
 
   Widget _buildMessageBubble(MessageModel msg) {
-    final isMe = msg.isMe;
+    final isMe = msg.isMine;
+    
+    // Safety check: if content is empty but it's not a temporary message, it might be a mapping issue
+    final displayContent = msg.content.isEmpty ? "..." : msg.content;
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
@@ -195,7 +205,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           Container(
             constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            margin: const EdgeInsets.only(bottom: 2),
+            margin: const Offset(0, 2).dy == 2 ? const EdgeInsets.only(bottom: 2) : EdgeInsets.zero,
             decoration: BoxDecoration(
               color: isMe ? StartupOnboardingTheme.goldAccent : Theme.of(context).cardColor,
               borderRadius: BorderRadius.only(
@@ -212,14 +222,14 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 ),
               ],
             ),
-            child: Text(
-              msg.text,
-              style: GoogleFonts.workSans(
-                fontSize: 14,
-                color: isMe ? Colors.black : Theme.of(context).textTheme.bodyLarge?.color,
-                height: 1.4,
+              child: Text(
+                displayContent,
+                style: GoogleFonts.workSans(
+                  fontSize: 14,
+                  color: isMe ? Colors.black : Theme.of(context).textTheme.bodyLarge?.color,
+                  height: 1.4,
+                ),
               ),
-            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -239,8 +249,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   }
 
   Widget _buildInputSection(BuildContext context) {
+    // Scaffold's resizeToAvoidBottomInset already handles the keyboard distance. 
+    // Adding viewInsets.bottom here causes a double-padding/overflow issue.
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
@@ -259,6 +271,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               child: Center(
                 child: TextField(
                   controller: _messageController,
+                  autofocus: true,
                   style: GoogleFonts.workSans(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Nhập tin nhắn...',
