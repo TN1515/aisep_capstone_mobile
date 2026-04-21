@@ -17,7 +17,10 @@ class ProfileTextField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.validator,
+    this.icon,
   });
+
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +59,7 @@ class ProfileTextField extends StatelessWidget {
               horizontal: 16,
               vertical: 14,
             ),
+            prefixIcon: icon != null ? Icon(icon, size: 18, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.4)) : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: theme.dividerColor),

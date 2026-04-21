@@ -32,18 +32,24 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return ChangeNotifierProvider(
       create: (_) => SettingsViewModel(),
       child: Scaffold(
-        backgroundColor: StartupOnboardingTheme.navyBg,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft),
+            icon: Icon(LucideIcons.arrowLeft, color: theme.appBarTheme.iconTheme?.color),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text('Đổi mật khẩu'),
+          title: Text(
+            'Đổi mật khẩu',
+            style: theme.appBarTheme.titleTextStyle,
+          ),
         ),
         body: Consumer<SettingsViewModel>(
           builder: (context, viewModel, child) {
@@ -74,7 +80,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                       style: GoogleFonts.outfit(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: StartupOnboardingTheme.softIvory,
+                        color: theme.textTheme.displayLarge?.color,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -83,7 +89,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                       textAlign: TextAlign.center,
                       style: GoogleFonts.workSans(
                         fontSize: 14,
-                        color: StartupOnboardingTheme.softIvory.withOpacity(0.6),
+                        color: theme.textTheme.bodyLarge?.color?.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -92,15 +98,23 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: StartupOnboardingTheme.navySurface,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        border: Border.all(color: theme.dividerColor),
+                        boxShadow: isDark ? [] : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildFieldHeader('Mật khẩu hiện tại'),
+                          _buildFieldHeader(context, 'Mật khẩu hiện tại'),
                           _buildPasswordField(
+                            context,
                             controller: _currentController,
                             hint: 'Nhập mật khẩu hiện tại',
                             obscure: _obscureCurrent,
@@ -112,8 +126,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           ),
                           const SizedBox(height: 20),
                           
-                          _buildFieldHeader('Mật khẩu mới'),
+                          _buildFieldHeader(context, 'Mật khẩu mới'),
                           _buildPasswordField(
+                            context,
                             controller: _newController,
                             hint: 'Ít nhất 8 ký tự',
                             obscure: _obscureNew,
@@ -125,8 +140,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           ),
                           const SizedBox(height: 20),
 
-                          _buildFieldHeader('Xác nhận mật khẩu'),
+                          _buildFieldHeader(context, 'Xác nhận mật khẩu'),
                           _buildPasswordField(
+                            context,
                             controller: _confirmController,
                             hint: 'Nhập lại mật khẩu mới',
                             obscure: _obscureConfirm,
@@ -153,24 +169,37 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                             );
                             if (success && mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Đã cập nhật mật khẩu thành công')),
+                                const SnackBar(
+                                  content: Text('Đã cập nhật mật khẩu thành công'),
+                                  backgroundColor: Colors.green,
+                                ),
                               );
                               Navigator.pop(context);
+                            } else if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(viewModel.errorMessage ?? 'Đã có lỗi xảy ra'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
                             }
                           }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: StartupOnboardingTheme.goldAccent,
-                          foregroundColor: StartupOnboardingTheme.navyBg,
+                          foregroundColor: isDark ? StartupOnboardingTheme.navyBg : Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
                         ),
                         child: viewModel.isLoading 
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: StartupOnboardingTheme.navyBg),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2, 
+                                  color: isDark ? StartupOnboardingTheme.navyBg : Colors.white,
+                                ),
                               )
                             : Text(
                                 'Cập nhật mật khẩu',
@@ -191,48 +220,54 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
     );
   }
 
-  Widget _buildFieldHeader(String title) {
+  Widget _buildFieldHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, left: 2),
       child: Text(
         title,
         style: GoogleFonts.outfit(
-          fontSize: 15, // Increased from 14
+          fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: StartupOnboardingTheme.softIvory.withOpacity(0.9),
+          color: Theme.of(context).textTheme.displayLarge?.color?.withOpacity(0.9),
         ),
       ),
     );
   }
 
-  Widget _buildPasswordField({
+  Widget _buildPasswordField(
+    BuildContext context, {
     required TextEditingController controller,
     required String hint,
     required bool obscure,
     required VoidCallback toggleObscure,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return TextFormField(
       controller: controller,
       obscureText: obscure,
-      style: GoogleFonts.workSans(color: StartupOnboardingTheme.softIvory),
+      style: GoogleFonts.workSans(color: theme.textTheme.bodyLarge?.color),
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.workSans(
-          color: StartupOnboardingTheme.softIvory.withOpacity(0.4), // Increased from 0.3
+          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.4),
           fontSize: 14,
         ),
         filled: true,
-        fillColor: StartupOnboardingTheme.navyBg.withOpacity(0.5), // Subtle contrast from parent card
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // Added vertical padding
+        fillColor: isDark 
+            ? StartupOnboardingTheme.navyBg.withOpacity(0.5) 
+            : Colors.grey.withOpacity(0.05),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16), // Increased from 12
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.dividerColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: theme.dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -245,7 +280,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? LucideIcons.eye : LucideIcons.eyeOff,
-            color: StartupOnboardingTheme.softIvory.withOpacity(0.5),
+            color: theme.iconTheme.color?.withOpacity(0.5),
             size: 20,
           ),
           onPressed: toggleObscure,

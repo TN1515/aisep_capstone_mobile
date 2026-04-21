@@ -1,47 +1,60 @@
+import 'package:aisep_capstone_mobile/features/auth/models/auth_request_models.dart';
+import 'package:aisep_capstone_mobile/features/auth/services/auth_service.dart';
+import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_settings_model.dart';
 import 'dart:async';
 
 class SettingsViewModel extends ChangeNotifier {
+  final AuthService _authService = AuthService();
+  final StartupService _startupService = StartupService();
+  
   UserSettingsModel _settings = const UserSettingsModel();
   bool _isLoading = false;
+  String? _errorMessage;
+  String? _kycStatus;
 
   UserSettingsModel get settings => _settings;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  String? get kycStatus => _kycStatus;
 
   SettingsViewModel() {
-    // Initial load, in a real app this would fetch from a database or shared preferences
     _loadSettings();
   }
 
-  void _loadSettings() {
-    // For now, using default settings
-    _settings = const UserSettingsModel();
+  Future<void> _loadSettings() async {
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      final response = await _startupService.getMyProfile();
+      if (response.success && response.data != null) {
+        final profile = response.data!;
+        _settings = _settings.copyWith(isVisible: profile.isVisible);
+        _kycStatus = profile.kycStatus;
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  Future<void> toggleShowToInvestors(bool value) async {
-    _settings = _settings.copyWith(showToInvestors: value);
+  Future<void> toggleProfileVisibility(bool value) async {
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
-    await _saveSettings();
-  }
 
-  Future<void> toggleShowToAdvisors(bool value) async {
-    _settings = _settings.copyWith(showToAdvisors: value);
+    final response = await _startupService.toggleVisibility(value);
+    
+    if (response.success) {
+      _settings = _settings.copyWith(isVisible: value);
+    } else {
+      _errorMessage = response.error ?? 'Không thể cập nhật trạng thái hiển thị';
+    }
+    
+    _isLoading = false;
     notifyListeners();
-    await _saveSettings();
-  }
-
-  Future<void> togglePushNotifications(bool value) async {
-    _settings = _settings.copyWith(pushNotifications: value);
-    notifyListeners();
-    await _saveSettings();
-  }
-
-  Future<void> toggleEmailNotifications(bool value) async {
-    _settings = _settings.copyWith(emailNotifications: value);
-    notifyListeners();
-    await _saveSettings();
   }
 
   Future<void> toggleDarkMode(bool value) async {
@@ -51,29 +64,35 @@ class SettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _saveSettings() async {
-    // Mock save delay
-    _isLoading = true;
+    // Local persistence logic could go here
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    _isLoading = false;
-    notifyListeners();
-    // Real implementation would call a repository here
   }
 
   Future<bool> changePassword(String current, String newPwd, String confirmNewPwd) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
     
-    // Mock API call to change password
-    await Future.delayed(const Duration(seconds: 1));
+    final request = ChangePasswordRequest(
+      currentPassword: current,
+      newPassword: newPwd,
+      confirmNewPassword: confirmNewPwd,
+    );
+
+    final response = await _authService.changePassword(request);
     
     _isLoading = false;
-    notifyListeners();
-    return true; // Assume success for now
+    if (response.success) {
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response.error ?? 'Đã có lỗi xảy ra khi đổi mật khẩu';
+      notifyListeners();
+      return false;
+    }
   }
 
   void logout() {
-    // Mock logout logic: clear session, etc.
     print("User logged out");
   }
 }

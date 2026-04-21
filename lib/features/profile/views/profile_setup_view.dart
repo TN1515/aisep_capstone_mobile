@@ -8,6 +8,8 @@ import 'package:aisep_capstone_mobile/features/profile/view_models/profile_setup
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import 'package:aisep_capstone_mobile/features/onboarding/widgets/startup_industry_selector.dart';
+import 'package:aisep_capstone_mobile/features/onboarding/widgets/startup_selection_field.dart';
 import 'package:aisep_capstone_mobile/features/onboarding/views/startup_onboarding_screen.dart';
 
 class ProfileSetupView extends StatefulWidget {
@@ -21,6 +23,13 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
   final _formKey = GlobalKey<FormState>();
   late final ProfileSetupViewModel _viewModel;
 
+  // Managed FocusNodes to robustly control keyboard
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _taglineFocus = FocusNode();
+  final FocusNode _problemFocus = FocusNode();
+  final FocusNode _solutionFocus = FocusNode();
+  final FocusNode _targetFocus = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -30,7 +39,21 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
   @override
   void dispose() {
     _viewModel.dispose();
+    _nameFocus.dispose();
+    _taglineFocus.dispose();
+    _problemFocus.dispose();
+    _solutionFocus.dispose();
+    _targetFocus.dispose();
     super.dispose();
+  }
+
+  void _unfocusAll() {
+    _nameFocus.unfocus();
+    _taglineFocus.unfocus();
+    _problemFocus.unfocus();
+    _solutionFocus.unfocus();
+    _targetFocus.unfocus();
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -44,34 +67,38 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
             backgroundColor: Colors.transparent,
             extendBodyBehindAppBar: true,
             appBar: _buildAppBar(),
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFFFDFCFB), // Lighter top
-                    StartupOnboardingTheme.softIvory, // Original bottom
-                  ],
+            body: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFFFDFCFB), // Lighter top
+                      StartupOnboardingTheme.softIvory, // Original bottom
+                    ],
+                  ),
                 ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    _buildStepper(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
-                        child: Form(
-                          key: _formKey,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          child: _buildStepContent(),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      _buildStepper(),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+                          child: Form(
+                            key: _formKey,
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                            child: _buildStepContent(),
+                          ),
                         ),
                       ),
-                    ),
-                    _buildBottomActions(),
-                  ],
+                      _buildBottomActions(),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -223,35 +250,47 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
           ),
           const SizedBox(height: 32),
           StartupInputField(
+            key: const ValueKey('startup_name_field'),
             label: 'TÊN STARTUP *',
             hint: 'VD: SmartFarm',
             controller: _viewModel.nameController,
+            focusNode: _nameFocus,
             validator: (v) => v?.trim().isEmpty ?? true ? 'Vui lòng nhập tên startup' : null,
           ),
           const SizedBox(height: 24),
           _buildFieldWithCounter(
-            label: 'KHẨU HIỆU / TAGLINE *',
+            key: const ValueKey('startup_tagline_field'),
+            label: 'KHẨU HIỆU / TAGLINE',
             hint: 'Giải pháp nông trại thông minh',
             controller: _viewModel.taglineController,
+            focusNode: _taglineFocus,
             maxLength: 100,
-            validator: (v) => v?.trim().isEmpty ?? true ? 'Vui lòng nhập khẩu hiệu' : null,
+            validator: (v) => null,
           ),
           const SizedBox(height: 24),
-          StartupDropdownField(
+          StartupIndustrySelector(
             label: 'LĨNH VỰC *',
-            hint: 'Chọn lĩnh vực',
-            items: _viewModel.industries,
-            value: _viewModel.selectedIndustry.isEmpty ? null : _viewModel.selectedIndustry,
-            onChanged: (v) => _viewModel.selectIndustry(v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Bắt buộc chọn lĩnh vực' : null,
+            hint: 'Chọn lĩnh vực (nhóm & chuyên sâu)',
+            categories: _viewModel.industryCategories,
+            selectedIndustry: _viewModel.selectedIndustry,
+            selectedSubIndustry: _viewModel.selectedSubIndustry,
+            onSelected: (cat, sub) {
+              _unfocusAll();
+              _viewModel.selectIndustryAndSub(cat, sub);
+            },
+            validator: (v) => (_viewModel.selectedSubIndustry.isEmpty) ? 'Bắt buộc chọn lĩnh vực chuyên sâu' : null,
           ),
           const SizedBox(height: 24),
-          StartupDropdownField(
+          StartupSelectionField(
             label: 'GIAI ĐOẠN *',
             hint: 'Chọn giai đoạn',
-            items: _viewModel.stages,
-            value: _viewModel.selectedStage.isEmpty ? null : _viewModel.selectedStage,
-            onChanged: (v) => _viewModel.selectStage(v ?? ''),
+            title: 'Chọn giai đoạn phát triển',
+            options: _viewModel.stages,
+            selectedValue: _viewModel.selectedStage,
+            onSelected: (v) {
+              _unfocusAll();
+              _viewModel.selectStage(v);
+            },
             validator: (v) => (v == null || v.isEmpty) ? 'Bắt buộc chọn giai đoạn' : null,
           ),
           const SizedBox(height: 32),
@@ -289,27 +328,33 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
           ),
           const SizedBox(height: 32),
           _buildFieldWithCounter(
+            key: const ValueKey('startup_problem_field'),
             label: 'VẤN ĐỀ BẠN ĐANG GIẢI QUYẾT *',
             hint: 'Khách hàng của bạn đang gặp vấn đề gì lớn?',
             controller: _viewModel.problemController,
+            focusNode: _problemFocus,
             maxLength: 300,
             maxLines: 4,
             validator: (v) => v?.trim().isEmpty ?? true ? 'Vui lòng mô tả vấn đề' : null,
           ),
           const SizedBox(height: 24),
           _buildFieldWithCounter(
+            key: const ValueKey('startup_solution_field'),
             label: 'GIẢI PHÁP CỦA BẠN *',
             hint: 'Bạn giải quyết bằng cách nào khác biệt?',
             controller: _viewModel.solutionController,
+            focusNode: _solutionFocus,
             maxLength: 300,
             maxLines: 4,
             validator: (v) => v?.trim().isEmpty ?? true ? 'Vui lòng mô tả giải pháp' : null,
           ),
           const SizedBox(height: 24),
           _buildFieldWithCounter(
+            key: const ValueKey('startup_target_field'),
             label: 'KHÁCH HÀNG MỤC TIÊU *',
             hint: 'Vd: SMEs tại Việt Nam, sinh viên đại học...',
             controller: _viewModel.targetCustomersController,
+            focusNode: _targetFocus,
             maxLength: 150,
             maxLines: 2,
             validator: (v) => v?.trim().isEmpty ?? true ? 'Vui lòng nhập đối tượng' : null,
@@ -385,14 +430,17 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
 
 
   Widget _buildFieldWithCounter({
+    Key? key,
     required String label,
     required String hint,
     required TextEditingController controller,
     required int maxLength,
+    FocusNode? focusNode,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -403,10 +451,10 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
               child: Text(
                 label,
                 style: GoogleFonts.workSans(
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.goldAccent.withOpacity(0.7),
-                  letterSpacing: 1.0,
+                  color: StartupOnboardingTheme.navyBg.withOpacity(0.5),
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
@@ -431,6 +479,7 @@ class _ProfileSetupViewState extends State<ProfileSetupView> {
           label: '', // Label already handled above for counter logic
           hint: hint,
           controller: controller,
+          focusNode: focusNode,
           maxLines: maxLines,
           validator: validator,
         ),

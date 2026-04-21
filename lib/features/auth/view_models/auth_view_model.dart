@@ -3,6 +3,7 @@ import 'package:aisep_capstone_mobile/core/services/token_service.dart';
 import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
 import '../models/auth_request_models.dart';
 import '../models/auth_response_model.dart';
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 
 enum LoginDestination { dashboard, createProfile, onboarding }
@@ -15,9 +16,12 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? _successMessage;
 
+  UserModel? _currentUser;
+
   bool get isBusy => _isBusy;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
+  UserModel? get currentUser => _currentUser;
 
   // 1. Đăng ký (Register)
   Future<bool> register({
@@ -53,6 +57,7 @@ class AuthViewModel extends ChangeNotifier {
     
     if (response.success && response.data != null) {
       await _saveAuthData(response.data!);
+      _currentUser = response.data!.user;
       
       // MAPPING API: Sử dụng userType từ UserModel (đã bóc từ data string)
       final destination = await _checkStartupProfile(response.data!.user.userType);
@@ -74,6 +79,7 @@ class AuthViewModel extends ChangeNotifier {
     
     if (response.success && response.data != null) {
       await _saveAuthData(response.data!);
+      _currentUser = response.data!.user;
       
       final destination = await _checkStartupProfile(response.data!.user.userType);
       _setBusy(false);
@@ -87,16 +93,13 @@ class AuthViewModel extends ChangeNotifier {
 
   /// MAPPING API: Gọi GET /api/startups/me để xác định đích đến
   Future<LoginDestination> _checkStartupProfile(String userType) async {
-    // Chấp nhận cả 'Startup' hoặc chuỗi chứa 'Startup' tùy theo backend
-    if (!userType.toLowerCase().contains('startup')) {
-       return LoginDestination.dashboard; 
-    }
-
+    // Vì ứng dụng mobile này chỉ dành cho Startup, chúng ta luôn ưu tiên kiểm tra Profile
     try {
       final profileResponse = await _startupService.getMyProfile();
-      if (profileResponse.success && profileResponse.data != null) {
+      if (profileResponse.success && profileResponse.data != null && profileResponse.data!.companyName.isNotEmpty) {
         return LoginDestination.dashboard;
       } else {
+        // Nếu chưa có profile (404) hoặc profile còn trống (chưa điền tên công ty), chuyển sang màn hình tạo
         return LoginDestination.createProfile;
       }
     } catch (_) {
@@ -161,6 +164,7 @@ class AuthViewModel extends ChangeNotifier {
     await TokenService.saveUserInfo(
       userId: data.user.userId.toString(),
       userType: data.user.userType,
+      email: data.user.email,
     );
   }
 }

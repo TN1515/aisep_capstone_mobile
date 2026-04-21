@@ -13,19 +13,20 @@ class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<SettingsViewModel>();
     final authViewModel = context.read<AuthViewModel>();
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft),
+          icon: Icon(LucideIcons.arrowLeft, color: theme.appBarTheme.iconTheme?.color),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Cài đặt'),
+        title: Text('Cài đặt', style: theme.appBarTheme.titleTextStyle),
       ),
       body: CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -39,51 +40,23 @@ class SettingsView extends StatelessWidget {
                         children: [
                           SettingsTile(
                             icon: LucideIcons.eye,
-                            title: 'Hiển thị cho Nhà đầu tư',
-                            subtitle: 'Nhà đầu tư sẽ thấy hồ sơ và có thể kết nối với bạn',
-                            trailing: _buildSwitch(
-                              context,
-                              viewModel.settings.showToInvestors,
-                              viewModel.toggleShowToInvestors,
-                            ),
-                          ),
-                          SettingsTile(
-                            icon: LucideIcons.userPlus,
-                            title: 'Hiển thị cho Cố vấn',
-                            subtitle: 'Cố vấn có thể tìm thấy và gửi lời mời tư vấn cho bạn',
+                            title: 'Hiển thị hồ sơ',
+                            subtitle: 'Cho phép Nhà đầu tư và Cố vấn tìm thấy hồ sơ của bạn',
                             isLast: true,
                             trailing: _buildSwitch(
                               context,
-                              viewModel.settings.showToAdvisors,
-                              viewModel.toggleShowToAdvisors,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Notifications Section
-                      SettingsSection(
-                        title: 'Thông báo',
-                        children: [
-                          SettingsTile(
-                            icon: LucideIcons.bell,
-                            title: 'Thông báo đẩy (Push)',
-                            subtitle: 'Nhận thông báo quan trọng ngay trên điện thoại',
-                            trailing: _buildSwitch(
-                              context,
-                              viewModel.settings.pushNotifications,
-                              viewModel.togglePushNotifications,
-                            ),
-                          ),
-                          SettingsTile(
-                            icon: LucideIcons.mail,
-                            title: 'Thông báo Email',
-                            subtitle: 'Nhận báo cáo định kỳ và tin nhắn qua email',
-                            isLast: true,
-                            trailing: _buildSwitch(
-                              context,
-                              viewModel.settings.emailNotifications,
-                              viewModel.toggleEmailNotifications,
+                              viewModel.settings.isVisible,
+                              (value) async {
+                                await viewModel.toggleProfileVisibility(value);
+                                if (viewModel.errorMessage != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(viewModel.errorMessage!),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
+                              },
                             ),
                           ),
                         ],
@@ -108,7 +81,7 @@ class SettingsView extends StatelessWidget {
                         ],
                       ),
 
-                      // Logout Section
+                      // System Section
                       SettingsSection(
                         title: 'Hệ thống',
                         children: [
@@ -150,14 +123,21 @@ class SettingsView extends StatelessWidget {
   }
 
   void _confirmLogout(BuildContext context, SettingsViewModel viewModel, AuthViewModel authViewModel) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: StartupOnboardingTheme.navySurface,
+      backgroundColor: theme.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -165,7 +145,7 @@ class SettingsView extends StatelessWidget {
               width: 50,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: theme.dividerColor,
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -175,7 +155,7 @@ class SettingsView extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: StartupOnboardingTheme.softIvory,
+                color: theme.textTheme.displayLarge?.color,
               ),
             ),
             const SizedBox(height: 12),
@@ -184,7 +164,7 @@ class SettingsView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.workSans(
                 fontSize: 14,
-                color: StartupOnboardingTheme.softIvory.withOpacity(0.6),
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 32),
@@ -195,13 +175,13 @@ class SettingsView extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      side: BorderSide(color: theme.dividerColor),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(
                       'Hủy',
                       style: GoogleFonts.workSans(
-                        color: StartupOnboardingTheme.softIvory,
+                        color: theme.textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -219,6 +199,7 @@ class SettingsView extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       elevation: 0,
@@ -226,7 +207,6 @@ class SettingsView extends StatelessWidget {
                     child: Text(
                       'Đăng xuất',
                       style: GoogleFonts.workSans(
-                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

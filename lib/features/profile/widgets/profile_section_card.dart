@@ -31,36 +31,38 @@ class ProfileSectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor.withOpacity(0.9),
-                    letterSpacing: 1.2,
-                    fontSize: 12,
+          if (title.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor.withOpacity(0.9),
+                      letterSpacing: 1.2,
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-                if (showEdit && onEdit != null)
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: onEdit,
-                    color: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-              ],
+                  if (showEdit && onEdit != null)
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      onPressed: onEdit,
+                      color: Theme.of(context).primaryColor,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
             ),
-          ),
-          Divider(
-            height: 1, 
-            thickness: 0.5, 
-            color: Theme.of(context).dividerColor,
-          ),
+            Divider(
+              height: 1, 
+              thickness: 0.5, 
+              color: Theme.of(context).dividerColor,
+            ),
+          ],
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: child,

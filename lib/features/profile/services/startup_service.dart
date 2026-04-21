@@ -53,9 +53,9 @@ class StartupService {
     }
   }
 
-  Future<ApiResponse<List<IndustryDto>>> getIndustries() async {
+  Future<ApiResponse<List<IndustryDto>>> getIndustries({String mode = 'tree'}) async {
     try {
-      final response = await _dio.get('/api/master/industries');
+      final response = await _dio.get('/api/master/industries', queryParameters: {'mode': mode});
       return ApiResponse<List<IndustryDto>>.fromJson(
         response.data,
         (data) => (data as List).map((i) => IndustryDto.fromJson(i)).toList(),
@@ -91,18 +91,27 @@ class StartupService {
   Future<ApiResponse<TeamMemberDto>> addTeamMember({
     required String fullName,
     required String role,
+    String? title,
     String? bio,
+    String? participationType,
+    int? experienceYears,
+    String? linkedInUrl,
+    bool isFounder = false,
     File? photo,
   }) async {
     try {
       final Map<String, dynamic> data = {
         'FullName': fullName,
         'Role': role,
+        'Title': title ?? '',
         'Bio': bio,
+        'IsFounder': isFounder,
+        'YearsOfExperience': experienceYears,
+        'LinkedInUrl': linkedInUrl,
       };
 
       if (photo != null) {
-        data['Image'] = await MultipartFile.fromFile(
+        data['PhotoURL'] = await MultipartFile.fromFile(
           photo.path,
           filename: basename(photo.path)
         );
@@ -123,18 +132,27 @@ class StartupService {
   Future<ApiResponse<TeamMemberDto>> updateTeamMember(int id, {
     String? fullName,
     String? role,
+    String? title,
     String? bio,
+    String? participationType,
+    int? experienceYears,
+    String? linkedInUrl,
+    bool? isFounder,
     File? photo,
   }) async {
     try {
       final Map<String, dynamic> data = {
         if (fullName != null) 'FullName': fullName,
         if (role != null) 'Role': role,
+        if (title != null) 'Title': title,
         if (bio != null) 'Bio': bio,
+        if (isFounder != null) 'IsFounder': isFounder,
+        if (experienceYears != null) 'YearsOfExperience': experienceYears,
+        if (linkedInUrl != null) 'LinkedInUrl': linkedInUrl,
       };
 
       if (photo != null) {
-        data['Image'] = await MultipartFile.fromFile(
+        data['PhotoURL'] = await MultipartFile.fromFile(
           photo.path,
           filename: basename(photo.path)
         );

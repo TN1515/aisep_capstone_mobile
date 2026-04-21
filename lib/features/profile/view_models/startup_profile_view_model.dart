@@ -19,6 +19,7 @@ class StartupProfileViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   File? get newLogoFile => _newLogoFile;
+  int? get startupId => _profileDto?.startupId;
 
   // 1. Core Info Controllers
   final TextEditingController nameController = TextEditingController();
@@ -49,17 +50,49 @@ class StartupProfileViewModel extends ChangeNotifier {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController linkedinController = TextEditingController();
 
-  List<String> stages = ['Idea', 'PreSeed', 'Seed', 'SeriesA', 'SeriesB', 'SeriesC', 'Growth'];
-  List<IndustryDto> industryList = [
-    IndustryDto(id: 1, name: 'Công nghệ & Phần mềm'),
-    IndustryDto(id: 2, name: 'Thương mại điện tử'),
-    IndustryDto(id: 3, name: 'Công nghệ tài chính (Fintech)'),
-    IndustryDto(id: 4, name: 'Công nghệ giáo dục (Edtech)'),
-    IndustryDto(id: 5, name: 'Y tế & Chăm sóc sức khỏe'),
-    IndustryDto(id: 6, name: 'Nông nghiệp (Agri/Foodtech)'),
-    IndustryDto(id: 7, name: 'Năng lượng xanh'),
-    IndustryDto(id: 8, name: 'Khác'),
+  // 5. Additional Detailed Info
+  final TextEditingController problemController = TextEditingController();
+  final TextEditingController solutionController = TextEditingController();
+  final TextEditingController marketScopeController = TextEditingController();
+  final TextEditingController productStatusController = TextEditingController();
+  final TextEditingController tractionIndexController = TextEditingController();
+  final TextEditingController teamSizeController = TextEditingController();
+  final TextEditingController businessCodeController = TextEditingController();
+  final TextEditingController metricSummaryController = TextEditingController();
+
+  List<String> stages = ['Idea', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Growth'];
+  List<IndustryDto> industryList = [];
+  List<IndustryDto> subIndustryList = [];
+  IndustryDto? selectedParentIndustry;
+
+  // 6. Team Member Form Controllers
+  final TextEditingController teamMemberNameController = TextEditingController();
+  final TextEditingController teamMemberRoleController = TextEditingController();
+  final TextEditingController teamMemberTitleController = TextEditingController();
+  final TextEditingController teamMemberBioController = TextEditingController();
+  final TextEditingController teamMemberLinkedInController = TextEditingController();
+  final TextEditingController teamMemberExpController = TextEditingController();
+  final TextEditingController teamMemberParticipationController = TextEditingController();
+  
+  bool isFounderMember = false;
+  File? memberPhotoFile;
+
+  final List<String> marketScopeOptions = [
+    'Chọn loại hình',
+    'B2B (Business to Business)',
+    'B2C (Business to Consumer)',
+    'B2B2C',
+    'B2G (Business to Government)',
   ];
+
+  final List<String> productStatusOptions = [
+    'Chọn trạng thái',
+    'Đang phát triển',
+    'Bản mẫu (MVP)',
+    'Thử nghiệm (Beta)',
+    'Đã ra mắt (Launched)',
+  ];
+
   List<TeamMemberDto> teamMembers = [];
   
   late StartupProfileModel profile;
@@ -83,7 +116,7 @@ class StartupProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final indResponse = await _service.getIndustries();
+      final indResponse = await _service.getIndustries(mode: 'tree');
       if (indResponse.success && indResponse.data != null) {
         industryList = indResponse.data!;
       }
@@ -143,11 +176,38 @@ class StartupProfileViewModel extends ChangeNotifier {
       createdAt: _profileDto!.createdAt,
       updatedAt: _profileDto!.updatedAt,
       kycStatus: _profileDto!.kycStatus ?? 'Chưa xác thực',
+      productStatus: _profileDto!.productStatus ?? '',
+      teamSize: _profileDto!.teamSize ?? '',
+      problemStatement: _profileDto!.problemStatement ?? '',
+      solutionSummary: _profileDto!.solutionSummary ?? '',
+      metricSummary: _profileDto!.metricSummary ?? '',
+      businessCode: _profileDto!.businessCode ?? '',
+      currentNeeds: _profileDto!.currentNeeds ?? [],
+      tractionIndex: (_profileDto!.metricSummary != null && _profileDto!.metricSummary!.isNotEmpty) 
+          ? _profileDto!.metricSummary! 
+          : (_profileDto!.tractionIndex ?? ''),
+      approvedAt: _profileDto!.approvedAt,
+      marketScope: _profileDto!.marketScope ?? '',
     );
 
-    selectedStage = profile.stage;
+    selectedStage = stages.contains(profile.stage) ? profile.stage : (stages.isNotEmpty ? stages.first : null);
     selectedIndustryId = profile.industryId;
-    selectedIndustryName = profile.industry;
+    
+    // Auto-detect parent and sub-industry lists from saved ID
+    if (selectedIndustryId != null) {
+      for (var parent in industryList) {
+        final foundSub = parent.subIndustries.any((s) => s.id == selectedIndustryId);
+        if (foundSub || parent.id == selectedIndustryId) {
+          selectedParentIndustry = parent;
+          subIndustryList = parent.subIndustries;
+          selectedIndustryName = foundSub 
+              ? parent.subIndustries.firstWhere((s) => s.id == selectedIndustryId).name 
+              : parent.name;
+          break;
+        }
+      }
+    }
+    
     foundedDate = profile.foundedDate;
     lastFundingDate = profile.lastFundingDate;
     
@@ -171,6 +231,14 @@ class StartupProfileViewModel extends ChangeNotifier {
     emailController.text = profile.contactEmail;
     phoneController.text = profile.phoneNumber;
     linkedinController.text = profile.linkedInUrl;
+    problemController.text = profile.problemStatement;
+    solutionController.text = profile.solutionSummary;
+    marketScopeController.text = profile.marketScope;
+    productStatusController.text = profile.productStatus;
+    tractionIndexController.text = profile.tractionIndex;
+    teamSizeController.text = profile.teamSize;
+    businessCodeController.text = profile.businessCode;
+    metricSummaryController.text = profile.metricSummary;
   }
 
   void resetMode() {
@@ -196,8 +264,162 @@ class StartupProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // --- Team Member Operations ---
+
+  void clearMemberForm() {
+    teamMemberNameController.clear();
+    teamMemberRoleController.clear();
+    teamMemberTitleController.clear();
+    teamMemberBioController.clear();
+    teamMemberLinkedInController.clear();
+    teamMemberExpController.clear();
+    teamMemberParticipationController.clear();
+    isFounderMember = false;
+    memberPhotoFile = null;
+    notifyListeners();
+  }
+
+  void setMemberForm(TeamMemberDto m) {
+    teamMemberNameController.text = m.fullName;
+    teamMemberRoleController.text = m.role;
+    teamMemberTitleController.text = m.title ?? '';
+    teamMemberBioController.text = m.bio ?? '';
+    teamMemberLinkedInController.text = m.linkedInUrl ?? '';
+    teamMemberExpController.text = m.experienceYears?.toString() ?? '';
+    teamMemberParticipationController.text = m.participationType ?? '';
+    isFounderMember = m.isFounder;
+    memberPhotoFile = null;
+    notifyListeners();
+  }
+
+  Future<void> pickMemberPhoto() async {
+    // This usually uses ImagePicker. For now, since I'm just an AI, 
+    // I'll assume it's called from the UI which handles the picking 
+    // and calls a setter, or I'll just provide the setter.
+  }
+
+  void setMemberPhoto(File file) {
+    memberPhotoFile = file;
+    notifyListeners();
+  }
+
+  Future<bool> addMember() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _service.addTeamMember(
+        fullName: teamMemberNameController.text,
+        role: teamMemberRoleController.text,
+        title: teamMemberTitleController.text,
+        bio: teamMemberBioController.text,
+        experienceYears: int.tryParse(teamMemberExpController.text),
+        linkedInUrl: teamMemberLinkedInController.text,
+        isFounder: isFounderMember,
+        photo: memberPhotoFile,
+      );
+
+      if (response.success) {
+        await loadTeamMembers();
+        clearMemberForm();
+        return true;
+      } else {
+        _errorMessage = response.error;
+        return false;
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateMember(int id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _service.updateTeamMember(
+        id,
+        fullName: teamMemberNameController.text,
+        role: teamMemberRoleController.text,
+        title: teamMemberTitleController.text,
+        bio: teamMemberBioController.text,
+        experienceYears: int.tryParse(teamMemberExpController.text),
+        linkedInUrl: teamMemberLinkedInController.text,
+        isFounder: isFounderMember,
+        photo: memberPhotoFile,
+      );
+
+      if (response.success) {
+        await loadTeamMembers();
+        clearMemberForm();
+        return true;
+      } else {
+        _errorMessage = response.error;
+        return false;
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteMember(int id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _service.deleteTeamMember(id);
+      if (response.success) {
+        await loadTeamMembers();
+        return true;
+      } else {
+        _errorMessage = response.error;
+        return false;
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void setLogo(File file) {
     _newLogoFile = file;
+    notifyListeners();
+  }
+
+  void removeLogo() {
+    _newLogoFile = null;
+    profile.logoUrl = ''; // Signal visual deletion
+    notifyListeners();
+  }
+
+  void addNeed(String need) {
+    if (need.trim().isEmpty) return;
+    if (!profile.currentNeeds.contains(need.trim())) {
+      profile.currentNeeds.add(need.trim());
+      notifyListeners();
+    }
+  }
+
+  void removeNeed(int index) {
+    if (index >= 0 && index < profile.currentNeeds.length) {
+      profile.currentNeeds.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void onParentIndustryChanged(IndustryDto? parent) {
+    selectedParentIndustry = parent;
+    subIndustryList = parent?.subIndustries ?? [];
+    selectedIndustryId = null; // Reset sub-selection
+    selectedIndustryName = null;
+    notifyListeners();
+  }
+
+  void onSubIndustryChanged(int? id, String? name) {
+    selectedIndustryId = id;
+    selectedIndustryName = name;
     notifyListeners();
   }
 
@@ -277,6 +499,15 @@ class StartupProfileViewModel extends ChangeNotifier {
         phoneNumber: phoneController.text,
         linkedInUrl: linkedinController.text,
         logoFile: _newLogoFile,
+        problemStatement: problemController.text,
+        solutionSummary: solutionController.text,
+        marketScope: marketScopeController.text,
+        productStatus: productStatusController.text,
+        tractionIndex: tractionIndexController.text,
+        teamSize: teamSizeController.text,
+        businessCode: businessCodeController.text,
+        metricSummary: tractionIndexController.text, // Mapped from Traction Index controller
+        currentNeeds: profile.currentNeeds, // Keep existing needs or add controller if needed
       );
 
       final response = await _service.updateProfile(request);
@@ -314,6 +545,21 @@ class StartupProfileViewModel extends ChangeNotifier {
     emailController.dispose();
     phoneController.dispose();
     linkedinController.dispose();
+    problemController.dispose();
+    solutionController.dispose();
+    marketScopeController.dispose();
+    productStatusController.dispose();
+    tractionIndexController.dispose();
+    teamSizeController.dispose();
+    businessCodeController.dispose();
+    metricSummaryController.dispose();
+    
+    teamMemberNameController.dispose();
+    teamMemberRoleController.dispose();
+    teamMemberBioController.dispose();
+    teamMemberLinkedInController.dispose();
+    teamMemberExpController.dispose();
+    teamMemberParticipationController.dispose();
     super.dispose();
   }
 }

@@ -1,31 +1,18 @@
 class UserSettingsModel {
-  final bool showToInvestors;
-  final bool showToAdvisors;
-  final bool pushNotifications;
-  final bool emailNotifications;
-
+  final bool isVisible;
   final bool isDarkMode;
 
   const UserSettingsModel({
-    this.showToInvestors = true,
-    this.showToAdvisors = false,
-    this.pushNotifications = true,
-    this.emailNotifications = true,
+    this.isVisible = false,
     this.isDarkMode = false,
   });
 
   UserSettingsModel copyWith({
-    bool? showToInvestors,
-    bool? showToAdvisors,
-    bool? pushNotifications,
-    bool? emailNotifications,
+    bool? isVisible,
     bool? isDarkMode,
   }) {
     return UserSettingsModel(
-      showToInvestors: showToInvestors ?? this.showToInvestors,
-      showToAdvisors: showToAdvisors ?? this.showToAdvisors,
-      pushNotifications: pushNotifications ?? this.pushNotifications,
-      emailNotifications: emailNotifications ?? this.emailNotifications,
+      isVisible: isVisible ?? this.isVisible,
       isDarkMode: isDarkMode ?? this.isDarkMode,
     );
   }

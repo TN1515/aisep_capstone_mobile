@@ -37,9 +37,17 @@ class StartupProfileModel {
   DateTime? updatedAt;
   String kycStatus;
 
-  // 6. Additional fields for back-compat
+  // 6. Additional fields
   String solutionSummary;
   String marketScope;
+  String productStatus;
+  String teamSize;
+  String problemStatement;
+  String metricSummary;
+  String businessCode;
+  List<String> currentNeeds;
+  String tractionIndex;
+  DateTime? approvedAt;
 
   StartupProfileModel({
     this.startupName = '',
@@ -72,6 +80,14 @@ class StartupProfileModel {
     this.kycStatus = 'Chưa xác thực',
     this.solutionSummary = '',
     this.marketScope = '',
+    this.productStatus = '',
+    this.teamSize = '',
+    this.problemStatement = '',
+    this.metricSummary = '',
+    this.businessCode = '',
+    this.currentNeeds = const [],
+    this.tractionIndex = '',
+    this.approvedAt,
   });
 
   StartupProfileModel copyWith({
@@ -105,6 +121,14 @@ class StartupProfileModel {
     String? kycStatus,
     String? solutionSummary,
     String? marketScope,
+    String? productStatus,
+    String? teamSize,
+    String? problemStatement,
+    String? metricSummary,
+    String? businessCode,
+    List<String>? currentNeeds,
+    String? tractionIndex,
+    DateTime? approvedAt,
   }) {
     return StartupProfileModel(
       startupName: startupName ?? this.startupName,
@@ -137,10 +161,17 @@ class StartupProfileModel {
       kycStatus: kycStatus ?? this.kycStatus,
       solutionSummary: solutionSummary ?? this.solutionSummary,
       marketScope: marketScope ?? this.marketScope,
+      productStatus: productStatus ?? this.productStatus,
+      teamSize: teamSize ?? this.teamSize,
+      problemStatement: problemStatement ?? this.problemStatement,
+      metricSummary: metricSummary ?? this.metricSummary,
+      businessCode: businessCode ?? this.businessCode,
+      currentNeeds: currentNeeds ?? this.currentNeeds,
+      tractionIndex: tractionIndex ?? this.tractionIndex,
+      approvedAt: approvedAt ?? this.approvedAt,
     );
   }
 
   // Legacy mappings 
-  String get problemStatement => description;
-  set problemStatement(String val) => description = val;
+  // removed problemStatement getter/setter as it's now a real field
 }

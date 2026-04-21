@@ -15,7 +15,7 @@ class AuthResponse {
     return AuthResponse(
       accessToken: json['accessToken'] ?? '',
       refreshToken: null, // Schema provided doesn't show refreshToken in Login/Verify
-      user: UserModel.fromSimpleData(json['data']?.toString() ?? 'Startup'),
+      user: UserModel.fromJson(json['user'] ?? json),
     );
   }
 }

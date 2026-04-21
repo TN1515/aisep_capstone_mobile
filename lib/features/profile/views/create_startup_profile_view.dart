@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import 'package:aisep_capstone_mobile/features/onboarding/widgets/startup_input_field.dart';
-import 'package:aisep_capstone_mobile/features/onboarding/widgets/startup_dropdown_field.dart';
+import 'package:aisep_capstone_mobile/features/onboarding/widgets/startup_selection_field.dart';
 import 'package:aisep_capstone_mobile/features/profile/view_models/startup_profile_view_model.dart';
 import 'package:aisep_capstone_mobile/features/profile/models/startup_models.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
@@ -65,12 +65,12 @@ class _CreateStartupProfileViewState extends State<CreateStartupProfileView> {
     _selectedStageIndex = viewModel.stages.indexOf(_selectedStage!);
 
     final request = CreateStartupProfileRequest(
-      companyName: _nameController.text,
-      oneLiner: _oneLinerController.text,
+      companyName: _nameController.text.trim(),
+      oneLiner: _oneLinerController.text.trim(),
       stage: _selectedStageIndex,
-      fullNameOfApplicant: _applicantNameController.text,
-      roleOfApplicant: _roleController.text,
-      contactEmail: _emailController.text,
+      fullNameOfApplicant: 'Founder',
+      roleOfApplicant: 'CEO/Founder',
+      contactEmail: _emailController.text.trim(),
       logoFile: _logoFile,
     );
 
@@ -234,35 +234,23 @@ class _CreateStartupProfileViewState extends State<CreateStartupProfileView> {
               const SizedBox(height: 20),
 
               StartupInputField(
-                label: 'Câu giới thiệu ngắn / Slogan (Bắt buộc)',
+                label: 'Câu giới thiệu ngắn / Slogan',
                 hint: 'VD: Nền tảng kết nối nhân tài ứng dụng AI',
                 controller: _oneLinerController,
-                validator: (v) => (v == null || v.isEmpty) ? 'Vui lòng nhập khẩu hiệu' : null,
+                validator: (v) => null, // Optional
               ),
               const SizedBox(height: 20),
 
-              StartupDropdownField(
+              StartupSelectionField(
                 label: 'Giai đoạn phát triển (Bắt buộc)',
                 hint: 'Hãy chọn giai đoạn hiện tại',
-                items: viewModel.stages,
-                onChanged: (val) => setState(() => _selectedStage = val),
+                title: 'Chọn giai đoạn phát triển',
+                options: viewModel.stages,
+                selectedValue: _selectedStage ?? '',
+                onSelected: (val) => setState(() => _selectedStage = val),
               ),
               const SizedBox(height: 20),
 
-              StartupInputField(
-                label: 'Họ tên người đăng ký (Bắt buộc)',
-                hint: 'VD: Nguyễn Văn A',
-                controller: _applicantNameController,
-                validator: (v) => (v == null || v.isEmpty) ? 'Vui lòng nhập họ tên' : null,
-              ),
-              const SizedBox(height: 20),
-
-              StartupInputField(
-                label: 'Chức vụ tại Startup (Bắt buộc)',
-                hint: 'VD: Founder, CEO...',
-                controller: _roleController,
-                validator: (v) => (v == null || v.isEmpty) ? 'Vui lòng nhập chức vụ' : null,
-              ),
               const SizedBox(height: 20),
 
               StartupInputField(

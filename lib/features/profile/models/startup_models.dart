@@ -17,16 +17,34 @@ enum ProfileStatus {
   rejected,  // 3
 }
 
+class IndustryCategory {
+  final String name;
+  final List<String> subIndustries;
+
+  IndustryCategory({required this.name, required this.subIndustries});
+}
+
 class IndustryDto {
   final int id;
   final String name;
+  final String? description;
+  final List<IndustryDto> subIndustries;
 
-  IndustryDto({required this.id, required this.name});
+  IndustryDto({
+    required this.id, 
+    required this.name, 
+    this.description,
+    this.subIndustries = const [],
+  });
 
   factory IndustryDto.fromJson(Map<String, dynamic> json) {
     return IndustryDto(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
+      id: json['id'] ?? json['industryID'] ?? 0,
+      name: json['name'] ?? json['industryName'] ?? '',
+      description: json['description'],
+      subIndustries: json['subIndustries'] != null 
+          ? (json['subIndustries'] as List).map((i) => IndustryDto.fromJson(i)).toList()
+          : [],
     );
   }
 }
@@ -78,6 +96,8 @@ class StartupProfileDto {
   final List<String>? currentNeeds;
   final int? subscriptionPlan;
   final DateTime? subscriptionEndDate;
+  final String? tractionIndex;
+  final DateTime? approvedAt;
 
   StartupProfileDto({
     required this.startupId,
@@ -119,6 +139,8 @@ class StartupProfileDto {
     this.currentNeeds,
     this.subscriptionPlan,
     this.subscriptionEndDate,
+    this.tractionIndex,
+    this.approvedAt,
   });
 
   factory StartupProfileDto.fromJson(Map<String, dynamic> json) {
@@ -163,6 +185,9 @@ class StartupProfileDto {
       subscriptionPlan: json['subscriptionPlan'] ?? json['SubscriptionPlan'],
       subscriptionEndDate: json['subscriptionEndDate'] != null ? DateTime.parse(json['subscriptionEndDate']) : 
                            json['SubscriptionEndDate'] != null ? DateTime.parse(json['SubscriptionEndDate']) : null,
+      tractionIndex: json['tractionIndex'] ?? json['TractionIndex'],
+      approvedAt: json['approvedAt'] != null ? DateTime.parse(json['approvedAt']) : 
+                  json['ApprovedAt'] != null ? DateTime.parse(json['ApprovedAt']) : null,
     );
   }
 }
@@ -205,6 +230,7 @@ class CreateStartupProfileRequest {
   final String? businessCode;
   final String? pitchDeckUrl;
   final List<String>? currentNeeds;
+  final String? tractionIndex;
   final File? fileCertificateBusiness;
 
   CreateStartupProfileRequest({
@@ -239,6 +265,7 @@ class CreateStartupProfileRequest {
     this.businessCode,
     this.pitchDeckUrl,
     this.currentNeeds,
+    this.tractionIndex,
     this.fileCertificateBusiness,
   });
 }
@@ -248,23 +275,38 @@ class TeamMemberDto {
   final String fullName;
   final String role;
   final String? photoUrl;
+  final String? title;
   final String? bio;
+  final String? participationType;
+  final int? experienceYears;
+  final String? linkedInUrl;
+  final bool isFounder;
 
   TeamMemberDto({
     required this.id,
     required this.fullName,
     required this.role,
     this.photoUrl,
+    this.title,
     this.bio,
+    this.participationType,
+    this.experienceYears,
+    this.linkedInUrl,
+    this.isFounder = false,
   });
 
   factory TeamMemberDto.fromJson(Map<String, dynamic> json) {
     return TeamMemberDto(
       id: json['id'] ?? 0,
-      fullName: json['fullName'] ?? '',
-      role: json['role'] ?? '',
-      photoUrl: json['photoURL'] ?? json['PhotoUrl'],
+      fullName: json['fullName'] ?? json['FullName'] ?? '',
+      role: json['role'] ?? json['Role'] ?? '',
+      title: json['title'] ?? json['Title'],
+      photoUrl: json['PhotoURL'] ?? json['photoURL'] ?? json['PhotoUrl'] ?? json['photoUrl'],
       bio: json['bio'] ?? json['Bio'],
+      participationType: json['participationType'] ?? json['ParticipationType'],
+      experienceYears: int.tryParse((json['YearsOfExperience'] ?? json['yearsOfExperience'] ?? json['experience_years'] ?? json['experienceYears'] ?? json['ExperienceYears'] ?? '').toString()),
+      linkedInUrl: json['linkedInUrl'] ?? json['LinkedInUrl'] ?? json['LinkedInURL'],
+      isFounder: json['isFounder'] ?? json['IsFounder'] ?? false,
     );
   }
 }

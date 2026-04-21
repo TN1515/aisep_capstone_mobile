@@ -23,6 +23,10 @@ class ProfileDropdownField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
+    // Safety check: Ensure the selected value actually exists in the items list
+    final bool isValueInItems = value != null && items.contains(value);
+    final String? safeValue = isValueInItems ? value : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -37,7 +41,7 @@ class ProfileDropdownField extends StatelessWidget {
           ),
         ),
         DropdownButtonFormField<String>(
-          value: value,
+          value: safeValue,
           dropdownColor: theme.cardColor,
           items: items.map((String item) {
                 return DropdownMenuItem<String>(
