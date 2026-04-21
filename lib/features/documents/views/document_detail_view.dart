@@ -9,6 +9,7 @@ import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import 'document_versions_view.dart';
 import 'edit_metadata_view.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DocumentDetailView extends StatelessWidget {
   final DocumentModel document;
@@ -192,8 +193,23 @@ class DocumentDetailView extends StatelessWidget {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Open URL
+            onPressed: () async {
+              if (doc.fileUrl.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tài liệu không có liên kết hợp lệ')),
+                );
+                return;
+              }
+              final url = Uri.parse(doc.fileUrl);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Không thể mở liên kết này')),
+                  );
+                }
+              }
             },
             icon: const Icon(LucideIcons.externalLink, size: 18),
             label: const Text('Mở tệp'),
@@ -209,8 +225,24 @@ class DocumentDetailView extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Download logic
+            onPressed: () async {
+              if (doc.fileUrl.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tài liệu không có liên kết hợp lệ')),
+                );
+                return;
+              }
+              final url = Uri.parse(doc.fileUrl);
+              // For download, we force external application which usually triggers browser download
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Không thể tải xuống từ liên kết này')),
+                  );
+                }
+              }
             },
             icon: const Icon(LucideIcons.download, size: 18),
             label: const Text('Tải xuống'),

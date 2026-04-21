@@ -86,19 +86,6 @@ class ActiveDocumentCard extends StatelessWidget {
                           color: textColor.withOpacity(0.5),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '•',
-                        style: TextStyle(color: textColor.withOpacity(0.3)),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${document.sizeInMb.toStringAsFixed(1)} MB',
-                        style: GoogleFonts.workSans(
-                          fontSize: 12,
-                          color: textColor.withOpacity(0.5),
-                        ),
-                      ),
                     ],
                   ),
                 ],
@@ -153,9 +140,7 @@ class ActiveDocumentCard extends StatelessWidget {
         color = Colors.redAccent;
         break;
       case DocumentReviewStatus.pending:
-        label = 'Chờ duyệt';
-        color = Colors.orangeAccent;
-        break;
+        return const SizedBox.shrink();
     }
 
     return Container(

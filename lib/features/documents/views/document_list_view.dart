@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../view_models/document_view_model.dart';
+import '../../profile/view_models/startup_profile_view_model.dart';
 import '../../evaluation/view_models/evaluation_view_model.dart';
 import '../widgets/ai_evaluation_tab_view.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
@@ -19,72 +20,93 @@ class DocumentListView extends StatefulWidget {
   State<DocumentListView> createState() => _DocumentListViewState();
 }
 
-class _DocumentListViewState extends State<DocumentListView> {
-  final DocumentViewModel _viewModel = DocumentViewModel();
+class _DocumentListViewState extends State<DocumentListView> with SingleTickerProviderStateMixin {
+  TabController? _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController?.addListener(_handleTabSelection);
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EvaluationViewModel>().loadHistory();
+      final profileVm = context.read<StartupProfileViewModel>();
+      context.read<EvaluationViewModel>().loadHistory(profileVm.startupId);
     });
+  }
+
+  void _handleTabSelection() {
+    if (_tabController?.indexIsChanging ?? false) {
+      setState(() {}); // Update to show/hide FAB during animation
+    } else {
+      setState(() {}); // Update after swipe
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController?.removeListener(_handleTabSelection);
+    _tabController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          backgroundColor: theme.scaffoldBackgroundColor,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: const Text('Tài liệu & Đánh giá'),
-            actions: [
-              IconButton(
-                icon: Icon(LucideIcons.refreshCw, color: theme.primaryColor, size: 20),
-                onPressed: () {
-                  _viewModel.loadDocuments();
-                  context.read<EvaluationViewModel>().loadHistory();
-                },
-              ),
-              const SizedBox(width: 12),
-            ],
-            bottom: TabBar(
-              indicatorColor: theme.primaryColor,
-              labelColor: theme.primaryColor,
-              unselectedLabelColor: Colors.grey,
-              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-              tabs: const [
-                Tab(text: 'Tài liệu'),
-                Tab(text: 'Đánh giá AI'),
-              ],
-            ),
+    final viewModel = context.watch<DocumentViewModel>();
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Tài liệu & Đánh giá'),
+        actions: [
+          IconButton(
+            icon: Icon(LucideIcons.refreshCw, color: theme.primaryColor, size: 20),
+            onPressed: () {
+              viewModel.loadDocuments();
+              final profileVm = context.read<StartupProfileViewModel>();
+              context.read<EvaluationViewModel>().loadHistory(profileVm.startupId);
+            },
           ),
-          body: TabBarView(
-            children: [
-              _buildDocumentTab(context),
-              AiEvaluationTabView(
-                viewModel: context.read<EvaluationViewModel>(), 
-                documentViewModel: _viewModel
-              ),
-            ],
+          const SizedBox(width: 12),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: theme.primaryColor,
+          labelColor: theme.primaryColor,
+          unselectedLabelColor: Colors.grey,
+          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          tabs: const [
+            Tab(text: 'Tài liệu'),
+            Tab(text: 'Đánh giá AI'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildDocumentTab(context),
+          AiEvaluationTabView(
+            viewModel: context.read<EvaluationViewModel>(), 
+            documentViewModel: viewModel
           ),
-          floatingActionButton: FloatingActionButton(
+        ],
+      ),
+      floatingActionButton: (_tabController?.index ?? 0) == 0 
+        ? FloatingActionButton(
             backgroundColor: theme.primaryColor,
             onPressed: () async {
               final success = await Navigator.push(
                 context, 
-                MaterialPageRoute(builder: (_) => UploadDocumentView(viewModel: _viewModel))
+                MaterialPageRoute(builder: (_) => UploadDocumentView(viewModel: viewModel))
               );
-              if (success == true) _viewModel.loadDocuments();
+              if (success == true) viewModel.loadDocuments();
             },
             child: const Icon(LucideIcons.plus, color: Colors.white),
-          ),
-        ),
-      ),
+          )
+        : null,
     );
   }
 

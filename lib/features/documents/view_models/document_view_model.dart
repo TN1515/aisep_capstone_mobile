@@ -28,6 +28,8 @@ class DocumentViewModel extends ChangeNotifier {
       final response = await _service.getDocuments(isArchived: isArchived);
       if (response.success) {
         _documents = response.data ?? [];
+        // Sort newest first
+        _documents.sort((a, b) => b.uploadDate.compareTo(a.uploadDate));
       } else {
         _errorMessage = response.error;
       }

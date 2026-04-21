@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aisep_capstone_mobile/core/utils/datetime_utils.dart';
 
 // Kiểu tài liệu (Enum từ Backend)
 enum DocumentType {
@@ -146,7 +147,7 @@ class DocumentModel {
       sizeInBytes: double.tryParse(json['sizeInBytes']?.toString() ?? '0') ?? 0.0,
       version: json['version']?.toString(),
       isArchived: json['isArchived'] == true || json['isArchived'] == 'true',
-      uploadDate: json['createdAt'] != null ? DateTime.parse(json['createdAt'].toString()) : DateTime.now(),
+      uploadDate: DateTimeUtils.parseApiDate(json['updatedAt'] ?? json['UpdatedAt'] ?? json['updatedDate'] ?? json['createdAt'] ?? json['uploadDate']),
       proofStatus: _parseProofStatus(json['proofStatus']),
       fileHash: json['fileHash']?.toString(),
       transactionHash: json['transactionHash']?.toString(),
