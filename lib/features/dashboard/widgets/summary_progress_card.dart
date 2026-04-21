@@ -8,14 +8,18 @@ class SummaryProgressCard extends StatelessWidget {
   final double profileCompletion;
   final DashboardKycStatus kycStatus;
   final int? aiScore;
+  final bool isAiEvaluating;
   final VoidCallback? onKycTap;
+  final VoidCallback? onAiTap;
 
   const SummaryProgressCard({
     Key? key,
     required this.profileCompletion,
     required this.kycStatus,
     this.aiScore,
+    this.isAiEvaluating = false,
     this.onKycTap,
+    this.onAiTap,
   }) : super(key: key);
 
   @override
@@ -94,8 +98,9 @@ class SummaryProgressCard extends StatelessWidget {
                 _buildStatusItem(
                   context,
                   'Đánh giá AI',
-                  aiScore != null ? '$aiScore/100' : 'Chưa có',
-                  theme.primaryColor,
+                  isAiEvaluating ? 'Đang xử lý...' : (aiScore != null ? '$aiScore/100' : 'Chưa có'),
+                  isAiEvaluating ? Colors.orange : theme.primaryColor,
+                  onTap: onAiTap,
                 ),
               ],
             ),

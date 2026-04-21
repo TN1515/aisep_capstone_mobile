@@ -14,6 +14,8 @@ import 'package:aisep_capstone_mobile/features/profile/view_models/startup_profi
 import 'package:aisep_capstone_mobile/features/evaluation/view_models/evaluation_view_model.dart';
 import 'package:aisep_capstone_mobile/features/connections/view_models/connection_view_model.dart';
 import 'package:aisep_capstone_mobile/features/messages/view_models/chat_view_model.dart';
+import 'package:aisep_capstone_mobile/features/documents/view_models/document_view_model.dart';
+import 'package:aisep_capstone_mobile/features/notifications/view_models/notification_view_model.dart';
 import 'package:aisep_capstone_mobile/core/navigation/navigator_service.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,13 +23,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Mặc định luôn hiện Onboarding khi run ứng dụng theo yêu cầu
-  const bool showOnboarding = true;
-  
-  // Chỉ kiểm tra Token nhanh ở tầng native
+  // Chỉ hiện Onboarding nếu chưa đăng nhập
   final bool isLoggedIn = await TokenService.hasToken();
+  final bool isFirstTime = !isLoggedIn;
   
-  runApp(MyApp(isLoggedIn: isLoggedIn, isFirstTime: showOnboarding));
+  runApp(MyApp(isLoggedIn: isLoggedIn, isFirstTime: isFirstTime));
 }
 
 class MyApp extends StatelessWidget {
@@ -52,6 +52,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EvaluationViewModel()),
         ChangeNotifierProvider(create: (_) => ConnectionViewModel()),
         ChangeNotifierProvider(create: (_) => ChatViewModel()),
+        ChangeNotifierProvider(create: (_) => DocumentViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
       ],
       child: Consumer<SettingsViewModel>(
         builder: (context, settingsViewModel, child) {
@@ -112,7 +114,7 @@ class _RootWrapperState extends State<_RootWrapper> {
       final profileResponse = await StartupService().getMyProfile();
       
       if (mounted) {
-        if (profileResponse.success && profileResponse.data != null) {
+        if (profileResponse.success && profileResponse.data != null && profileResponse.data!.companyName.isNotEmpty) {
           setState(() {
             _hasProfile = true;
             _isChecking = false;

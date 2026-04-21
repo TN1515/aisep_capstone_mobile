@@ -15,13 +15,16 @@ import 'package:aisep_capstone_mobile/features/documents/views/document_list_vie
 import 'package:aisep_capstone_mobile/features/connections/views/connections_view.dart';
 import 'package:aisep_capstone_mobile/features/consulting/views/consulting_dashboard_view.dart';
 import 'package:aisep_capstone_mobile/features/consulting/views/advisor_discovery_view.dart';
-import 'package:aisep_capstone_mobile/features/notifications/view_models/notification_view_model.dart'; // NEW
-import 'package:aisep_capstone_mobile/features/notifications/views/notifications_view.dart';       // NEW
-import 'package:aisep_capstone_mobile/features/messages/views/chat_list_view.dart';              // NEW
+import 'package:aisep_capstone_mobile/features/profile/view_models/startup_profile_view_model.dart';
+import 'package:aisep_capstone_mobile/features/evaluation/view_models/evaluation_view_model.dart';
+import 'package:aisep_capstone_mobile/features/evaluation/views/evaluation_history_view.dart';
+import 'package:aisep_capstone_mobile/features/evaluation/models/evaluation_models.dart';
+import 'package:aisep_capstone_mobile/features/notifications/view_models/notification_view_model.dart';
+import 'package:aisep_capstone_mobile/features/notifications/views/notifications_view.dart';
+import 'package:aisep_capstone_mobile/features/notifications/widgets/notification_tile.dart';
+import 'package:aisep_capstone_mobile/features/messages/views/chat_list_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../profile/view_models/startup_profile_view_model.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({Key? key}) : super(key: key);
@@ -39,6 +42,12 @@ class _DashboardViewState extends State<DashboardView> {
     super.initState();
     _viewModel = DashboardViewModel();
     _viewModel.fetchDashboardData();
+    
+    // Trigger history load for AI Status card accuracy
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileVm = context.read<StartupProfileViewModel>();
+      context.read<EvaluationViewModel>().loadHistory(profileVm.startupId);
+    });
   }
 
   void _onTabTapped(int index) {
@@ -82,8 +91,8 @@ class _DashboardViewState extends State<DashboardView> {
           const ConnectionsView(), // Index 0: Kết nối
           const ConsultingDashboardView(), // Index 1: Tư vấn
           _buildDashboardContent(), // Index 2: Trang chủ
-          const ChatListView(), // Index 3: Nhắn tin
-          const DocumentListView(), // Index 4: Tài liệu
+          ChatListView(), // Index 3: Nhắn tin
+          DocumentListView(), // Index 4: Tài liệu
         ],
       ),
     );
@@ -120,15 +129,17 @@ class _DashboardViewState extends State<DashboardView> {
           return const Center(child: Text('Không có dữ liệu', style: TextStyle(color: Colors.white70)));
         }
 
-        return ChangeNotifierProvider( // Wrap the dashboard content with NotificationViewModel
-          create: (_) => NotificationViewModel(),
-          child: Consumer<NotificationViewModel>(
-            builder: (context, notiViewModel, _) {
-              return RefreshIndicator(
-                onRefresh: () async {
-                  await _viewModel.fetchDashboardData();
-                  await notiViewModel.refresh();
-                },
+        final notiViewModel = context.watch<NotificationViewModel>();
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            final profileVm = context.read<StartupProfileViewModel>();
+            await _viewModel.fetchDashboardData(
+              userName: profileVm.profile.fullNameOfApplicant,
+              startupName: profileVm.profile.startupName,
+            );
+            await notiViewModel.refresh();
+          },
                 color: Theme.of(context).primaryColor,
                 backgroundColor: Theme.of(context).cardColor,
                 child: CustomScrollView(
@@ -146,7 +157,7 @@ class _DashboardViewState extends State<DashboardView> {
                           onNotificationTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const NotificationsView()),
+                              MaterialPageRoute(builder: (_) => NotificationsView()),
                             );
                           },
                           onProfileTap: () {
@@ -163,19 +174,34 @@ class _DashboardViewState extends State<DashboardView> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: SummaryProgressCard(
-                    profileCompletion: stats.profileCompletion,
-                    kycStatus: stats.kycStatus,
-                    aiScore: stats.aiEvaluationScore,
-                    onKycTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => KycFormView(
-                            isIncorporated: true,
-                            onBack: () => Navigator.pop(context),
-                          ),
-                        ),
+                   child: Consumer<EvaluationViewModel>(
+                    builder: (context, evalVm, _) {
+                      final isProcessing = evalVm.history.any((e) => 
+                        e.status == EvaluationStatus.processing || e.status == EvaluationStatus.queued
+                      );
+
+                      return SummaryProgressCard(
+                        profileCompletion: stats.profileCompletion,
+                        kycStatus: stats.kycStatus,
+                        aiScore: stats.aiEvaluationScore,
+                        isAiEvaluating: isProcessing,
+                        onKycTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => KycFormView(
+                                isIncorporated: true,
+                                onBack: () => Navigator.pop(context),
+                              ),
+                            ),
+                          );
+                        },
+                        onAiTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => EvaluationHistoryView()),
+                          );
+                        },
                       );
                     },
                   ),
@@ -237,9 +263,19 @@ class _DashboardViewState extends State<DashboardView> {
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    return ActivityItemTile(activity: stats.activities[index]);
+                    final notification = notiViewModel.notifications[index];
+                    return NotificationTile(
+                      notification: notification,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => NotificationsView()),
+                        );
+                      },
+                      onLongPress: () {},
+                    );
                   },
-                  childCount: stats.activities.length,
+                  childCount: notiViewModel.notifications.length,
                 ),
               ),
 
@@ -247,9 +283,6 @@ class _DashboardViewState extends State<DashboardView> {
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
                   ],
                 ),
-              );
-            },
-          ),
         );
       },
     );

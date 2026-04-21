@@ -9,7 +9,14 @@ import 'package:aisep_capstone_mobile/features/documents/views/document_list_vie
 import 'package:aisep_capstone_mobile/features/connections/views/connections_view.dart';
 import 'package:aisep_capstone_mobile/features/consulting/views/consulting_dashboard_view.dart';
 import 'package:aisep_capstone_mobile/features/consulting/views/advisor_discovery_view.dart';
+import 'package:aisep_capstone_mobile/features/messages/views/chat_list_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:aisep_capstone_mobile/features/messages/view_models/chat_view_model.dart';
+import 'package:aisep_capstone_mobile/features/connections/view_models/connection_view_model.dart';
+import 'package:aisep_capstone_mobile/features/profile/view_models/startup_profile_view_model.dart';
+import 'package:aisep_capstone_mobile/features/auth/view_models/auth_view_model.dart';
+import 'dart:developer' as dev;
 
 class MainNavigationContainer extends StatefulWidget {
   const MainNavigationContainer({Key? key}) : super(key: key);
@@ -27,6 +34,30 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
     setState(() {
       _currentIndex = index;
     });
+
+    // Proactively refresh messaging data when switching to the Messaging tab
+    if (index == 3) {
+      try {
+        final chatVm = context.read<ChatViewModel>();
+        final connVm = context.read<ConnectionViewModel>();
+        final authVm = context.read<AuthViewModel>();
+        
+        // Inject real account User ID for Me/Partner distinction
+        // Using userId instead of startupId because backend usually uses Account ID for messaging
+        final myId = authVm.currentUser?.userId ?? 0;
+        chatVm.setCurrentUserId(myId);
+        
+        dev.log('ChatViewModel: Account User ID set to $myId');
+        
+        // Ensure connections are loaded as they are the source for data synthesis
+        connVm.loadReceivedConnections();
+        connVm.loadSentConnections();
+        
+        chatVm.loadConversations(connections: connVm.allConnections);
+      } catch (e) {
+        // ViewModel might not be available yet in some edge cases
+      }
+    }
   }
 
   @override
@@ -37,14 +68,11 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const ConnectionsView(), // Index 0: Updated from Placeholder
-          const ConsultingDashboardView(), // Index 1: Redesigned
-          const DashboardView(), // Index 2: Primary Screen
-          const DocumentListView(), // Index 3: Updated from Placeholder
-          KycFormView(
-            isIncorporated: true,
-            onBack: () => _onTabTapped(2),
-          ),
+          const ConnectionsView(), // Index 0
+          const ConsultingDashboardView(), // Index 1
+          const DashboardView(), // Index 2
+          const ChatListView(), // Index 3: Messaging [FIXED]
+          const DocumentListView(), // Index 4: Documents [FIXED]
         ],
       ),
       floatingActionButton: _currentIndex == 1

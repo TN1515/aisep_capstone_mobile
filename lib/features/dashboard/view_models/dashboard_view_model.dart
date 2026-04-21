@@ -4,8 +4,8 @@ import 'package:aisep_capstone_mobile/features/dashboard/models/dashboard_stats_
 
 class DashboardViewModel extends BaseViewModel {
   DashboardStats? _stats;
-  String _userName = 'Nguyễn Alpha';
-  String _startupName = 'BioCore AI';
+  String _userName = '';
+  String _startupName = '';
 
   DashboardStats? get stats => _stats;
   String get userName => _userName;
@@ -18,7 +18,9 @@ class DashboardViewModel extends BaseViewModel {
     return 'Chào buổi tối';
   }
 
-  Future<void> fetchDashboardData() async {
+  Future<void> fetchDashboardData({String? userName, String? startupName}) async {
+    if (userName != null) _userName = userName;
+    if (startupName != null) _startupName = startupName;
     setLoading(true);
     try {
       // Mock API call - (Removing artificial delay for speed)
@@ -72,23 +74,7 @@ class DashboardViewModel extends BaseViewModel {
             progress: 0.24,
           ),
         ],
-        activities: [
-          RecentActivity(
-            description: 'Tài liệu "Product_Roadmap_2026.pdf" đã được xác thực blockchain.',
-            timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-            type: 'document',
-          ),
-          RecentActivity(
-            description: 'Bạn có yêu cầu kết nối mới từ Investor "Alpha Capital".',
-            timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-            type: 'connection',
-          ),
-          RecentActivity(
-            description: 'Đánh giá AI hoàn tất. Điểm số của bạn là 82/100.',
-            timestamp: DateTime.now().subtract(const Duration(days: 1)),
-            type: 'ai',
-          ),
-        ],
+        activities: [], // Real notifications are handled by NotificationViewModel
       );
     } catch (e) {
       setError('Không thể tải dữ liệu Dashboard. Vui lòng thử lại.');
