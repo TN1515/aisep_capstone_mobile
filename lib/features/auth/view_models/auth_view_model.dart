@@ -93,17 +93,25 @@ class AuthViewModel extends ChangeNotifier {
 
   /// MAPPING API: Gọi GET /api/startups/me để xác định đích đến
   Future<LoginDestination> _checkStartupProfile(String userType) async {
-    // Vì ứng dụng mobile này chỉ dành cho Startup, chúng ta luôn ưu tiên kiểm tra Profile
     try {
       final profileResponse = await _startupService.getMyProfile();
-      if (profileResponse.success && profileResponse.data != null && profileResponse.data!.companyName.isNotEmpty) {
+      
+      // 1. Nếu có profile (thành công 200 và có data) -> Vào Dashboard
+      if (profileResponse.success && profileResponse.data != null) {
         return LoginDestination.dashboard;
-      } else {
-        // Nếu chưa có profile (404) hoặc profile còn trống (chưa điền tên công ty), chuyển sang màn hình tạo
+      } 
+      
+      // 2. Nếu server trả về 404 (Not Found) -> Chắc chắn chưa có profile -> Chuyển sang màn tạo
+      if (profileResponse.statusCode == 404) {
         return LoginDestination.createProfile;
       }
+
+      // 3. Các trường hợp lỗi khác (500, timeout, 401...) 
+      // Mặc định vào Dashboard để tránh bắt người dùng tạo lại profile khi hệ thống lỗi tạm thời
+      return LoginDestination.dashboard;
     } catch (_) {
-      return LoginDestination.createProfile;
+      // Nếu có exception lạ (lỗi logic mobile), cũng ưu tiên Dashboard cho an toàn
+      return LoginDestination.dashboard;
     }
   }
 
