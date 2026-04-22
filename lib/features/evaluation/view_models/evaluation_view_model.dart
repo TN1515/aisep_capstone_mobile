@@ -13,6 +13,12 @@ class EvaluationViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool get isAnyEvaluationInProgress => _history.any((e) => 
+    e.status == EvaluationStatus.queued || 
+    e.status == EvaluationStatus.processing || 
+    e.status == EvaluationStatus.retry
+  );
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 

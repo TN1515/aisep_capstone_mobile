@@ -138,12 +138,15 @@ class DocumentModel {
   });
 
   factory DocumentModel.fromJson(Map<String, dynamic> json) {
+    // Ưu tiên lấy documentType từ nhiều "Key" khác nhau để tránh lỗi giao thức Backend
+    final rawType = json['documentType'] ?? json['DocumentType'] ?? json['type'] ?? json['Type'] ?? json['document_type'] ?? json['docType'];
+    
     return DocumentModel(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
-      title: json['title']?.toString(),
-      fileName: json['fileName']?.toString() ?? 'Unnamed',
-      fileUrl: json['fileUrl']?.toString() ?? '',
-      documentType: DocumentTypeExtension.fromInt(int.tryParse(json['documentType']?.toString() ?? '0') ?? 0),
+      title: json['title']?.toString() ?? json['name']?.toString(),
+      fileName: json['fileName']?.toString() ?? json['name']?.toString() ?? 'Unnamed',
+      fileUrl: json['fileUrl']?.toString() ?? json['fileURL'] ?? '',
+      documentType: _parseDocumentType(rawType),
       sizeInBytes: double.tryParse(json['sizeInBytes']?.toString() ?? '0') ?? 0.0,
       version: json['version']?.toString(),
       isArchived: json['isArchived'] == true || json['isArchived'] == 'true',
@@ -153,6 +156,41 @@ class DocumentModel {
       transactionHash: json['transactionHash']?.toString(),
       reviewStatus: _parseReviewStatus(json['reviewStatus']),
     );
+  }
+
+  static DocumentType _parseDocumentType(dynamic val) {
+    if (val == null) return DocumentType.other;
+    
+    // Debug log để biết đích xác backend đang trả về cái gì
+    // debugPrint('📄 DocumentType raw value: $val (Type: ${val.runtimeType})');
+
+    // 1. Xử lý kiểu số (Integer)
+    if (val is int) return DocumentTypeExtension.fromInt(val);
+    
+    // 2. Xử lý kiểu chuỗi (String) - Resilience Level: Max
+    String strVal = val.toString().toLowerCase().replaceAll('_', '').replaceAll(' ', '').replaceAll('-', '');
+    
+    switch (strVal) {
+      case '0':
+      case 'pitchdeck': 
+      case 'deck': return DocumentType.pitchDeck;
+      
+      case '1':
+      case 'businessplan': 
+      case 'bussinessplan': // Handle common typo from backend
+      case 'plan': 
+      case 'executivesummary': return DocumentType.businessPlan;
+      
+      case '2':
+      case 'financials': 
+      case 'financialreport': return DocumentType.financials;
+      
+      case '3':
+      case 'legal': 
+      case 'compliance': return DocumentType.legal;
+      
+      default: return DocumentType.other;
+    }
   }
 
   static ProofStatus _parseProofStatus(dynamic val) {

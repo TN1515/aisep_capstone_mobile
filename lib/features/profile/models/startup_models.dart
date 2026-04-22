@@ -144,14 +144,26 @@ class StartupProfileDto {
   });
 
   factory StartupProfileDto.fromJson(Map<String, dynamic> json) {
+    // Xử lý subscriptionPlan một cách linh hoạt (chấp nhận cả String và int)
+    int? parseSubscriptionPlan(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is String) {
+        if (value.toLowerCase().contains('free')) return 0;
+        if (value.toLowerCase().contains('pro')) return 1;
+        return int.tryParse(value);
+      }
+      return null;
+    }
+
     return StartupProfileDto(
       startupId: json['startupID'] ?? json['id'] ?? 0,
       companyName: json['companyName'] ?? json['CompanyName'] ?? '',
       oneLiner: json['oneLiner'] ?? json['OneLiner'] ?? '',
       description: json['description'] ?? json['Description'],
-      logoUrl: json['logoURL'] ?? json['LogoUrl'],
+      logoUrl: json['logoURL'] ?? json['logoUrl'] ?? json['LogoUrl'],
       website: json['website'] ?? json['Website'],
-      industryId: json['industryID'] ?? json['IndustryID'],
+      industryId: json['industryID'] ?? json['id'] ?? 0,
       industryName: json['industryName'] ?? json['IndustryName'],
       subIndustry: json['subIndustry'] ?? json['SubIndustry'],
       stage: json['stage'] ?? json['Stage'],
@@ -166,15 +178,15 @@ class StartupProfileDto {
       fullNameOfApplicant: json['fullNameOfApplicant'] ?? json['FullNameOfApplicant'],
       roleOfApplicant: json['roleOfApplicant'] ?? json['RoleOfApplicant'],
       contactEmail: json['contactEmail'] ?? json['ContactEmail'],
-      phoneNumber: json['phoneNumber'] ?? json['PhoneNumber'],
-      linkedInUrl: json['linkedInUrl'] ?? json['LinkedinUrl'] ?? json['LinkedInURL'],
+      phoneNumber: json['contactPhone'] ?? json['phoneNumber'] ?? json['PhoneNumber'] ?? json['ContactPhone'],
+      linkedInUrl: json['linkedInURL'] ?? json['linkedInUrl'] ?? json['LinkedinUrl'] ?? json['LinkedInURL'] ?? json['LinkedInUrl'],
       profileStatus: json['profileStatus'] ?? 'Draft',
       isVisible: json['isVisible'] ?? false,
       profileScore: (json['profileScore'] ?? 0).toDouble(),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       kycStatus: json['kycStatus'],
-      teamSize: json['teamSize'] ?? json['TeamSize'],
+      teamSize: json['teamSize']?.toString() ?? json['TeamSize']?.toString(), // To String for safety
       marketScope: json['marketScope'] ?? json['MarketScope'],
       productStatus: json['productStatus'] ?? json['ProductStatus'],
       problemStatement: json['problemStatement'] ?? json['ProblemStatement'],
@@ -182,7 +194,7 @@ class StartupProfileDto {
       metricSummary: json['metricSummary'] ?? json['MetricSummary'],
       businessCode: json['businessCode'] ?? json['BusinessCode'],
       currentNeeds: json['currentNeeds'] != null ? List<String>.from(json['currentNeeds']) : null,
-      subscriptionPlan: json['subscriptionPlan'] ?? json['SubscriptionPlan'],
+      subscriptionPlan: parseSubscriptionPlan(json['subscriptionPlan'] ?? json['SubscriptionPlan']),
       subscriptionEndDate: json['subscriptionEndDate'] != null ? DateTime.parse(json['subscriptionEndDate']) : 
                            json['SubscriptionEndDate'] != null ? DateTime.parse(json['SubscriptionEndDate']) : null,
       tractionIndex: json['tractionIndex'] ?? json['TractionIndex'],
@@ -301,7 +313,7 @@ class TeamMemberDto {
       fullName: json['fullName'] ?? json['FullName'] ?? '',
       role: json['role'] ?? json['Role'] ?? '',
       title: json['title'] ?? json['Title'],
-      photoUrl: json['PhotoURL'] ?? json['photoURL'] ?? json['PhotoUrl'] ?? json['photoUrl'],
+      photoUrl: json['PhotoURL'] ?? json['photoURL'] ?? json['PhotoUrl'] ?? json['photoUrl'] ?? json['avatarUrl'] ?? json['AvatarUrl'] ?? json['imageUrl'] ?? json['ImageUrl'],
       bio: json['bio'] ?? json['Bio'],
       participationType: json['participationType'] ?? json['ParticipationType'],
       experienceYears: int.tryParse((json['YearsOfExperience'] ?? json['yearsOfExperience'] ?? json['experience_years'] ?? json['experienceYears'] ?? json['ExperienceYears'] ?? '').toString()),

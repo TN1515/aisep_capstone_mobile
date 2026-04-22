@@ -1,6 +1,7 @@
 import 'package:aisep_capstone_mobile/features/auth/models/auth_request_models.dart';
 import 'package:aisep_capstone_mobile/features/auth/services/auth_service.dart';
 import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
+import 'package:aisep_capstone_mobile/features/profile/models/startup_models.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_settings_model.dart';
 import 'dart:async';
@@ -19,11 +20,21 @@ class SettingsViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get kycStatus => _kycStatus;
 
-  SettingsViewModel() {
-    _loadSettings();
+  bool _isInitialized = false;
+
+  SettingsViewModel(); // Constructor không tự động load để tránh redundant request
+
+  /// Bootstrapping: Nhận data từ main.dart
+  void setInitialData(StartupProfileDto profile) {
+    _settings = _settings.copyWith(isVisible: profile.isVisible);
+    _kycStatus = profile.kycStatus;
+    _isInitialized = true;
+    notifyListeners();
   }
 
   Future<void> _loadSettings() async {
+    if (_isInitialized) return;
+    
     _isLoading = true;
     notifyListeners();
 

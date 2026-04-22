@@ -25,6 +25,9 @@ class _EvaluationSubmissionViewState extends State<EvaluationSubmissionView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DocumentViewModel>().loadDocuments();
+      
+      final startupId = context.read<StartupProfileViewModel>().startupId;
+      context.read<EvaluationViewModel>().loadHistory(startupId);
     });
   }
 
@@ -107,7 +110,7 @@ class _EvaluationSubmissionViewState extends State<EvaluationSubmissionView> {
                 ? const Center(child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent))
                 : _buildDocumentList(docViewModel.documents),
           ),
-          _buildBottomAction(evalViewModel.isLoading),
+          _buildBottomAction(evalViewModel),
         ],
       ),
     );
@@ -285,8 +288,12 @@ class _EvaluationSubmissionViewState extends State<EvaluationSubmissionView> {
     );
   }
 
-  Widget _buildBottomAction(bool isLoading) {
+  Widget _buildBottomAction(EvaluationViewModel evalViewModel) {
     final theme = Theme.of(context);
+    final isLoading = evalViewModel.isLoading;
+    final isAnyInProgress = evalViewModel.isAnyEvaluationInProgress;
+    final isBtnDisabled = isLoading || isAnyInProgress || _selectedDocumentIds.isEmpty;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -305,12 +312,14 @@ class _EvaluationSubmissionViewState extends State<EvaluationSubmissionView> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: isLoading ? null : _submit,
+            onPressed: isBtnDisabled ? null : _submit,
             style: ElevatedButton.styleFrom(
               backgroundColor: StartupOnboardingTheme.goldAccent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              disabledBackgroundColor: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+              disabledBackgroundColor: isAnyInProgress 
+                  ? Colors.blue.withOpacity(0.1) 
+                  : StartupOnboardingTheme.goldAccent.withOpacity(0.3),
             ),
             child: isLoading
                 ? const SizedBox(
@@ -319,10 +328,13 @@ class _EvaluationSubmissionViewState extends State<EvaluationSubmissionView> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : Text(
-                    'Bắt đầu Phân tích AI (${_selectedDocumentIds.length})',
+                    isAnyInProgress 
+                        ? 'Đang có tài liệu phân tích...' 
+                        : 'Bắt đầu Phân tích AI (${_selectedDocumentIds.length})',
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: isAnyInProgress ? Colors.blue : Colors.white,
                     ),
                   ),
           ),

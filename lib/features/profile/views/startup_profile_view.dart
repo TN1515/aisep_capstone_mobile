@@ -12,6 +12,7 @@ import '../models/startup_models.dart';
 import '../../kyc/views/kyc_form_view.dart';
 import '../../settings/views/settings_view.dart';
 import '../../membership/views/membership_upgrade_view.dart';
+import '../../../../core/utils/ui_utils.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +32,10 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     _viewModel = context.read<StartupProfileViewModel>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _viewModel.resetMode();
+      // Fallback: Nếu khởi động nhanh thất bại, màn hình này sẽ tự nạp lại dữ liệu
+      if (!_viewModel.isInitialized) {
+        _viewModel.loadProfile();
+      }
     });
   }
 
@@ -93,10 +98,15 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 ),
               ),
             ),
+            // Loading indicator chỉ hiện một thanh nhỏ phía trên nếu đã có data (mượt mà hơn)
             if (viewModel.isLoading)
-              Container(
-                color: Colors.black45,
-                child: const Center(child: CircularProgressIndicator(color: StartupOnboardingTheme.goldAccent)),
+              Positioned(
+                top: 0, left: 0, right: 0,
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.transparent,
+                  color: StartupOnboardingTheme.goldAccent.withOpacity(0.5),
+                  minHeight: 2,
+                ),
               ),
           ],
         ),
@@ -275,7 +285,12 @@ class _StartupProfileViewState extends State<StartupProfileView> {
 
   Widget _buildProfileLogo(StartupProfileViewModel viewModel) {
     return GestureDetector(
-      onTap: viewModel.isEditMode ? _pickLogo : () => _showImagePreview(imageUrl: viewModel.profile.logoUrl, imageFile: viewModel.newLogoFile),
+      onTap: viewModel.isEditMode ? _pickLogo : () => UIUtils.showImagePreview(
+        context, 
+        imageUrl: viewModel.profile.logoUrl, 
+        imageFile: viewModel.newLogoFile,
+        tag: 'profile_logo'
+      ),
       child: Hero(
         tag: 'profile_logo',
         child: Stack(
@@ -294,7 +309,7 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                     ? Image.file(viewModel.newLogoFile!, fit: BoxFit.cover)
                     : (viewModel.profile.logoUrl.isNotEmpty 
                         ? Image.network(
-                            viewModel.profile.logoUrl,
+                            UIUtils.getFullImageUrl(viewModel.profile.logoUrl)!,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Icon(LucideIcons.building, size: 36, color: Theme.of(context).dividerColor),
                           )
@@ -584,9 +599,23 @@ class _StartupProfileViewState extends State<StartupProfileView> {
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${currency.format(p.currentFundingRaised)} đã huy động', style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.slateGray)),
-                    Text('Mục tiêu ${currency.format(p.fundingAmountSought)}', style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.slateGray)),
+                    Expanded(
+                      child: Text(
+                        '${currency.format(p.currentFundingRaised)} đã huy động', 
+                        style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.slateGray),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Mục tiêu ${currency.format(p.fundingAmountSought)}', 
+                        style: GoogleFonts.workSans(fontSize: 12, color: StartupOnboardingTheme.slateGray),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -972,13 +1001,13 @@ class _StartupProfileViewState extends State<StartupProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onTap: () => _showImagePreview(imageUrl: m.photoUrl, heroTag: 'member_${m.id}'),
+                  onTap: () => UIUtils.showImagePreview(context, imageUrl: m.photoUrl, tag: 'member_${m.id}'),
                   child: Hero(
                     tag: 'member_${m.id}',
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: m.photoUrl != null
-                        ? Image.network(m.photoUrl!, width: 70, height: 70, fit: BoxFit.cover)
+                      child: (m.photoUrl != null && m.photoUrl!.isNotEmpty)
+                        ? Image.network(UIUtils.getFullImageUrl(m.photoUrl!)!, width: 70, height: 70, fit: BoxFit.cover)
                         : Container(
                             width: 70, height: 70,
                             color: theme.dividerColor.withOpacity(0.1),
@@ -1434,50 +1463,6 @@ class _StartupProfileViewState extends State<StartupProfileView> {
     return Container(
       decoration: BoxDecoration(color: Colors.black38, shape: BoxShape.circle, border: Border.all(color: Colors.white10)), 
       child: IconButton(icon: Icon(icon, color: Colors.white, size: 18), onPressed: onTap)
-    );
-  }
-
-  void _showImagePreview({String? imageUrl, File? imageFile, String heroTag = 'profile_logo'}) {
-    if ((imageUrl == null || imageUrl.isEmpty) && imageFile == null) return;
-    
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: double.infinity, height: double.infinity,
-                color: Colors.black.withOpacity(0.95),
-                child: Center(
-                  child: Hero(
-                    tag: heroTag,
-                    child: InteractiveViewer(
-                      minScale: 0.5, maxScale: 4.0,
-                      child: imageFile != null 
-                        ? Image.file(imageFile, fit: BoxFit.contain)
-                        : Image.network(imageUrl!, fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => const Icon(LucideIcons.image, size: 48, color: Colors.white24)),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 10,
-              right: 20,
-              child: CircleAvatar(
-                backgroundColor: Colors.black45,
-                child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

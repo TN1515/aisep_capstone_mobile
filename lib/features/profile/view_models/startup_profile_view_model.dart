@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
 import 'package:aisep_capstone_mobile/features/profile/models/startup_models.dart';
 import 'package:aisep_capstone_mobile/features/profile/models/startup_profile_model.dart';
+import 'package:aisep_capstone_mobile/core/network/api_response.dart';
 import 'package:intl/intl.dart';
 
 class StartupProfileViewModel extends ChangeNotifier {
@@ -97,37 +98,68 @@ class StartupProfileViewModel extends ChangeNotifier {
   
   late StartupProfileModel profile;
 
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+
   StartupProfileViewModel() {
     _initEmptyProfile();
     _initControllers();
-    loadProfile();
+    // loadProfile() removed to avoid double-fetching during startup
   }
 
   void _initEmptyProfile() {
     profile = StartupProfileModel(
-       startupName: 'Đang tải...',
-       tagline: 'Vui lòng đợi...',
-       logoUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=loading',
+       startupName: 'Chưa cập nhật',
+       tagline: 'Chưa có thông tin giới thiệu',
+       logoUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=new',
     );
   }
 
-  Future<void> loadProfile() async {
+  /// Hook để main.dart đẩy dữ liệu vào ngay lập tức khi khởi động
+  void setInitialData({StartupProfileDto? profileDto, List<IndustryDto>? industries}) {
+    if (industries != null) {
+      industryList = industries;
+    }
+    
+    if (profileDto != null) {
+      _profileDto = profileDto;
+      _mapDtoToModel();
+      _isInitialized = true;
+      notifyListeners();
+      // Load thêm đội ngũ ngầm
+      loadTeamMembers();
+    }
+  }
+
+  Future<void> loadProfile({bool force = false}) async {
+    if (_isLoading) return;
+    if (_isInitialized && !force) return;
+    
     _isLoading = true;
     notifyListeners();
 
     try {
-      final indResponse = await _service.getIndustries(mode: 'tree');
+      // Chạy song song các request độc lập để tăng tốc độ load
+      final results = await Future.wait([
+        _service.getIndustries(mode: 'tree'),
+        _service.getMyProfile(),
+      ]);
+
+      final indResponse = results[0] as ApiResponse<List<IndustryDto>>;
+      final profileResponse = results[1] as ApiResponse<StartupProfileDto?>;
+
       if (indResponse.success && indResponse.data != null) {
         industryList = indResponse.data!;
       }
 
-      final response = await _service.getMyProfile();
-      if (response.success && response.data != null) {
-        _profileDto = response.data;
+      if (profileResponse.success && profileResponse.data != null) {
+        _profileDto = profileResponse.data;
         _mapDtoToModel();
+        _isInitialized = true;
         await loadTeamMembers();
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

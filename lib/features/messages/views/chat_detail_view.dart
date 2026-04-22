@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/chat_model.dart';
 import '../view_models/chat_view_model.dart';
+import 'package:aisep_capstone_mobile/core/utils/ui_utils.dart';
 import 'package:intl/intl.dart';
 
 class ChatDetailView extends StatefulWidget {
@@ -137,28 +138,39 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   }
 
   Widget _buildSmallAvatar() {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
-        shape: BoxShape.circle,
-        border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.2)),
+    return Hero(
+      tag: 'chat_avatar_${widget.conversationId}',
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: StartupOnboardingTheme.goldAccent.withOpacity(0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: StartupOnboardingTheme.goldAccent.withOpacity(0.2)),
+        ),
+        child: Center(
+          child: (widget.partnerAvatar != null && widget.partnerAvatar!.isNotEmpty)
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    UIUtils.getFullImageUrl(widget.partnerAvatar!)!, 
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _buildInitials(),
+                  ),
+                )
+              : _buildInitials(),
+        ),
       ),
-      child: Center(
-        child: widget.partnerAvatar != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(widget.partnerAvatar!, fit: BoxFit.cover),
-              )
-            : Text(
-                widget.partnerName.substring(0, 1).toUpperCase(),
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: StartupOnboardingTheme.goldAccent,
-                ),
-              ),
+    );
+  }
+
+  Widget _buildInitials() {
+    return Text(
+      widget.partnerName.substring(0, 1).toUpperCase(),
+      style: GoogleFonts.outfit(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: StartupOnboardingTheme.goldAccent,
       ),
     );
   }

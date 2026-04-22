@@ -18,14 +18,12 @@ class EditMetadataView extends StatefulWidget {
 class _EditMetadataViewState extends State<EditMetadataView> {
   late TextEditingController _titleController;
   late DocumentType _selectedType;
-  late bool _isArchived;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.document.title ?? widget.document.fileName);
     _selectedType = widget.document.documentType;
-    _isArchived = widget.document.isArchived;
   }
 
   @override
@@ -78,8 +76,6 @@ class _EditMetadataViewState extends State<EditMetadataView> {
             _buildTextField(context, 'Tiêu đề hiển thị', _titleController, LucideIcons.fileText),
             const SizedBox(height: 20),
             _buildTypeDropdown(context, textColor),
-            const SizedBox(height: 20),
-            _buildArchiveSwitch(context, textColor),
             const SizedBox(height: 32),
             _buildSubmitButton(context),
           ],
@@ -158,33 +154,6 @@ class _EditMetadataViewState extends State<EditMetadataView> {
     );
   }
 
-  Widget _buildArchiveSwitch(BuildContext context, Color textColor) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Row(
-        children: [
-          Icon(LucideIcons.archive, size: 20, color: theme.primaryColor.withOpacity(0.5)),
-          const SizedBox(width: 12),
-          Text(
-            'Lưu trữ tài liệu',
-            style: GoogleFonts.workSans(color: textColor, fontWeight: FontWeight.w500),
-          ),
-          const Spacer(),
-          Switch(
-            value: _isArchived,
-            onChanged: (v) => setState(() => _isArchived = v),
-            activeColor: theme.primaryColor,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSubmitButton(BuildContext context) {
     final theme = Theme.of(context);
@@ -196,7 +165,6 @@ class _EditMetadataViewState extends State<EditMetadataView> {
           widget.document.id,
           title: _titleController.text,
           type: _selectedType.value,
-          isArchived: _isArchived,
         );
         if (success && mounted) {
           Navigator.pop(context);

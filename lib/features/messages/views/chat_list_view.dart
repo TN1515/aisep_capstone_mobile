@@ -9,6 +9,7 @@ import '../../connections/models/connection_model.dart';
 import '../../connections/view_models/connection_view_model.dart';
 import '../../consulting/models/mentorship_models.dart';
 import 'package:aisep_capstone_mobile/features/consulting/view_models/consulting_view_model.dart';
+import 'package:aisep_capstone_mobile/core/utils/ui_utils.dart';
 import 'chat_detail_view.dart';
 
 class ChatListView extends StatefulWidget {
@@ -369,7 +370,7 @@ class _ChatListViewState extends State<ChatListView> {
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(28),
                 child: Image.network(
-                  chat.partnerAvatar!, 
+                  UIUtils.getFullImageUrl(chat.partnerAvatar!)!, 
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => _buildInitials(chat, textColor),
                 ),
