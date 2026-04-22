@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import '../services/token_service.dart';
 import '../navigation/navigator_service.dart';
@@ -17,8 +19,8 @@ class DioClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -30,71 +32,53 @@ class DioClient {
     _dio!.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Lấy token thực tế từ SecureStorage
-          final String? token = await TokenService.getAccessToken();
-          
-          if (token != null && token.isNotEmpty) {
+          final token = await TokenService.getAccessToken();
+          if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          
+          // Log cực mạnh ra Console để bạn debug
+          dev.log('🚀 [HTTP CALL] ${options.method} ${options.baseUrl}${options.path}', name: 'NETWORK');
+          if (options.queryParameters.isNotEmpty) {
+            dev.log('   Query: ${options.queryParameters}', name: 'NETWORK');
+          }
+          
           return handler.next(options);
         },
+        onResponse: (response, handler) {
+          dev.log('✅ [RESPONSE] ${response.statusCode} from ${response.requestOptions.path}', name: 'NETWORK');
+          return handler.next(response);
+        },
         onError: (DioException e, handler) async {
-          // Xử lý lỗi 401 (Hết hạn Token)
+          dev.log('❌ [ERROR] ${e.response?.statusCode} at ${e.requestOptions.path}', name: 'NETWORK');
+          dev.log('   Message: ${e.message}', name: 'NETWORK');
+          
           if (e.response?.statusCode == 401) {
-            final refreshToken = await TokenService.getRefreshToken();
-            
-            if (refreshToken != null) {
-              try {
-                // Thử Refresh Token
-                // Sử dụng một Dio instance mới để tránh lặp vô hạn
-                final refreshResponse = await Dio().post(
-                  '${AppConfig.apiBaseUrl}/api/auth/refresh-token',
-                  data: {'refreshToken': refreshToken},
-                );
-
-                if (refreshResponse.statusCode == 200) {
-                  final String newAccessToken = refreshResponse.data['data']['accessToken'];
-                  
-                  // Lưu token mới
-                  await TokenService.saveTokens(accessToken: newAccessToken);
-
-                  // Gửi lại request bị lỗi với token mới
-                  e.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-                  final response = await _dio!.fetch(e.requestOptions);
-                  return handler.resolve(response);
-                }
-              } catch (refreshError) {
-                // Nếu refresh thất bại, xóa dữ liệu và logout
-                await TokenService.clearAuthData();
-                NavigatorService.navigatorKey.currentState?.pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const StartupLoginView()),
-                  (route) => false,
-                );
-              }
-            } else {
-              // Không có Refresh Token, logout luôn
-              await TokenService.clearAuthData();
-              NavigatorService.navigatorKey.currentState?.pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const StartupLoginView()),
-                (route) => false,
-              );
-            }
+            await TokenService.clearAuthData();
+            NavigatorService.navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const StartupLoginView()),
+              (route) => false,
+            );
           }
           return handler.next(e);
         },
       ),
     );
 
-    // Log interceptor - Chỉ kích hoạt trong môi trường Development
+    // Log interceptor tiêu chuẩn của Dio
     if (!AppConfig.isProduction) {
       _dio!.interceptors.add(LogInterceptor(
+        requestHeader: true,
         requestBody: true,
+        responseHeader: true,
         responseBody: true,
+        error: true,
       ));
 
-      // Bỏ qua kiểm tra SSL nếu là môi trường Development (HTTPS Local)
+      // Bỏ qua kiểm tra SSL và cấu hình Inspector
       (_dio!.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
         final client = HttpClient();
+        client.connectionTimeout = const Duration(seconds: 10);
         client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
         return client;
       };

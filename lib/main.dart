@@ -3,6 +3,7 @@ import 'package:aisep_capstone_mobile/features/onboarding/views/startup_onboardi
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import 'package:aisep_capstone_mobile/core/services/token_service.dart';
 import 'package:aisep_capstone_mobile/features/dashboard/views/dashboard_view.dart';
+import 'package:aisep_capstone_mobile/features/auth/views/startup_login_view.dart';
 import 'package:aisep_capstone_mobile/features/profile/views/profile_setup_view.dart';
 import 'package:aisep_capstone_mobile/features/profile/services/startup_service.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,8 @@ import 'package:aisep_capstone_mobile/features/settings/view_models/settings_vie
 import 'package:aisep_capstone_mobile/features/kyc/view_models/kyc_view_model.dart';
 import 'package:aisep_capstone_mobile/features/auth/view_models/auth_view_model.dart';
 import 'package:aisep_capstone_mobile/features/profile/view_models/startup_profile_view_model.dart';
+import 'package:aisep_capstone_mobile/features/profile/models/startup_models.dart';
+import 'package:aisep_capstone_mobile/core/network/api_response.dart';
 import 'package:aisep_capstone_mobile/features/evaluation/view_models/evaluation_view_model.dart';
 import 'package:aisep_capstone_mobile/features/connections/view_models/connection_view_model.dart';
 import 'package:aisep_capstone_mobile/features/messages/view_models/chat_view_model.dart';
@@ -23,21 +26,17 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Chỉ hiện Onboarding nếu chưa đăng nhập
   final bool isLoggedIn = await TokenService.hasToken();
-  final bool isFirstTime = !isLoggedIn;
   
-  runApp(MyApp(isLoggedIn: isLoggedIn, isFirstTime: isFirstTime));
+  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
-  final bool isFirstTime;
   
   const MyApp({
     super.key,
     required this.isLoggedIn,
-    required this.isFirstTime,
   });
 
   @override
@@ -73,7 +72,7 @@ class MyApp extends StatelessWidget {
               themeMode: settingsViewModel.settings.isDarkMode 
                   ? ThemeMode.dark 
                   : ThemeMode.light,
-              home: _RootWrapper(isLoggedIn: isLoggedIn, isFirstTime: isFirstTime),
+              home: _RootWrapper(isLoggedIn: isLoggedIn),
             ),
           );
         },
@@ -85,8 +84,7 @@ class MyApp extends StatelessWidget {
 /// Widget trung gian kiểm tra trạng thái hồ sơ sau khi đã có Token
 class _RootWrapper extends StatefulWidget {
   final bool isLoggedIn;
-  final bool isFirstTime;
-  const _RootWrapper({required this.isLoggedIn, required this.isFirstTime});
+  const _RootWrapper({required this.isLoggedIn});
 
   @override
   State<_RootWrapper> createState() => _RootWrapperState();
@@ -99,9 +97,7 @@ class _RootWrapperState extends State<_RootWrapper> {
   @override
   void initState() {
     super.initState();
-    if (widget.isFirstTime) {
-      _hasProfile = false;
-    } else if (widget.isLoggedIn) {
+    if (widget.isLoggedIn) {
       _checkProfile();
     } else {
       _hasProfile = false;
@@ -110,33 +106,66 @@ class _RootWrapperState extends State<_RootWrapper> {
 
   Future<void> _checkProfile() async {
     setState(() => _isChecking = true);
+    debugPrint('🚀 Bootstrap Started...');
     try {
-      final profileResponse = await StartupService().getMyProfile();
+      final service = StartupService();
       
+      // Chạy song song: Kiểm tra hồ sơ VÀ lấy danh mục (Industries)
+      // Thêm timeout 5 giây để tránh treo màn hình splash quá lâu
+      final results = await Future.wait([
+        service.getMyProfile(),
+        service.getIndustries(mode: 'tree'),
+      ]).timeout(const Duration(seconds: 5));
+
+      final profileResponse = results[0] as ApiResponse<StartupProfileDto?>;
+      final industriesResponse = results[1] as ApiResponse<List<IndustryDto>>;
+
+      debugPrint('✅ Bootstrap Data Received. Status: ${profileResponse.statusCode}');
+
       if (mounted) {
-        if (profileResponse.success && profileResponse.data != null && profileResponse.data!.companyName.isNotEmpty) {
-          setState(() {
-            _hasProfile = true;
-            _isChecking = false;
-          });
-        } else if (profileResponse.statusCode == 401) {
+        final profileDto = profileResponse.data;
+        
+        // Push dữ liệu vào tất cả ViewModel cùng lúc
+        final profileVm = context.read<StartupProfileViewModel>();
+        final settingsVm = context.read<SettingsViewModel>();
+        final consultingVm = context.read<ConsultingViewModel>();
+        
+        profileVm.setInitialData(
+          profileDto: profileDto,
+          industries: industriesResponse.data,
+        );
+        
+        if (profileDto != null) {
+          settingsVm.setInitialData(profileDto);
+          consultingVm.setInitialProfile(profileDto);
+        }
+
+        if (profileResponse.statusCode == 401) {
           await TokenService.clearAuthData();
           setState(() {
             _hasProfile = false;
             _isChecking = false;
           });
-          // Redirect handled by Navigator if needed, but here we just update state
-        } else {
+          return;
+        } 
+        
+        if (profileResponse.statusCode == 404) {
           setState(() {
             _hasProfile = false;
             _isChecking = false;
           });
+        } else {
+          setState(() {
+            _hasProfile = true; // Mặc định là True để vào Home, trừ khi chắc chắn chưa có (404)
+            _isChecking = false;
+          });
         }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('⚠️ Bootstrap Timeout or Error: $e');
       if (mounted) {
         setState(() {
-          _hasProfile = false;
+          _hasProfile = true; // An toàn là trên hết, cho vào Home để người dùng tự refresh
           _isChecking = false;
         });
       }
@@ -145,10 +174,12 @@ class _RootWrapperState extends State<_RootWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isFirstTime || !widget.isLoggedIn) {
+    // Nếu chưa đăng nhập -> Ưu tiên hiện Onboarding để giới thiệu App
+    if (!widget.isLoggedIn) {
       return const StartupOnboardingScreen();
     }
 
+    // Nếu đã đăng nhập -> Kiểm tra xem có profile chưa
     if (_isChecking || _hasProfile == null) {
       return Scaffold(
         body: Center(

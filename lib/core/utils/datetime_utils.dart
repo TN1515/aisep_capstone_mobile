@@ -35,11 +35,22 @@ class DateTimeUtils {
   }
 
   /// Optional: If we want to safely parse without the +7 shift for specific cases
+  /// Automatically converts to local time if the string ends with 'Z'
   static DateTime parseRaw(dynamic value) {
     if (value == null) return DateTime.now();
     try {
-      if (value is DateTime) return value;
-      return DateTime.parse(value.toString());
+      if (value is DateTime) return value.toLocal();
+      final str = value.toString().trim();
+      
+      // Handle ISO strings with 'Z' or offsets
+      DateTime dt = DateTime.parse(str);
+      
+      // If it's UTC (e.g. ends with Z), convert to local
+      if (str.endsWith('Z') || str.contains('+') || (str.contains('-') && str.contains('T') && str.lastIndexOf('-') > str.lastIndexOf('T'))) {
+        return dt.toLocal();
+      }
+      
+      return dt;
     } catch (_) {
       return DateTime.now();
     }
