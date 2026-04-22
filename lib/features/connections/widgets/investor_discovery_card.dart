@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/investor_model.dart';
 import '../view_models/connection_view_model.dart';
+import '../../../../core/utils/ui_utils.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/config/app_config.dart';
 
@@ -44,54 +45,56 @@ class InvestorDiscoveryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if ((investor.matchScore * 100).toInt() > 0 || investor.isVerified) ...[
+                if (investor.isVerified) ...[
                   Row(
                     children: [
-                      if ((investor.matchScore * 100).toInt() > 0)
-                        _buildMatchScore(context),
-                      if ((investor.matchScore * 100).toInt() > 0 && investor.isVerified)
-                        const SizedBox(width: 12),
-                      if (investor.isVerified)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.verified, color: Color(0xFF10B981), size: 12),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Đã xác thực',
-                                style: GoogleFonts.workSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF10B981),
-                                ),
-                              ),
-                            ],
-                          ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.verified, color: Color(0xFF10B981), size: 12),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Đã xác thực',
+                              style: GoogleFonts.workSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                 ],
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: accentColor.withOpacity(0.1),
-                      backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
-                          ? NetworkImage(
-                              investor.avatarUrl!.startsWith('http')
-                                  ? investor.avatarUrl!
-                                  : '${AppConfig.apiBaseUrl}${investor.avatarUrl!.startsWith('/') ? '' : '/'}${investor.avatarUrl!}'
-                            )
-                          : null,
-                      child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
-                          ? Icon(LucideIcons.briefcase, color: accentColor)
-                          : null,
+                    GestureDetector(
+                      onTap: () {
+                        final String? url = UIUtils.getFullImageUrl(investor.avatarUrl);
+                        if (url != null) {
+                          UIUtils.showImagePreview(context, imageUrl: url, tag: 'investor_avatar_${investor.id}');
+                        }
+                      },
+                      child: Hero(
+                        tag: 'investor_avatar_${investor.id}',
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundColor: accentColor.withOpacity(0.1),
+                          backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
+                              ? NetworkImage(UIUtils.getFullImageUrl(investor.avatarUrl)!)
+                              : null,
+                          child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
+                              ? Icon(LucideIcons.briefcase, color: accentColor)
+                              : null,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -107,7 +110,7 @@ class InvestorDiscoveryCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${investor.position}${investor.organization != null ? ' • ${investor.organization}' : ''}',
+                            '${investor.position}${investor.organization != null ? ' tại ${investor.organization}' : ''}',
                             style: GoogleFonts.workSans(
                               fontSize: 12,
                               color: textColor.withOpacity(0.6),
@@ -135,24 +138,31 @@ class InvestorDiscoveryCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  investor.thesis,
-                  style: GoogleFonts.workSans(
-                    fontSize: 13,
-                    color: textColor.withOpacity(0.8),
-                    height: 1.4,
+                if (investor.investmentThesis != null && investor.investmentThesis!.isNotEmpty && investor.investmentThesis != 'Chưa có thông tin')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      investor.investmentThesis!,
+                      style: GoogleFonts.workSans(
+                        fontSize: 13,
+                        color: textColor.withOpacity(0.8),
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                const SizedBox(height: 16),
+                _buildInfoGrid(context),
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    ...investor.preferredIndustries.take(2).map((tag) => _buildTag(context, tag, LucideIcons.tag)),
-                    ...investor.preferredStages.take(1).map((tag) => _buildTag(context, tag, LucideIcons.trendingUp)),
+                    if (investor.preferredIndustries.isNotEmpty)
+                      ...investor.preferredIndustries.take(2).map((tag) => _buildTag(context, tag, LucideIcons.tag)),
+                    if (investor.preferredStages.isNotEmpty)
+                      ...investor.preferredStages.take(1).map((tag) => _buildTag(context, tag, LucideIcons.trendingUp)),
                   ],
                 ),
               ],
@@ -163,23 +173,56 @@ class InvestorDiscoveryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMatchScore(BuildContext context) {
-    final score = (investor.matchScore * 100).toInt();
-    return Row(
+  Widget _buildInfoGrid(BuildContext context) {
+    String ticketRange = 'Liên hệ';
+    if (investor.ticketSizeMin != null && investor.ticketSizeMax != null) {
+      ticketRange = '${_formatCurrency(investor.ticketSizeMin!)} - ${_formatCurrency(investor.ticketSizeMax!)}';
+    } else if (investor.ticketSizeMin != null) {
+      ticketRange = '> ${_formatCurrency(investor.ticketSizeMin!)}';
+    } else if (investor.ticketSizeMax != null) {
+      ticketRange = '< ${_formatCurrency(investor.ticketSizeMax!)}';
+    }
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Icon(LucideIcons.sparkles, color: Theme.of(context).primaryColor, size: 14),
-        const SizedBox(width: 4),
+        _buildInfoItem(context, LucideIcons.users, '${investor.acceptedConnectionCount} đã kết nối'),
+        _buildInfoItem(context, LucideIcons.banknote, 'Quy mô: $ticketRange'),
+      ],
+    );
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount >= 1000000) {
+      return '\$${(amount / 1000000).toStringAsFixed(amount % 1000000 == 0 ? 0 : 1)}M';
+    } else if (amount >= 1000) {
+      return '\$${(amount / 1000).toStringAsFixed(amount % 1000 == 0 ? 0 : 1)}k';
+    }
+    return '\$${amount.toStringAsFixed(0)}';
+  }
+
+  Widget _buildInfoItem(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.primaryColor.withOpacity(0.6)),
+        const SizedBox(width: 6),
         Text(
-          '$score% Phù hợp',
-          style: GoogleFonts.outfit(
+          label,
+          style: GoogleFonts.workSans(
             fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.w500,
+            color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7),
           ),
         ),
       ],
     );
   }
+
+
 
   Widget _buildTag(BuildContext context, String label, IconData icon) {
     final theme = Theme.of(context);

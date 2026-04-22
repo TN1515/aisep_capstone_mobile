@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/investor_model.dart';
+import 'package:aisep_capstone_mobile/core/utils/ui_utils.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/config/app_config.dart';
 
@@ -56,19 +57,26 @@ class InvestorProfileHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: accentColor.withOpacity(0.5), width: 2),
                 ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: accentColor.withOpacity(0.1),
-                  backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(
-                          investor.avatarUrl!.startsWith('http')
-                              ? investor.avatarUrl!
-                              : '${AppConfig.apiBaseUrl}${investor.avatarUrl!.startsWith('/') ? '' : '/'}${investor.avatarUrl!}'
-                        )
-                      : null,
-                  child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
-                      ? Icon(LucideIcons.user, color: accentColor, size: 40)
-                      : null,
+                child: GestureDetector(
+                  onTap: () {
+                    final String? url = UIUtils.getFullImageUrl(investor.avatarUrl);
+                    if (url != null) {
+                      UIUtils.showImagePreview(context, imageUrl: url, tag: 'investor_profile_avatar_${investor.id}');
+                    }
+                  },
+                  child: Hero(
+                    tag: 'investor_profile_avatar_${investor.id}',
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: accentColor.withOpacity(0.1),
+                      backgroundImage: (investor.avatarUrl != null && investor.avatarUrl!.isNotEmpty)
+                          ? NetworkImage(UIUtils.getFullImageUrl(investor.avatarUrl)!)
+                          : null,
+                      child: (investor.avatarUrl == null || investor.avatarUrl!.isEmpty)
+                          ? Icon(LucideIcons.user, color: accentColor, size: 40)
+                          : null,
+                    ),
+                  ),
                 ),
               ),
               if (investor.isVerified)
@@ -97,7 +105,7 @@ class InvestorProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${investor.position}${investor.organization != null ? ' • ${investor.organization}' : ''}',
+            '${investor.position}${investor.organization != null ? ' tại ${investor.organization}' : ''}',
             style: GoogleFonts.workSans(
               fontSize: 14,
               color: textColor.withOpacity(0.6),
@@ -107,14 +115,61 @@ class InvestorProfileHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildMetric(context, LucideIcons.sparkles, '${(investor.matchScore * 100).toInt()}%', 'Phù hợp'),
-              const SizedBox(width: 40),
-              _buildMetric(context, LucideIcons.globe, investor.marketScope, 'Phạm vi'),
+              _buildMetric(
+                context, 
+                LucideIcons.users, 
+                '${investor.acceptedConnectionCount}', 
+                'Đã kết nối'
+              ),
+              Container(
+                height: 30,
+                width: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                color: theme.dividerColor.withOpacity(0.1),
+              ),
+              _buildMetric(
+                context, 
+                LucideIcons.dollarSign, 
+                _formatTicketSize(investor),
+                'Quy mô'
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  String _formatTicketSize(InvestorModel investor) {
+    if (investor.ticketSizeMin == null && investor.ticketSizeMax == null) return 'Liên hệ';
+    
+    String format(double? val) {
+      if (val == null) return '';
+      double value = val;
+      String unit = 'K';
+      
+      if (value >= 1000000) {
+        value /= 1000000;
+        unit = 'M';
+      } else if (value >= 1000) {
+        value /= 1000;
+        unit = 'K';
+      } else {
+        // If it's already small (e.g. 50), keep it as is assuming it's in K
+        unit = 'K';
+      }
+      
+      // Remove .0 if it exists
+      String formatted = value.toString();
+      if (formatted.endsWith('.0')) {
+        formatted = formatted.substring(0, formatted.length - 2);
+      }
+      return '\$$formatted$unit';
+    }
+
+    if (investor.ticketSizeMin == null) return '< ${format(investor.ticketSizeMax)}';
+    if (investor.ticketSizeMax == null) return '> ${format(investor.ticketSizeMin)}';
+    return '${format(investor.ticketSizeMin)} - ${format(investor.ticketSizeMax)}';
   }
 
   Widget _buildMetric(BuildContext context, IconData icon, String value, String label) {

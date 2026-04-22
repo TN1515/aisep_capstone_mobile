@@ -41,6 +41,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
         builder: (context, child) {
           return Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            resizeToAvoidBottomInset: false,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -142,7 +143,7 @@ class _ConnectionsViewState extends State<ConnectionsView> {
           child: vm.discoveryResults.isEmpty && vm.searchQuery.isNotEmpty
               ? _buildEmptyState('Không tìm thấy nhà đầu tư phù hợp.')
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
                   itemCount: vm.discoveryResults.length,
                   itemBuilder: (context, index) {
                     return _buildInterestedItem(vm.discoveryResults[index]);
@@ -191,10 +192,11 @@ class _ConnectionsViewState extends State<ConnectionsView> {
       },
       color: Theme.of(context).primaryColor,
       child: ListView.builder(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
         itemCount: items.length,
         itemBuilder: (context, index) {
-          final connection = items[index];
+          final rawConnection = items[index];
+          final connection = vm.enrichConnection(rawConnection);
           return ConnectionRequestCard(
             connection: connection,
             onTap: () {
@@ -213,89 +215,243 @@ class _ConnectionsViewState extends State<ConnectionsView> {
 
   void _showFilterSheet(BuildContext context) {
     final vm = ConnectionViewModel();
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      builder: (_) => AnimatedBuilder(
-        animation: vm,
-        builder: (context, _) => Container(
-          padding: EdgeInsets.fromLTRB(32, 24, 32, MediaQuery.of(context).padding.bottom + 24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Bộ lọc nâng cao',
-                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.displayLarge?.color),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Bộ lọc nâng cao',
+                    style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      vm.resetFilters();
+                      setSheetState(() {});
+                    },
+                    child: Text('Thiết lập lại', style: GoogleFonts.workSans(color: theme.primaryColor)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              _buildFilterDropdown(
+                context, 
+                'Giai đoạn', 
+                ConnectionViewModel.stagesOptions,
+                vm.selectedStages.firstOrNull,
+                (val) {
+                  if (val != null) {
+                    vm.toggleStage(val);
+                    setSheetState(() {});
+                  }
+                }
+              ),
+              const SizedBox(height: 16),
+
+              _buildFilterDropdown(
+                context, 
+                'Ngành nghề ưu tiên', 
+                ConnectionViewModel.industriesOptions,
+                vm.selectedIndustries.firstOrNull,
+                (val) {
+                  if (val != null) {
+                    vm.toggleIndustry(val);
+                    setSheetState(() {});
+                  }
+                }
+              ),
+              const SizedBox(height: 16),
+
+              _buildFilterDropdown(
+                context, 
+                'Quy mô đầu tư', 
+                ConnectionViewModel.dealSizeOptions,
+                vm.selectedDealSize,
+                (val) {
+                  vm.setSelectedDealSize(val);
+                  setSheetState(() {});
+                }
+              ),
+              
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(
+                    'Áp dụng bộ lọc', 
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, 
+                      color: theme.brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white,
                     ),
-                    TextButton(
-                      onPressed: () => vm.resetFilters(),
-                      child: Text('Thiết lập lại', style: GoogleFonts.workSans(color: Theme.of(context).primaryColor)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                _buildFilterLabel('GIAI ĐOẠN ĐẦU TƯ'),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildSheetChip('Seed', vm.selectedStages.contains('Seed'), () => vm.toggleStage('Seed')),
-                    _buildSheetChip('Series A', vm.selectedStages.contains('Series A'), () => vm.toggleStage('Series A')),
-                    _buildSheetChip('Series B', vm.selectedStages.contains('Series B'), () => vm.toggleStage('Series B')),
-                    _buildSheetChip('IPO', vm.selectedStages.contains('IPO'), () => vm.toggleStage('IPO')),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildFilterLabel('LĨNH VỰC'),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildSheetChip('AI & Data', vm.selectedIndustries.contains('AI & Data'), () => vm.toggleIndustry('AI & Data')),
-                    _buildSheetChip('Fintech', vm.selectedIndustries.contains('Fintech'), () => vm.toggleIndustry('Fintech')),
-                    _buildSheetChip('EdTech', vm.selectedIndustries.contains('EdTech'), () => vm.toggleIndustry('EdTech')),
-                    _buildSheetChip('Blockchain', vm.selectedIndustries.contains('Blockchain'), () => vm.toggleIndustry('Blockchain')),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                _buildFilterLabel('QUY MÔ ĐẦU TƯ'),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildSheetChip('< \$500k', vm.selectedDealSize == '< \$500k', () => vm.setSelectedDealSize('< \$500k')),
-                    _buildSheetChip('\$500k - \$2M', vm.selectedDealSize == '\$500k - \$2M', () => vm.setSelectedDealSize('\$500k - \$2M')),
-                    _buildSheetChip('\$2M+', vm.selectedDealSize == '\$2M+', () => vm.setSelectedDealSize('\$2M+')),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Text('Áp dụng bộ lọc', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? StartupOnboardingTheme.navyBg : Colors.white)),
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown(
+    BuildContext context, 
+    String label, 
+    List<String> options, 
+    String? selectedValue,
+    Function(String?) onChanged
+  ) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          child: Text(
+            label.toUpperCase(),
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+              color: theme.primaryColor.withOpacity(0.5),
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _showSelectionModal(context, label, options, selectedValue, onChanged),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedValue ?? 'Chọn $label',
+                    style: GoogleFonts.workSans(
+                      color: selectedValue != null ? textColor : textColor.withOpacity(0.3),
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Icon(LucideIcons.chevronDown, size: 16, color: theme.primaryColor),
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  void _showSelectionModal(
+    BuildContext context, 
+    String title, 
+    List<String> options, 
+    String? selectedValue,
+    Function(String?) onChanged
+  ) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Prominent Drag Handle
+            Container(
+              width: 36,
+              height: 5,
+              decoration: BoxDecoration(
+                color: theme.dividerColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2.5),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: options.length,
+                separatorBuilder: (context, index) => Divider(height: 1, color: theme.dividerColor.withOpacity(0.05)),
+                itemBuilder: (context, index) {
+                  final option = options[index];
+                  final isSelected = option == selectedValue;
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        // Small delay to show the splash effect
+                        onChanged(option);
+                        await Future.delayed(const Duration(milliseconds: 150));
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                      splashColor: Colors.black.withOpacity(0.1),
+                      highlightColor: Colors.black.withOpacity(0.05),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                option,
+                                style: GoogleFonts.workSans(
+                                  fontSize: 13,
+                                  color: isSelected ? theme.primaryColor : textColor,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            if (isSelected) 
+                              Icon(Icons.check_circle, color: theme.primaryColor, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

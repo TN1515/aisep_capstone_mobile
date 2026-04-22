@@ -4,6 +4,7 @@ import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/connection_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/ui_utils.dart';
 import '../../../../core/config/app_config.dart';
 
 class ConnectionCard extends StatelessWidget {
@@ -50,7 +51,6 @@ class ConnectionCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildStatusBadge(),
-                    _buildMatchScore(),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -60,24 +60,31 @@ class ConnectionCard extends StatelessWidget {
                   children: [
                     Stack(
                       children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: accentColor.withOpacity(0.1),
-                          backgroundImage: (connection.investorAvatarUrl != null && connection.investorAvatarUrl!.isNotEmpty)
-                              ? NetworkImage(
-                                  connection.investorAvatarUrl!.startsWith('http')
-                                      ? connection.investorAvatarUrl!
-                                      : '${AppConfig.apiBaseUrl}${connection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${connection.investorAvatarUrl!}'
-                                )
-                              : null,
-                          child: (connection.investorAvatarUrl == null || connection.investorAvatarUrl!.isEmpty)
-                              ? Icon(
-                                  connection.role == ConnectionRole.investor 
-                                    ? LucideIcons.briefcase 
-                                    : LucideIcons.graduationCap,
-                                  color: accentColor,
-                                )
-                              : null,
+                        GestureDetector(
+                          onTap: () {
+                            final String? url = UIUtils.getFullImageUrl(connection.investorAvatarUrl);
+                            if (url != null) {
+                              UIUtils.showImagePreview(context, imageUrl: url, tag: 'conn_avatar_${connection.id}');
+                            }
+                          },
+                          child: Hero(
+                            tag: 'conn_avatar_${connection.id}',
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: accentColor.withOpacity(0.1),
+                              backgroundImage: (connection.investorAvatarUrl != null && connection.investorAvatarUrl!.isNotEmpty)
+                                  ? NetworkImage(UIUtils.getFullImageUrl(connection.investorAvatarUrl)!)
+                                  : null,
+                              child: (connection.investorAvatarUrl == null || connection.investorAvatarUrl!.isEmpty)
+                                  ? Icon(
+                                      connection.role == ConnectionRole.investor 
+                                        ? LucideIcons.briefcase 
+                                        : LucideIcons.graduationCap,
+                                      color: accentColor,
+                                    )
+                                  : null,
+                            ),
+                          ),
                         ),
                         if (connection.isVerified)
                           Positioned(
@@ -252,23 +259,6 @@ class ConnectionCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMatchScore() {
-    final score = (connection.matchScore * 100).toInt();
-    return Row(
-      children: [
-        Icon(LucideIcons.sparkles, color: StartupOnboardingTheme.goldAccent, size: 14),
-        const SizedBox(width: 4),
-        Text(
-          '$score% Phù hợp',
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: StartupOnboardingTheme.goldAccent,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildTag(String label) {
     return Container(

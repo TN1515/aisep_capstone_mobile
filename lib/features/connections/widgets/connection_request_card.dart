@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import '../models/connection_model.dart';
 import 'connection_status_badge.dart';
+import '../../../../core/utils/ui_utils.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/config/app_config.dart';
@@ -96,25 +97,32 @@ class ConnectionRequestCard extends StatelessWidget {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: statusColor.withOpacity(0.2), width: 1),
-                            ),
-                            child: CircleAvatar(
-                              radius: 24,
-                              backgroundColor: statusColor.withOpacity(0.1),
-                              backgroundImage: (connection.investorAvatarUrl != null && connection.investorAvatarUrl!.isNotEmpty)
-                                  ? NetworkImage(
-                                      connection.investorAvatarUrl!.startsWith('http')
-                                          ? connection.investorAvatarUrl!
-                                          : '${AppConfig.apiBaseUrl}${connection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${connection.investorAvatarUrl!}'
-                                    )
-                                  : null,
-                              child: (connection.investorAvatarUrl == null || connection.investorAvatarUrl!.isEmpty)
-                                  ? Icon(LucideIcons.user, color: statusColor, size: 20)
-                                  : null,
+                          GestureDetector(
+                            onTap: () {
+                              final String? url = UIUtils.getFullImageUrl(connection.investorAvatarUrl);
+                              if (url != null) {
+                                UIUtils.showImagePreview(context, imageUrl: url, tag: 'conn_avatar_${connection.id}');
+                              }
+                            },
+                            child: Hero(
+                              tag: 'conn_avatar_${connection.id}',
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: statusColor.withOpacity(0.2), width: 1),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: statusColor.withOpacity(0.1),
+                                  backgroundImage: (connection.investorAvatarUrl != null && connection.investorAvatarUrl!.isNotEmpty)
+                                      ? NetworkImage(UIUtils.getFullImageUrl(connection.investorAvatarUrl)!)
+                                      : null,
+                                  child: (connection.investorAvatarUrl == null || connection.investorAvatarUrl!.isEmpty)
+                                      ? Icon(LucideIcons.user, color: statusColor, size: 20)
+                                      : null,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -131,7 +139,7 @@ class ConnectionRequestCard extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '${connection.position}${connection.organization != null ? ' • ${connection.organization}' : ''}',
+                                  '${connection.position}${connection.organization != null ? ' tại ${connection.organization}' : ''}',
                                   style: GoogleFonts.workSans(
                                     fontSize: 11,
                                     color: textColor.withOpacity(0.6),

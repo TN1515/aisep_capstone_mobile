@@ -15,9 +15,8 @@ import '../../messages/models/chat_model.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/config/app_config.dart';
 
-class ConnectionRequestDetailView extends StatelessWidget {
+class ConnectionRequestDetailView extends StatefulWidget {
   final ConnectionModel connection;
-  // In a real app, we'd fetch the full RequestModel using requestId
   final String? requestId;
 
   const ConnectionRequestDetailView({
@@ -27,17 +26,33 @@ class ConnectionRequestDetailView extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ConnectionRequestDetailView> createState() => _ConnectionRequestDetailViewState();
+}
+
+class _ConnectionRequestDetailViewState extends State<ConnectionRequestDetailView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch full investor profile in background to get the correct 'investorType/title'
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectionViewModel.instance.loadInvestorDetail(widget.connection.investorId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final viewModel = ConnectionViewModel();
+    final viewModel = ConnectionViewModel.instance;
     final theme = Theme.of(context);
     final Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
 
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, child) {
-        // Luôn tìm bản ghi mới nhất từ ViewModel để đảm bảo UI cập nhật
-        final latestConnection = (viewModel.sentRequests.followedBy(viewModel.receivedRequests))
-            .firstWhere((c) => c.id == connection.id, orElse: () => connection);
+        // Find latest connection status and enrich with profile data
+        final rawConnection = (viewModel.sentRequests.followedBy(viewModel.receivedRequests))
+            .firstWhere((c) => c.id == widget.connection.id, orElse: () => widget.connection);
+        
+        final currentConnection = viewModel.enrichConnection(rawConnection);
 
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -55,20 +70,20 @@ class ConnectionRequestDetailView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileSummary(context, latestConnection),
+                _buildProfileSummary(context, currentConnection),
                 const SizedBox(height: 32),
-                _buildMessageSection(context, latestConnection, textColor),
+                _buildMessageSection(context, currentConnection, textColor),
                 const SizedBox(height: 32),
-                if (latestConnection.status == ConnectionStatus.accepted) ...[
-                  _buildInfoRequestsSection(context, viewModel, latestConnection),
+                if (currentConnection.status == ConnectionStatus.accepted) ...[
+                  _buildInfoRequestsSection(context, viewModel, currentConnection),
                   const SizedBox(height: 32),
                 ],
-                _buildTimelineSection(context, latestConnection, textColor),
+                _buildTimelineSection(context, currentConnection, textColor),
                 const SizedBox(height: 100),
               ],
             ),
           ),
-          bottomNavigationBar: _buildBottomActions(context, viewModel, latestConnection),
+          bottomNavigationBar: _buildBottomActions(context, viewModel, currentConnection),
         );
       },
     );
@@ -79,64 +94,102 @@ class ConnectionRequestDetailView extends StatelessWidget {
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
     
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: theme.primaryColor.withOpacity(0.1),
-                backgroundImage: (currentConnection.investorAvatarUrl != null && currentConnection.investorAvatarUrl!.isNotEmpty)
-                    ? NetworkImage(
-                        currentConnection.investorAvatarUrl!.startsWith('http')
-                            ? currentConnection.investorAvatarUrl!
-                            : '${AppConfig.apiBaseUrl}${currentConnection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${currentConnection.investorAvatarUrl!}'
-                      )
-                    : null,
-                child: (currentConnection.investorAvatarUrl == null || currentConnection.investorAvatarUrl!.isEmpty)
-                    ? Icon(LucideIcons.user, color: theme.primaryColor, size: 24)
-                    : null,
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: theme.primaryColor.withOpacity(0.2), width: 1.5),
+                ),
+                child: CircleAvatar(
+                  radius: 36,
+                  backgroundColor: theme.primaryColor.withOpacity(0.1),
+                  backgroundImage: (currentConnection.investorAvatarUrl != null && currentConnection.investorAvatarUrl!.isNotEmpty)
+                      ? NetworkImage(
+                          currentConnection.investorAvatarUrl!.startsWith('http')
+                              ? currentConnection.investorAvatarUrl!
+                              : '${AppConfig.apiBaseUrl}${currentConnection.investorAvatarUrl!.startsWith('/') ? '' : '/'}${currentConnection.investorAvatarUrl!}'
+                        )
+                      : null,
+                  child: (currentConnection.investorAvatarUrl == null || currentConnection.investorAvatarUrl!.isEmpty)
+                      ? Icon(LucideIcons.user, color: theme.primaryColor, size: 30)
+                      : null,
+                ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 20),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      currentConnection.name,
-                      style: GoogleFonts.outfit(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        currentConnection.name,
+                        maxLines: 1,
+                        style: GoogleFonts.outfit(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      '${currentConnection.position}${currentConnection.organization != null ? ' • ${currentConnection.organization}' : ''}',
+                      '${currentConnection.position}${currentConnection.organization != null ? ' tại ${currentConnection.organization}' : ''}',
                       style: GoogleFonts.workSans(
-                        fontSize: 13,
-                        color: textColor.withOpacity(0.6),
+                        fontSize: 14,
+                        color: textColor.withOpacity(0.5),
                       ),
                     ),
                   ],
                 ),
               ),
-              ConnectionStatusBadge(status: currentConnection.status),
             ],
           ),
-          const SizedBox(height: 20),
-          Divider(color: theme.dividerColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildCompactMetric(context, 'Độ phù hợp', '${(currentConnection.matchScore * 100).toInt()}%'),
-              _buildCompactMetric(context, 'Cập nhật', DateFormat('dd/MM/yyyy').format(currentConnection.lastUpdated)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Cập nhật',
+                    style: GoogleFonts.workSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: textColor.withOpacity(0.4),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('dd/MM/yyyy').format(currentConnection.createdAt.toLocal()),
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+              ConnectionStatusBadge(status: currentConnection.status),
             ],
           ),
         ],
@@ -163,6 +216,8 @@ class ConnectionRequestDetailView extends StatelessWidget {
 
   Widget _buildMessageSection(BuildContext context, ConnectionModel currentConnection, Color textColor) {
     final theme = Theme.of(context);
+    final hasMessage = currentConnection.message != null && currentConnection.message!.trim().isNotEmpty;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -170,20 +225,39 @@ class ConnectionRequestDetailView extends StatelessWidget {
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: theme.cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.primaryColor.withOpacity(0.1)),
-          ),
-          child: Text(
-            currentConnection.bio ?? 'Không có lời nhắn đi kèm.',
-            style: GoogleFonts.workSans(
-              fontSize: 14,
-              color: textColor.withOpacity(0.8),
-              height: 1.6,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: hasMessage ? theme.primaryColor.withOpacity(0.1) : theme.dividerColor.withOpacity(0.1),
             ),
           ),
+          child: hasMessage 
+            ? Text(
+                currentConnection.message!,
+                style: GoogleFonts.workSans(
+                  fontSize: 14,
+                  color: textColor.withOpacity(0.8),
+                  height: 1.6,
+                ),
+              )
+            : Row(
+                children: [
+                  Icon(LucideIcons.info, size: 16, color: theme.textTheme.bodySmall?.color?.withOpacity(0.4)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Đối tác không gửi kèm lời nhắn cho yêu cầu này.',
+                      style: GoogleFonts.workSans(
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: textColor.withOpacity(0.4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
         ),
       ],
     );
@@ -298,7 +372,7 @@ class ConnectionRequestDetailView extends StatelessWidget {
               Text(desc, style: GoogleFonts.workSans(fontSize: 11, color: textColor.withOpacity(0.4))),
               const SizedBox(height: 4),
               Text(
-                DateFormat('HH:mm - dd/MM/yyyy').format(time), 
+                DateFormat('HH:mm - dd/MM/yyyy').format(time.toLocal()), 
                 style: GoogleFonts.workSans(fontSize: 10, color: theme.primaryColor.withOpacity(0.5))
               ),
               const SizedBox(height: 20),

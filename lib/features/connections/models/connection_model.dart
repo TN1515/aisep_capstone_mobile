@@ -130,6 +130,7 @@ class ConnectionModel {
   final DateTime updatedAt;
   final int? conversationId; // New field to check if chat exists
 
+  final String? investorType; // e.g. Individual Angel, Venture Capital
   final bool isReceived; // To distinguish incoming vs outgoing in the UI
 
   ConnectionModel({
@@ -147,6 +148,7 @@ class ConnectionModel {
     required this.updatedAt,
     this.isReceived = false,
     this.conversationId,
+    this.investorType,
   });
 
   factory ConnectionModel.fromJson(Map<String, dynamic> json) {
@@ -154,19 +156,25 @@ class ConnectionModel {
     final idVal = json['id'] ?? json['Id'] ?? json['connectionID'] ?? json['ConnectionID'];
     final statusVal = json['status'] ?? json['Status'] ?? json['connectionStatus'] ?? json['ConnectionStatus'] ?? json['requestStatus'] ?? json['RequestStatus'];
     final msgVal = json['message'] ?? json['Message'] ?? json['personalizedMessage'] ?? json['PersonalizedMessage'] ?? json['note'] ?? json['Note'];
-    final createdVal = json['createdAt'] ?? json['CreatedAt'] ?? json['requestedAt'] ?? json['RequestedAt'] ?? json['createdDate'] ?? json['CreatedDate'];
-    final updatedVal = json['updatedAt'] ?? json['UpdatedAt'] ?? json['respondedAt'] ?? json['RespondedAt'] ?? json['modifiedDate'] ?? json['ModifiedDate'];
-
     // Nested parsing support: check if investor info is wrapped in "investor", "partner", "user", "advisor"
     final partnerData = json['investor'] ?? json['Investor'] ?? json['partner'] ?? json['Partner'] ?? json['user'] ?? json['User'] ?? json['advisor'] ?? json['Advisor'];
     final Map<String, dynamic> targetJson = (partnerData is Map<String, dynamic>) ? partnerData : json;
 
+    final createdVal = json['createdAt'] ?? json['CreatedAt'] ?? json['requestedAt'] ?? json['RequestedAt'] ?? json['requested_at'] ?? json['requestAt'] ?? json['createdDate'] ?? json['CreatedDate'] ?? json['created_at'] ??
+                       targetJson['createdAt'] ?? targetJson['CreatedAt'] ?? targetJson['requestedAt'] ?? targetJson['RequestedAt'] ?? targetJson['requested_at'] ?? targetJson['requestAt'];
+    final updatedVal = json['updatedAt'] ?? json['UpdatedAt'] ?? json['respondedAt'] ?? json['RespondedAt'] ?? json['responded_at'] ?? json['respondedAt'] ?? json['modifiedDate'] ?? json['ModifiedDate'] ?? json['updated_at'] ?? json['modified_at'] ??
+                       targetJson['updatedAt'] ?? targetJson['UpdatedAt'] ?? targetJson['respondedAt'] ?? targetJson['RespondedAt'] ?? targetJson['responded_at'] ?? targetJson['respondedAt'];
+
     // Super-resilient avatar key search
     final avatarUrlVal = json['avatarUrl'] ?? json['AvatarUrl'] ?? json['AvatarURL'] ?? 
+                        json['profilePhotoURL'] ?? json['ProfilePhotoURL'] ?? json['ProfilePhotoUrl'] ??
+                        json['investorPhotoURL'] ?? json['InvestorPhotoURL'] ??
                         json['profileImage'] ?? json['ProfileImage'] ?? 
                         json['imageUrl'] ?? json['ImageUrl'] ?? 
                         json['picture'] ?? json['Picture'] ??
                         targetJson['avatarUrl'] ?? targetJson['AvatarUrl'] ?? targetJson['AvatarURL'] ??
+                        targetJson['profilePhotoURL'] ?? targetJson['ProfilePhotoURL'] ?? targetJson['ProfilePhotoUrl'] ??
+                        targetJson['investorPhotoURL'] ?? targetJson['InvestorPhotoURL'] ??
                         targetJson['investorAvatarUrl'] ?? targetJson['InvestorAvatarUrl'] ??
                         targetJson['profileImage'] ?? targetJson['ProfileImage'] ??
                         targetJson['imageUrl'] ?? targetJson['ImageUrl'] ??
@@ -185,13 +193,15 @@ class ConnectionModel {
       role: (json['role'] ?? json['Role'] ?? targetJson['role'] ?? targetJson['Role'])?.toString() == 'Advisor' ? ConnectionRole.advisor : ConnectionRole.investor,
       isVerified: (targetJson['isVerified'] ?? targetJson['IsVerified'] ?? targetJson['profileStatus'] == 'Approved' ?? targetJson['ProfileStatus'] == 'Approved') == true,
       tags: (targetJson['tags'] ?? targetJson['Tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      createdAt: DateTimeUtils.parseApiDate(createdVal),
-      updatedAt: DateTimeUtils.parseApiDate(updatedVal),
+      createdAt: DateTimeUtils.parseRaw(createdVal),
+      updatedAt: DateTimeUtils.parseRaw(updatedVal),
       conversationId: (json['conversationId'] ?? json['ConversationId']) != null ? int.tryParse((json['conversationId'] ?? json['ConversationId']).toString()) : null,
+      investorType: (json['investorType'] ?? json['InvestorType'] ?? json['investor_type'] ?? json['investorTypeName'] ?? json['investor_type_name'] ?? json['type'] ?? json['Type'] ?? json['title'] ??
+                     targetJson['investorType'] ?? targetJson['InvestorType'] ?? targetJson['investor_type'] ?? targetJson['investorTypeName'] ?? targetJson['investor_type_name'] ?? targetJson['type'] ?? targetJson['Type'] ?? targetJson['title'])?.toString(),
     );
   }
 
-  ConnectionModel copyWith({ConnectionStatus? status, int? conversationId, bool? isReceived}) {
+  ConnectionModel copyWith({ConnectionStatus? status, int? conversationId, bool? isReceived, String? investorType}) {
     return ConnectionModel(
       id: id,
       investorId: investorId,
@@ -207,13 +217,26 @@ class ConnectionModel {
       updatedAt: updatedAt,
       isReceived: isReceived ?? this.isReceived,
       conversationId: conversationId ?? this.conversationId,
+      investorType: investorType ?? this.investorType,
     );
   }
 
   // --- Legacy Compatibility ---
   String get name => investorName;
   String? get organization => investorOrganization;
-  String get position => role == ConnectionRole.advisor ? 'Cố vấn' : 'Nhà đầu tư';
+  String get position {
+    if (investorType == null || investorType!.isEmpty) {
+      return role == ConnectionRole.advisor ? 'Cố vấn' : 'Nhà đầu tư';
+    }
+    
+    // Format: INDIVIDUAL_ANGEL -> Individual Angel
+    return investorType!
+        .replaceAll('_', ' ')
+        .toLowerCase()
+        .split(' ')
+        .map((word) => word.isEmpty ? word : '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
+  }
   DateTime get lastUpdated => updatedAt;
   String? get bio => message;
   double get matchScore => 0.0; // Use real data or default to 0 to trigger hidden indicator

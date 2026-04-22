@@ -5,10 +5,33 @@ import '../models/investor_model.dart';
 import '../models/information_request_model.dart';
 import '../services/connection_service.dart';
 import '../../messages/services/message_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 
 class ConnectionViewModel extends ChangeNotifier {
   final ConnectionService _service = ConnectionService();
   final MessageService _messageService = MessageService();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String _favoritesKey = 'favorite_investor_ids';
+
+  // Filter Constants
+  static const List<String> stagesOptions = ['Idea', 'Pre-Seed', 'Seed', 'Growth'];
+  
+  static const List<String> industriesOptions = [
+    'Agri & FoodTech', 'AI in Diagnosis & Clinical Decision Support', 'Appointment & Health Records',
+    'B2B Commerce', 'B2C Marketplace', 'Blockchain & Digital Assets', 'Coding & STEM Education',
+    'Cold Chain Infrastructure', 'CRM & Sales Tools', 'Data Analytics & BI', 'Developer Tools & DevOps',
+    'E-Commerce', 'EdTech', 'ERP & Operations', 'Farm Automation & Robotics', 'Farmer-to-Market Platforms',
+    'FinTech', 'Food & Grocery Delivery', 'Fulfillment & Delivery', 'HealthTech / MedTech',
+    'InsurTech', 'K-12 Learning Support', 'Language Learning', 'Marketing Tech', 'MOOCs & Skills Courses',
+    'Online Lending & Credit', 'Online Pharmacy', 'Payments & Digital Wallets', 'Personal Finance & Investing',
+    'Precision Agriculture', 'SaaS & Enterprise Software', 'Social Commerce', 'Telehealth',
+    'Traceability & Food Safety', 'Tutor Matching Platforms', 'Wearables & Health Tracking'
+  ];
+
+  static const List<String> dealSizeOptions = [
+    'Dưới \$50K', '\$50K - \$250K', '\$250K - \$1M', 'Từ \$1M'
+  ];
 
   // Singleton instance
   static final ConnectionViewModel instance = ConnectionViewModel._internal();
@@ -23,6 +46,7 @@ class ConnectionViewModel extends ChangeNotifier {
   List<ConnectionModel> _history = [];
   List<InvestorModel> _investors = [];
   List<InvestorModel> _aiInvestors = [];
+  Set<int> _localFavoriteIds = {};
   List<InfoRequestModel> _infoRequests = [];
   InvestorModel? _currentDetailedInvestor;
   
@@ -50,9 +74,47 @@ class ConnectionViewModel extends ChangeNotifier {
   }
   List<InvestorModel> get discoveryResults => _investors;
   List<InvestorModel> get aiRecommendations => _aiInvestors;
-  List<InvestorModel> get favoriteInvestors => _investors.where((i) => i.isFavorite).toList();
+  List<InvestorModel> get favoriteInvestors {
+    // Merge server-side favorites with local favorites
+    final Map<int, InvestorModel> favoritesMap = {};
+    
+    // Add server favorites
+    for (var i in _investors.where((i) => i.isFavorite)) {
+      favoritesMap[i.id] = i;
+    }
+    
+    // Add local favorites if they are in the current list
+    for (var i in _investors) {
+      if (_localFavoriteIds.contains(i.id)) {
+        favoritesMap[i.id] = i.copyWith(isFavorite: true);
+      }
+    }
+    
+    return favoritesMap.values.toList();
+  }
   List<InfoRequestModel> get infoRequests => _infoRequests;
   InvestorModel? get currentDetailedInvestor => _currentDetailedInvestor;
+  final Map<int, InvestorModel> _investorCache = {};
+
+  ConnectionModel enrichConnection(ConnectionModel conn) {
+    // 1. Check current detailed investor
+    if (_currentDetailedInvestor?.id == conn.investorId) {
+      return conn.copyWith(investorType: _currentDetailedInvestor!.investorType);
+    }
+    
+    // 2. Check cache
+    if (_investorCache.containsKey(conn.investorId)) {
+      return conn.copyWith(investorType: _investorCache[conn.investorId]!.investorType);
+    }
+    
+    // 3. Check discovery list
+    try {
+      final discoveryMatch = _investors.firstWhere((i) => i.id == conn.investorId);
+      return conn.copyWith(investorType: discoveryMatch.investorType);
+    } catch (_) {}
+    
+    return conn;
+  }
   
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -67,12 +129,14 @@ class ConnectionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _loadLocalFavorites();
       await Future.wait([
         loadInvestors(),
         loadAiRecommendations(),
         _loadReceived(),
         _loadSent(),
       ]);
+      _applyLocalFavorites();
     } catch (e) {
       log('ConnectionViewModel: Error during refreshAll: $e');
       _errorMessage = 'Không thể tải dữ liệu kết nối. Vui lòng thử lại.';
@@ -92,6 +156,7 @@ class ConnectionViewModel extends ChangeNotifier {
 
     if (response.isSuccess) {
       _investors = response.data ?? [];
+      _applyLocalFavorites();
     }
   }
 
@@ -109,7 +174,12 @@ class ConnectionViewModel extends ChangeNotifier {
 
     final response = await _service.getInvestorById(id);
     if (response.isSuccess && response.data != null) {
-      _currentDetailedInvestor = response.data;
+      var investor = response.data!;
+      if (_localFavoriteIds.contains(investor.id)) {
+        investor = investor.copyWith(isFavorite: true);
+      }
+      _currentDetailedInvestor = investor;
+      _investorCache[investor.id] = investor;
     } else {
       _errorMessage = response.message;
     }
@@ -269,18 +339,65 @@ class ConnectionViewModel extends ChangeNotifier {
     if (index != -1) {
       final isNowFavorite = !_investors[index].isFavorite;
       _investors[index] = _investors[index].copyWith(isFavorite: isNowFavorite);
+      
+      // Update local storage
+      if (isNowFavorite) {
+        _localFavoriteIds.add(investorId);
+      } else {
+        _localFavoriteIds.remove(investorId);
+      }
+      await _saveLocalFavorites();
+      
+      // Also update detailed view if applicable
+      if (_currentDetailedInvestor?.id == investorId) {
+        _currentDetailedInvestor = _currentDetailedInvestor!.copyWith(isFavorite: isNowFavorite);
+      }
+      
       notifyListeners();
       
       final response = await _service.addToWatchlist(investorId);
       if (!response.isSuccess) {
-        // Rollback on failure
-        _investors[index] = _investors[index].copyWith(isFavorite: !isNowFavorite);
-        notifyListeners();
-        return false;
+        // Rollback on failure is usually skipped for favorites to keep UX smooth,
+        // but since we want to be correct:
+        log('ConnectionViewModel: Server toggle failed, but kept local state for UX.');
+        // We keep local state even if server fails because server endpoint is missing
       }
       return true;
     }
     return false;
+  }
+
+  // --- Local Persistence Helpers ---
+  
+  Future<void> _loadLocalFavorites() async {
+    try {
+      final data = await _storage.read(key: _favoritesKey);
+      if (data != null) {
+        final List<dynamic> decoded = jsonDecode(data);
+        _localFavoriteIds = decoded.cast<int>().toSet();
+      }
+    } catch (e) {
+      log('ConnectionViewModel: Error loading local favorites: $e');
+    }
+  }
+
+  Future<void> _saveLocalFavorites() async {
+    try {
+      await _storage.write(key: _favoritesKey, value: jsonEncode(_localFavoriteIds.toList()));
+    } catch (e) {
+      log('ConnectionViewModel: Error saving local favorites: $e');
+    }
+  }
+
+  void _applyLocalFavorites() {
+    for (int i = 0; i < _investors.length; i++) {
+      if (_localFavoriteIds.contains(_investors[i].id)) {
+        _investors[i] = _investors[i].copyWith(isFavorite: true);
+      }
+    }
+    if (_currentDetailedInvestor != null && _localFavoriteIds.contains(_currentDetailedInvestor!.id)) {
+      _currentDetailedInvestor = _currentDetailedInvestor!.copyWith(isFavorite: true);
+    }
   }
 
   Future<bool> inviteConnection(int investorId, String message) async {
