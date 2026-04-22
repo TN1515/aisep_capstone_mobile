@@ -23,6 +23,7 @@ import 'package:aisep_capstone_mobile/features/notifications/view_models/notific
 import 'package:aisep_capstone_mobile/features/notifications/views/notifications_view.dart';
 import 'package:aisep_capstone_mobile/features/notifications/widgets/notification_tile.dart';
 import 'package:aisep_capstone_mobile/features/messages/views/chat_list_view.dart';
+import 'package:aisep_capstone_mobile/features/consulting/view_models/consulting_view_model.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
@@ -46,8 +47,70 @@ class _DashboardViewState extends State<DashboardView> {
     // Trigger history load for AI Status card accuracy
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final profileVm = context.read<StartupProfileViewModel>();
-      context.read<EvaluationViewModel>().loadHistory(profileVm.startupId);
+      final evalVm = context.read<EvaluationViewModel>();
+      final consultingVm = context.read<ConsultingViewModel>();
+      
+      // Load all dependencies
+      Future.wait<void>([
+        profileVm.loadProfile(),
+        evalVm.loadHistory(profileVm.startupId),
+        consultingVm.fetchMentorships(),
+      ]).then((_) {
+        _syncDashboardData();
+      });
     });
+  }
+
+  Future<void> _syncDashboardData() async {
+    if (!mounted) return;
+    
+    final profileVm = context.read<StartupProfileViewModel>();
+    final evalVm = context.read<EvaluationViewModel>();
+    final consultingVm = context.read<ConsultingViewModel>();
+
+    final profile = profileVm.profile;
+    
+    // Calculate Personal Profile Score (Hồ sơ cá nhân)
+    int personalFields = 0;
+    if (profile.fullNameOfApplicant.isNotEmpty) personalFields++;
+    if (profile.roleOfApplicant.isNotEmpty) personalFields++;
+    if (profile.contactEmail.isNotEmpty) personalFields++;
+    if (profile.phoneNumber.isNotEmpty) personalFields++;
+    if (profile.linkedInUrl.isNotEmpty) personalFields++;
+    if (profile.location.isNotEmpty) personalFields++;
+    double personalScore = personalFields / 6.0;
+
+    // Calculate KYC Progress
+    double kycProgress = 0.0;
+    final String kycStr = profile.kycStatus.toLowerCase();
+    if (kycStr.contains('đã xác thực') || kycStr.contains('verified')) {
+      kycProgress = 1.0;
+    } else if (kycStr.contains('chờ') || kycStr.contains('pending')) {
+      kycProgress = 0.5;
+    } else if (kycStr.contains('từ chối') || kycStr.contains('rejected')) {
+      kycProgress = 0.25;
+    }
+
+    // Get latest AI Score
+    int? latestAiScore;
+    final history = evalVm.history.where((e) => 
+      (e.status == EvaluationStatus.completed || e.status == EvaluationStatus.partial_completed) 
+      && e.overallScore != null
+    ).toList();
+    
+    if (history.isNotEmpty) {
+      latestAiScore = history.first.overallScore?.toInt();
+    }
+
+    await _viewModel.fetchDashboardData(
+      userName: profile.fullNameOfApplicant,
+      startupName: profile.startupName,
+      aiScore: latestAiScore,
+      advisorCount: consultingVm.usedRequests,
+      advisorProgress: consultingVm.subscriptionProgress,
+      kycProgress: kycProgress,
+      profileProgress: personalScore,
+    );
   }
 
   void _onTabTapped(int index) {
@@ -60,6 +123,7 @@ class _DashboardViewState extends State<DashboardView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      resizeToAvoidBottomInset: false,
       // Integration: Bottom Navigation Bar is now directly in DashboardView
       bottomNavigationBar: StartupBottomNavBar(
         currentIndex: _currentIndex,
@@ -116,7 +180,7 @@ class _DashboardViewState extends State<DashboardView> {
                 Text(_viewModel.error!, style: const TextStyle(color: Colors.white70)),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _viewModel.fetchDashboardData,
+                  onPressed: _syncDashboardData,
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -129,79 +193,117 @@ class _DashboardViewState extends State<DashboardView> {
           return const Center(child: Text('Không có dữ liệu', style: TextStyle(color: Colors.white70)));
         }
 
+        final profileVm = context.watch<StartupProfileViewModel>();
+        final profile = profileVm.profile;
+        final evalVm = context.watch<EvaluationViewModel>();
         final notiViewModel = context.watch<NotificationViewModel>();
+        final consultingVm = context.watch<ConsultingViewModel>();
+
+        // Calculate Personal Profile Score (Hồ sơ cá nhân)
+        double personalScore = 0;
+        int personalFields = 0;
+        if (profile.fullNameOfApplicant.isNotEmpty) personalFields++;
+        if (profile.roleOfApplicant.isNotEmpty) personalFields++;
+        if (profile.contactEmail.isNotEmpty) personalFields++;
+        if (profile.phoneNumber.isNotEmpty) personalFields++;
+        if (profile.linkedInUrl.isNotEmpty) personalFields++;
+        if (profile.location.isNotEmpty) personalFields++;
+        personalScore = personalFields / 6.0;
+
+        // Map String kycStatus to DashboardKycStatus enum
+        DashboardKycStatus currentKycStatus = DashboardKycStatus.none;
+        double kycProgress = 0.0;
+        final String kycStr = profile.kycStatus.toLowerCase();
+        if (kycStr.contains('đã xác thực') || kycStr.contains('verified')) {
+          currentKycStatus = DashboardKycStatus.verified;
+          kycProgress = 1.0;
+        } else if (kycStr.contains('chờ') || kycStr.contains('pending')) {
+          currentKycStatus = DashboardKycStatus.pending;
+          kycProgress = 0.5;
+        } else if (kycStr.contains('từ chối') || kycStr.contains('rejected')) {
+          currentKycStatus = DashboardKycStatus.rejected;
+          kycProgress = 0.25;
+        }
+
+        // Get latest AI Score from history
+        int? latestAiScore;
+        final latestEval = evalVm.history.firstWhere(
+          (e) => (e.status == EvaluationStatus.completed || e.status == EvaluationStatus.partial_completed) && e.overallScore != null,
+          orElse: () => EvaluationStatusResult(
+            runId: 0, startupId: 0, status: EvaluationStatus.queued, 
+            submittedAt: DateTime.now(), updatedAt: DateTime.now()
+          ),
+        );
+        if (latestEval.runId != 0) {
+          latestAiScore = latestEval.overallScore?.toInt();
+        }
+
+        final isEvaluating = evalVm.history.any((e) => 
+          e.status == EvaluationStatus.processing || e.status == EvaluationStatus.queued
+        );
 
         return RefreshIndicator(
           onRefresh: () async {
-            final profileVm = context.read<StartupProfileViewModel>();
-            await _viewModel.fetchDashboardData(
-              userName: profileVm.profile.fullNameOfApplicant,
-              startupName: profileVm.profile.startupName,
-            );
-            await notiViewModel.refresh();
+            // Làm mới song song Dashboard và Thông báo
+            await Future.wait<dynamic>([
+              profileVm.loadProfile(force: true),
+              evalVm.loadHistory(profileVm.startupId),
+              consultingVm.fetchMentorships(),
+              notiViewModel.refresh(),
+            ]);
+            
+            // Re-fetch dashboard data with new values
+            await _syncDashboardData();
           },
-                color: Theme.of(context).primaryColor,
-                backgroundColor: Theme.of(context).cardColor,
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    // Header is now part of the scrollable content inside the dashboard tab
-                    SliverToBoxAdapter(
-                      child: SafeArea(
-                        bottom: false,
-                        child: DashboardHeader(
-                          greeting: _viewModel.greeting,
-                          userName: _viewModel.userName,
-                          startupName: context.watch<StartupProfileViewModel>().profile.startupName,
-                          unreadCount: notiViewModel.unreadCount, // Dynamic unread count
-                          onNotificationTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => NotificationsView()),
-                            );
-                          },
-                          onProfileTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const StartupProfileView()),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+          color: Theme.of(context).primaryColor,
+          backgroundColor: Theme.of(context).cardColor,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  bottom: false,
+                  child: DashboardHeader(
+                    greeting: _viewModel.greeting,
+                    userName: profile.fullNameOfApplicant,
+                    startupName: profile.startupName,
+                    avatarUrl: profile.logoUrl,
+                    unreadCount: notiViewModel.unreadCount,
+                    onNotificationTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationsView()));
+                    },
+                    onProfileTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const StartupProfileView()));
+                    },
+                  ),
+                ),
+              ),
 
               // 1. Summary Header Banner
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
-                   child: Consumer<EvaluationViewModel>(
-                    builder: (context, evalVm, _) {
-                      final isProcessing = evalVm.history.any((e) => 
-                        e.status == EvaluationStatus.processing || e.status == EvaluationStatus.queued
+                  child: SummaryProgressCard(
+                    title: 'Hồ sơ cá nhân',
+                    profileCompletion: personalScore,
+                    kycStatus: currentKycStatus,
+                    aiScore: latestAiScore,
+                    isAiEvaluating: isEvaluating,
+                    onKycTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => KycFormView(
+                            isIncorporated: true,
+                            onBack: () => Navigator.pop(context),
+                          ),
+                        ),
                       );
-
-                      return SummaryProgressCard(
-                        profileCompletion: stats.profileCompletion,
-                        kycStatus: stats.kycStatus,
-                        aiScore: stats.aiEvaluationScore,
-                        isAiEvaluating: isProcessing,
-                        onKycTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => KycFormView(
-                                isIncorporated: true,
-                                onBack: () => Navigator.pop(context),
-                              ),
-                            ),
-                          );
-                        },
-                        onAiTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => EvaluationHistoryView()),
-                          );
-                        },
+                    },
+                    onAiTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => EvaluationHistoryView()),
                       );
                     },
                   ),
@@ -219,7 +321,7 @@ class _DashboardViewState extends State<DashboardView> {
                     crossAxisCount: 2,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 0.9,
+                    childAspectRatio: 1.15,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {

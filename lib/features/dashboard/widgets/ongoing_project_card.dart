@@ -41,29 +41,10 @@ class OngoingProjectCard extends StatelessWidget {
           splashColor: accentColor.withOpacity(0.1),
           highlightColor: accentColor.withOpacity(0.05),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      DateFormat('MMM dd, yyyy').format(task.date),
-                      style: GoogleFonts.workSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: secondaryTextColor,
-                      ),
-                    ),
-                    Icon(
-                      Icons.more_vert_rounded,
-                      size: 18,
-                      color: secondaryTextColor,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
                 Row(
                   children: [
                     Container(
@@ -96,7 +77,7 @@ class OngoingProjectCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            task.category,
+                            task.description,
                             style: GoogleFonts.workSans(
                               fontSize: 11,
                               color: secondaryTextColor,
@@ -108,56 +89,88 @@ class OngoingProjectCard extends StatelessWidget {
                   ],
                 ),
                 const Spacer(),
-                Text(
-                  'Progress',
-                  style: GoogleFonts.workSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: primaryTextColor.withOpacity(0.9),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      height: 4,
-                      width: double.infinity,
+                if (task.progress >= 1.0) ...[
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: theme.dividerColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(2),
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 14, color: Colors.green),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Đã hoàn thành',
+                            style: GoogleFonts.workSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    FractionallySizedBox(
-                      widthFactor: task.progress,
-                      child: Container(
+                  ),
+                  const SizedBox(height: 20),
+                ] else ...[
+                  Text(
+                    'Progress',
+                    style: GoogleFonts.workSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: primaryTextColor.withOpacity(0.9),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Stack(
+                    children: [
+                      Container(
                         height: 4,
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          color: accentColor,
+                          color: theme.dividerColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: accentColor.withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 0),
-                            ),
-                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '${(task.progress * 100).toInt()}%',
-                    style: GoogleFonts.workSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: secondaryTextColor,
+                      FractionallySizedBox(
+                        widthFactor: task.progress,
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: accentColor,
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: accentColor.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 0),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      task.unit == '%' 
+                          ? '${(task.progress * 100).toInt()}%'
+                          : '${(task.progress * 100).toInt()} ${task.unit}',
+                      style: GoogleFonts.workSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: secondaryTextColor,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

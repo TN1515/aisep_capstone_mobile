@@ -64,6 +64,7 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: StartupOnboardingTheme.navyBg,
+      resizeToAvoidBottomInset: false,
       // The body is wrapped in IndexedStack to preserve state between tabs
       body: IndexedStack(
         index: _currentIndex,

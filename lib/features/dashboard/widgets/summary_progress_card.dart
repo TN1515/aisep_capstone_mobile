@@ -5,6 +5,7 @@ import 'package:aisep_capstone_mobile/features/dashboard/models/dashboard_stats_
 import 'package:aisep_capstone_mobile/core/theme/app_colors.dart';
 
 class SummaryProgressCard extends StatelessWidget {
+  final String title;
   final double profileCompletion;
   final DashboardKycStatus kycStatus;
   final int? aiScore;
@@ -14,6 +15,7 @@ class SummaryProgressCard extends StatelessWidget {
 
   const SummaryProgressCard({
     Key? key,
+    this.title = 'Hồ sơ cá nhân',
     required this.profileCompletion,
     required this.kycStatus,
     this.aiScore,
@@ -60,7 +62,7 @@ class SummaryProgressCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hoàn thiện hồ sơ',
+                          title,
                           style: GoogleFonts.workSans(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -69,7 +71,9 @@ class SummaryProgressCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Hãy hoàn thiện 100% để tăng cơ hội kết nối với nhà đầu tư.',
+                          profileCompletion >= 1.0 
+                            ? 'Hồ sơ của bạn hiện đạt 100%. Hoàn thiện các mục còn thiếu để tăng 3x khả năng tiếp cận nhà đầu tư và nhận đánh giá AI chuyên sâu.'
+                            : 'Hãy hoàn thiện 100% để tăng cơ hội kết nối với nhà đầu tư.',
                           style: GoogleFonts.workSans(
                             fontSize: 12,
                             color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
@@ -175,10 +179,10 @@ class SummaryProgressCard extends StatelessWidget {
 
   String _getKycText() {
     switch (kycStatus) {
-      case DashboardKycStatus.none: return 'Cần gửi hồ sơ';
-      case DashboardKycStatus.pending: return 'Chờ duyệt';
+      case DashboardKycStatus.none: return 'Chưa xác thực';
+      case DashboardKycStatus.pending: return 'Đang chờ duyệt';
       case DashboardKycStatus.verified: return 'Đã xác thực';
-      case DashboardKycStatus.rejected: return 'Cần cập nhật';
+      case DashboardKycStatus.rejected: return 'Bị từ chối';
     }
   }
 
@@ -186,8 +190,8 @@ class SummaryProgressCard extends StatelessWidget {
     switch (kycStatus) {
       case DashboardKycStatus.none: return Colors.blueGrey;
       case DashboardKycStatus.pending: return Colors.orange;
-      case DashboardKycStatus.verified: return Colors.green;
-      case DashboardKycStatus.rejected: return Colors.red;
+      case DashboardKycStatus.verified: return AppColors.success;
+      case DashboardKycStatus.rejected: return AppColors.error;
     }
   }
 }

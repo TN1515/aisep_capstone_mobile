@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
-import 'package:lucide_icons/lucide_icons.dart'; // NEW
+import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/config/app_config.dart';
 
 class DashboardHeader extends StatelessWidget {
   final String greeting;
   final String userName;
   final String startupName;
   final int unreadCount;
+  final String? avatarUrl;
   final VoidCallback onNotificationTap;
   final VoidCallback onProfileTap;
 
@@ -17,12 +19,22 @@ class DashboardHeader extends StatelessWidget {
     required this.userName,
     required this.startupName,
     required this.unreadCount,
+    this.avatarUrl,
     required this.onNotificationTap,
     required this.onProfileTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accentColor = theme.primaryColor;
+    
+    // Resolve full image URL
+    final String? fullAvatarUrl = avatarUrl != null && avatarUrl!.isNotEmpty 
+        ? (avatarUrl!.startsWith('http') ? avatarUrl : '${AppConfig.apiBaseUrl}/$avatarUrl'.replaceAll('//', '/').replaceFirst('http:/', 'http://').replaceFirst('https:/', 'https://'))
+        : null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -36,7 +48,7 @@ class DashboardHeader extends StatelessWidget {
                   greeting,
                   style: GoogleFonts.workSans(
                     fontSize: 14,
-                    color: Theme.of(context).primaryColor.withOpacity(0.8),
+                    color: accentColor.withOpacity(0.8),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -46,7 +58,7 @@ class DashboardHeader extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.displayLarge?.color,
+                    color: theme.textTheme.displayLarge?.color,
                   ),
                 ),
               ],
@@ -58,7 +70,7 @@ class DashboardHeader extends StatelessWidget {
                 onPressed: onNotificationTap,
                 icon: Icon(
                   Icons.notifications_outlined,
-                  color: Theme.of(context).textTheme.displayLarge?.color,
+                  color: theme.textTheme.displayLarge?.color,
                 ),
               ),
               if (unreadCount > 0)
@@ -90,20 +102,31 @@ class DashboardHeader extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onProfileTap,
-            child: Container(
-              margin: const EdgeInsets.only(left: 8),
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.5)),
-                gradient: LinearGradient(
-                  colors: [Theme.of(context).cardColor, Colors.black.withOpacity(0.2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            child: Hero(
+              tag: 'dashboard_avatar',
+              child: Container(
+                margin: const EdgeInsets.only(left: 8),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: accentColor.withOpacity(0.5), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: accentColor.withOpacity(0.1),
+                  backgroundImage: fullAvatarUrl != null ? NetworkImage(fullAvatarUrl) : null,
+                  child: fullAvatarUrl == null 
+                      ? Icon(LucideIcons.user, color: accentColor, size: 20)
+                      : null,
                 ),
               ),
-              child: Icon(Icons.person_rounded, color: Theme.of(context).primaryColor, size: 24),
             ),
           ),
         ],

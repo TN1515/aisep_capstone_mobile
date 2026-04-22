@@ -38,30 +38,34 @@ class DashboardTask {
   final String title;
   final String description;
   final String actionText;
-  final VoidCallback onAction;
+  final VoidCallback? onAction;
   final DateTime? _date;
   final IconData? _icon;
   final String? _category;
   final double? _progress;
+  final String? _unit;
 
   DateTime get date => _date ?? DateTime.now();
   IconData get icon => _icon ?? Icons.folder_open_rounded;
   String get category => _category ?? 'Project';
   double get progress => _progress ?? 0.0;
+  String get unit => _unit ?? '%';
 
   DashboardTask({
     required this.title,
     required this.description,
     required this.actionText,
-    required this.onAction,
+    this.onAction,
     DateTime? date,
     IconData? icon,
     String? category,
     double? progress,
+    String? unit,
   })  : _date = date,
         _icon = icon,
         _category = category,
-        _progress = progress;
+        _progress = progress,
+        _unit = unit;
 }
 
 class RecentActivity {

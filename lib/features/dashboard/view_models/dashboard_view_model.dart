@@ -18,63 +18,73 @@ class DashboardViewModel extends BaseViewModel {
     return 'Chào buổi tối';
   }
 
-  Future<void> fetchDashboardData({String? userName, String? startupName}) async {
+  Future<void> fetchDashboardData({
+    String? userName, 
+    String? startupName,
+    int? aiScore,
+    int? advisorCount,
+    double? advisorProgress,
+    double? kycProgress,
+    double? profileProgress,
+  }) async {
     if (userName != null) _userName = userName;
     if (startupName != null) _startupName = startupName;
     setLoading(true);
     try {
-      // Mock API call - (Removing artificial delay for speed)
-      
       _stats = DashboardStats(
-        profileCompletion: 0.65,
-        kycStatus: DashboardKycStatus.pending,
-        aiEvaluationScore: 82,
-        documentCount: 12,
-        connectionCount: 5,
-        advisorCount: 3,
+        profileCompletion: profileProgress ?? 0.0,
+        kycStatus: DashboardKycStatus.none,
+        aiEvaluationScore: aiScore,
+        documentCount: 0,
+        connectionCount: 0,
+        advisorCount: advisorCount ?? 0,
         tasks: [
           DashboardTask(
-            title: 'Hồ sơ Startup',
-            description: 'Thông tin đội ngũ & sản phẩm',
-            actionText: 'Hoàn thiện',
-            onAction: () => debugPrint('Navigate to Profile'),
-            date: DateTime(2026, 4, 1),
-            icon: Icons.business_center_rounded,
-            category: 'Hồ sơ',
-            progress: 0.65,
-          ),
-          DashboardTask(
-            title: 'Xác thực KYC',
-            description: 'Xác thực định danh doanh nghiệp',
+            title: 'Xác thực',
+            description: 'Định danh doanh nghiệp',
             actionText: 'Tiếp tục',
             onAction: () => debugPrint('Navigate to KYC'),
-            date: DateTime(2026, 4, 2),
+            date: DateTime.now(),
             icon: Icons.verified_user_rounded,
             category: 'Pháp lý',
-            progress: 0.46,
+            progress: kycProgress ?? 0.0,
+            unit: '%',
           ),
           DashboardTask(
             title: 'Đánh giá AI',
-            description: 'Báo cáo phân tích chuyên sâu',
+            description: 'Phân tích chuyên sâu',
             actionText: 'Xem chi tiết',
             onAction: () => debugPrint('Navigate to AI Evaluation'),
-            date: DateTime(2026, 4, 3),
-            icon: Icons.analytics_rounded, // Analytics for AI score
+            date: DateTime.now(),
+            icon: Icons.analytics_rounded,
             category: 'AI Score',
-            progress: 0.82,
+            progress: aiScore != null ? (aiScore.toDouble() / 100.0) : 0.0,
+            unit: 'điểm',
           ),
           DashboardTask(
-            title: 'Advisor & Tư vấn',
-            description: 'Kết nối mạng lưới hỗ trợ',
+            title: 'Kết nối',
+            description: 'Nhà đầu tư',
+            actionText: 'Khám phá',
+            onAction: () => debugPrint('Navigate to Connections'),
+            date: DateTime.now(),
+            icon: Icons.handshake_rounded,
+            category: 'Kết nối',
+            progress: 0.1, // Placeholder progress
+            unit: 'lượt',
+          ),
+          DashboardTask(
+            title: 'Liên hệ',
+            description: 'Advisor & Tư vấn',
             actionText: 'Khám phá',
             onAction: () => debugPrint('Navigate to Consulting'),
-            date: DateTime(2026, 4, 3),
+            date: DateTime.now(),
             icon: Icons.chat_bubble_outline_rounded,
             category: 'Tư vấn',
-            progress: 0.24,
+            progress: advisorProgress ?? 0.0,
+            unit: 'lượt',
           ),
         ],
-        activities: [], // Real notifications are handled by NotificationViewModel
+        activities: [],
       );
     } catch (e) {
       setError('Không thể tải dữ liệu Dashboard. Vui lòng thử lại.');
