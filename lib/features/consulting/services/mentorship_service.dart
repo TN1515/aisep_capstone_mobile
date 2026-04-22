@@ -55,7 +55,7 @@ class MentorshipService {
     }
   }
 
-  Future<AdvisorModel?> getAdvisorDetail(String id) async {
+  Future<AdvisorModel?> getAdvisorDetail(int id) async {
     try {
       final response = await _dio.get('/api/advisors/$id');
       if (response.statusCode == 200) {
@@ -63,6 +63,7 @@ class MentorshipService {
       }
       return null;
     } catch (e) {
+      debugPrint('[API ERROR] getAdvisorDetail: $e');
       rethrow;
     }
   }
@@ -141,6 +142,34 @@ class MentorshipService {
       );
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<List<FeedbackDto>> getFeedbacks(int mentorshipId) async {
+    try {
+      final response = await _dio.get('/api/mentorships/$mentorshipId/feedbacks');
+      if (response.statusCode == 200) {
+        final List data = response.data['data'] ?? [];
+        return data.map((json) => FeedbackDto.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('[API ERROR] getFeedbacks: $e');
+      return [];
+    }
+  }
+
+  Future<List<FeedbackDto>> getAdvisorFeedbacks(int advisorId) async {
+    try {
+      final response = await _dio.get('/api/advisors/$advisorId/feedbacks');
+      if (response.statusCode == 200) {
+        final List data = response.data['data'] ?? [];
+        return data.map((json) => FeedbackDto.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('[API ERROR] getAdvisorFeedbacks: $e');
+      return [];
     }
   }
 

@@ -239,12 +239,12 @@ class ReportDto {
 class CreateFeedbackRequest {
   final int? sessionId;
   final int rating;
-  final String comment;
+  final String? comment;
 
   CreateFeedbackRequest({
     this.sessionId,
     required this.rating,
-    required this.comment,
+    this.comment,
   });
 
   Map<String, dynamic> toJson() => {
@@ -252,4 +252,36 @@ class CreateFeedbackRequest {
     'rating': rating,
     'comment': comment,
   };
+}
+
+class FeedbackDto {
+  final int feedbackID;
+  final int mentorshipID;
+  final int? sessionID;
+  final String fromRole;
+  final int rating;
+  final String? comment;
+  final DateTime submittedAt;
+
+  FeedbackDto({
+    required this.feedbackID,
+    required this.mentorshipID,
+    this.sessionID,
+    required this.fromRole,
+    required this.rating,
+    this.comment,
+    required this.submittedAt,
+  });
+
+  factory FeedbackDto.fromJson(Map<String, dynamic> json) {
+    return FeedbackDto(
+      feedbackID: json['feedbackID'] ?? 0,
+      mentorshipID: json['mentorshipID'] ?? 0,
+      sessionID: json['sessionID'],
+      fromRole: json['fromRole'] ?? 'Startup',
+      rating: json['rating'] ?? 0,
+      comment: json['comment'],
+      submittedAt: DateTimeUtils.parseApiDate(json['submittedAt'] ?? json['requestedAt']),
+    );
+  }
 }

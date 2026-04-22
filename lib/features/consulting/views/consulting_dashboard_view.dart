@@ -8,6 +8,7 @@ import 'package:aisep_capstone_mobile/features/consulting/views/mentorship_detai
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:aisep_capstone_mobile/core/utils/ui_utils.dart';
 
 class ConsultingDashboardView extends StatefulWidget {
   const ConsultingDashboardView({Key? key}) : super(key: key);
@@ -477,10 +478,10 @@ class _ConsultingDashboardViewState extends State<ConsultingDashboardView> {
                       child: CircleAvatar(
                         radius: 30, // Larger premium avatar
                         backgroundColor: theme.primaryColor.withOpacity(0.05),
-                        backgroundImage: item.advisorAvatar != null 
-                          ? NetworkImage(item.advisorAvatar!) 
+                        backgroundImage: (item.advisorAvatar != null && item.advisorAvatar!.isNotEmpty) 
+                          ? NetworkImage(UIUtils.getFullImageUrl(item.advisorAvatar!)!) 
                           : null,
-                        child: item.advisorAvatar == null 
+                        child: (item.advisorAvatar == null || item.advisorAvatar!.isEmpty) 
                           ? Icon(LucideIcons.user, color: theme.primaryColor.withOpacity(0.4), size: 30) 
                           : null,
                       ),

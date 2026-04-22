@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aisep_capstone_mobile/core/theme/startup_onboarding_theme.dart';
 import 'package:aisep_capstone_mobile/features/consulting/models/advisor_model.dart';
+import 'package:aisep_capstone_mobile/core/utils/ui_utils.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 
@@ -104,7 +105,7 @@ class AdvisorCard extends StatelessWidget {
                           Wrap(
                             spacing: 6,
                             runSpacing: 6,
-                            children: advisor.expertise.take(3).map((e) => _buildExpertiseChip(context, e)).toList(),
+                            children: advisor.expertise.take(3).map((e) => _buildExpertiseChip(context, UIUtils.formatExpertiseLabel(e))).toList(),
                           ),
                         ],
                       ),
@@ -112,20 +113,13 @@ class AdvisorCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Replaced Container-background with loose items and NO divider
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          _buildStatItem(context, LucideIcons.star, advisor.averageRating.toStringAsFixed(1), '(${advisor.reviewCount})', color: Colors.amber),
-                          const SizedBox(width: 16),
-                          _buildStatItem(context, LucideIcons.users, advisor.completedSessions.toString(), 'Học viên'),
-                        ],
-                      ),
-                    ),
-                    Column(
+                    _buildStatItem(context, LucideIcons.star, advisor.averageRating.toStringAsFixed(1), '(${advisor.reviewCount})', color: Colors.amber),
+                    const SizedBox(width: 16),
+                    _buildStatItem(context, LucideIcons.users, advisor.completedSessions.toString(), 'Học viên'),
+                    const Spacer(),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
@@ -138,7 +132,7 @@ class AdvisorCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '/ buổi',
+                          '/ giờ',
                           style: GoogleFonts.workSans(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
@@ -158,42 +152,40 @@ class AdvisorCard extends StatelessWidget {
   }
 
   Widget _buildAvatarLayout(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor.withOpacity(0.2),
-                Theme.of(context).primaryColor.withOpacity(0.01),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor.withOpacity(0.2),
+            Theme.of(context).primaryColor.withOpacity(0.01),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () {
+          final String? url = UIUtils.getFullImageUrl(advisor.profilePhotoURL);
+          if (url != null) {
+            UIUtils.showImagePreview(context, imageUrl: url, tag: 'advisor_avatar_${advisor.id}');
+          }
+        },
+        child: Hero(
+          tag: 'advisor_avatar_${advisor.id}',
           child: CircleAvatar(
             radius: 34,
             backgroundColor: Colors.grey.shade200,
-            backgroundImage: NetworkImage(advisor.profilePhotoURL),
+            backgroundImage: (advisor.profilePhotoURL.isNotEmpty)
+                ? NetworkImage(UIUtils.getFullImageUrl(advisor.profilePhotoURL)!)
+                : null,
+            child: (advisor.profilePhotoURL.isEmpty)
+                ? Icon(LucideIcons.user, color: Theme.of(context).primaryColor, size: 30)
+                : null,
           ),
         ),
-        if (advisor.isVerified)
-          Positioned(
-            right: 0,
-            top: 2,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade600,
-                shape: BoxShape.circle,
-                border: Border.all(color: Theme.of(context).cardColor, width: 2),
-              ),
-              child: const Icon(LucideIcons.check, size: 10, color: Colors.white),
-            ),
-          ),
-      ],
+      ),
     );
   }
 

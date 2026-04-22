@@ -19,13 +19,42 @@ class _AdvisorDiscoveryViewState extends State<AdvisorDiscoveryView> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _expertises = [
-    'Tất cả',
-    'Fintech',
-    'AI & Data',
+    'Tất cả chuyên môn',
+    'Product Strategy',
     'Fundraising',
+    'Engineering',
+    'AI/ML',
+    'Growth Hacking',
     'Marketing',
+    'Legal & Compliance',
+    'Operations',
     'SaaS',
+    'FinTech',
+    'E-commerce',
+    'Nhân sự & Đội ngũ',
     'Tài chính',
+  ];
+
+  final List<String> _experiences = [
+    'Tất cả kinh nghiệm',
+    '1–3 năm',
+    '3–7 năm',
+    '7+ năm',
+    '10+ năm',
+  ];
+
+  final List<String> _ratings = [
+    'Tất cả xếp hạng',
+    '4.5★ trở lên',
+    '4★ trở lên',
+    '3★ trở lên',
+  ];
+
+  final List<String> _sorts = [
+    'Phù hợp nhất',
+    'Đánh giá cao nhất',
+    'Nhiều kinh nghiệm nhất',
+    'Nhiều phiên nhất',
   ];
 
   @override
@@ -130,7 +159,11 @@ class _AdvisorDiscoveryViewState extends State<AdvisorDiscoveryView> {
   }
 
   Widget _buildFilterButton(BuildContext context, ConsultingViewModel viewModel, bool isDark) {
-    final hasFilter = viewModel.selectedExpertise != 'Tất cả';
+    final hasFilter = viewModel.selectedExpertise != 'Tất cả chuyên môn' || 
+                      viewModel.selectedExperience != 'Tất cả kinh nghiệm' ||
+                      viewModel.selectedRating != 'Tất cả xếp hạng' ||
+                      viewModel.selectedSort != 'Phù hợp nhất';
+                      
     return GestureDetector(
       onTap: () => _showFilterSheet(context, viewModel),
       child: AnimatedContainer(
@@ -156,10 +189,28 @@ class _AdvisorDiscoveryViewState extends State<AdvisorDiscoveryView> {
             )
           ] : [],
         ),
-        child: Icon(
-          LucideIcons.sliders,
-          size: 18,
-          color: hasFilter ? Colors.white : (isDark ? Colors.white70 : StartupOnboardingTheme.navyBg.withOpacity(0.6)),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              LucideIcons.sliders,
+              size: 18,
+              color: hasFilter ? Colors.white : (isDark ? Colors.white70 : StartupOnboardingTheme.navyBg.withOpacity(0.6)),
+            ),
+            if (hasFilter)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.redAccent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -170,75 +221,133 @@ class _AdvisorDiscoveryViewState extends State<AdvisorDiscoveryView> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.5,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      builder: (context) => DefaultTabController(
+        length: 4,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.65,
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Consumer<ConsultingViewModel>(
+            builder: (context, vm, _) => Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TabBar(
+                  isScrollable: true,
+                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                  unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.normal, fontSize: 14),
+                  indicatorColor: Theme.of(context).primaryColor,
+                  labelColor: Theme.of(context).primaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  dividerColor: Colors.transparent,
+                  tabAlignment: TabAlignment.start,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  tabs: const [
+                    Tab(text: 'Chuyên môn'),
+                    Tab(text: 'Kinh nghiệm'),
+                    Tab(text: 'Xếp hạng'),
+                    Tab(text: 'Sắp xếp'),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildFilterList(context, vm.selectedExpertise, _expertises, (val) => vm.setSelectedExpertise(val)),
+                      _buildFilterList(context, vm.selectedExperience, _experiences, (val) => vm.setSelectedExperience(val)),
+                      _buildFilterList(context, vm.selectedRating, _ratings, (val) => vm.setSelectedRating(val)),
+                      _buildFilterList(context, vm.selectedSort, _sorts, (val) => vm.setSelectedSort(val)),
+                    ],
+                  ),
+                ),
+                _buildApplyButton(context),
+              ],
+            ),
+          ),
         ),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
+      ),
+    );
+  }
+
+  Widget _buildFilterList(BuildContext context, String selectedValue, List<String> options, Function(String) onSelect) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: options.length,
+      itemBuilder: (context, index) {
+        final value = options[index];
+        final isSelected = selectedValue == value;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: InkWell(
+            onTap: () => onSelect(value),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
+                color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? Theme.of(context).primaryColor : Colors.grey.withOpacity(0.1),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Lọc theo Lĩnh vực',
-              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                itemCount: _expertises.length,
-                itemBuilder: (context, index) {
-                  final expertise = _expertises[index];
-                  final isSelected = viewModel.selectedExpertise == expertise;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: InkWell(
-                      onTap: () {
-                        viewModel.setSelectedExpertise(expertise);
-                        Navigator.pop(context);
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey.withOpacity(0.1),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              expertise,
-                              style: GoogleFonts.workSans(
-                                fontSize: 15,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                color: isSelected ? Theme.of(context).primaryColor : null,
-                              ),
-                            ),
-                            const Spacer(),
-                            if (isSelected)
-                              Icon(LucideIcons.check, color: Theme.of(context).primaryColor, size: 20),
-                          ],
-                        ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value,
+                      style: GoogleFonts.workSans(
+                        fontSize: 15,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected ? Theme.of(context).primaryColor : null,
                       ),
                     ),
-                  );
-                },
+                  ),
+                  if (isSelected)
+                    Icon(LucideIcons.check, color: Theme.of(context).primaryColor, size: 20),
+                ],
               ),
             ),
-          ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildApplyButton(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: () => Navigator.pop(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
+        ),
+        child: Text(
+          'Áp dụng bộ lọc',
+          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );

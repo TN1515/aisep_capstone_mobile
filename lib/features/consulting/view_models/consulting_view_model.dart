@@ -8,6 +8,7 @@ import '../services/mentorship_service.dart';
 import '../services/payment_service.dart';
 import '../../profile/services/startup_service.dart';
 import '../../profile/models/startup_models.dart';
+import 'package:aisep_capstone_mobile/core/network/api_response.dart';
 import 'package:intl/intl.dart';
 
 class ConsultingViewModel extends ChangeNotifier {
@@ -22,8 +23,17 @@ class ConsultingViewModel extends ChangeNotifier {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  String _selectedExpertise = 'Tất cả';
+  String _selectedExpertise = 'Tất cả chuyên môn';
   String get selectedExpertise => _selectedExpertise;
+
+  String _selectedExperience = 'Tất cả kinh nghiệm';
+  String get selectedExperience => _selectedExperience;
+
+  String _selectedRating = 'Tất cả xếp hạng';
+  String get selectedRating => _selectedRating;
+
+  String _selectedSort = 'Phù hợp nhất';
+  String get selectedSort => _selectedSort;
 
   List<AdvisorModel> _advisors = [];
   List<AdvisorModel> get advisors => _advisors;
@@ -40,6 +50,15 @@ class ConsultingViewModel extends ChangeNotifier {
 
   String _selectedReportFilter = 'Tất cả';
   String get selectedReportFilter => _selectedReportFilter;
+
+  List<FeedbackDto> _advisorFeedbacks = [];
+  List<FeedbackDto> get advisorFeedbacks => _advisorFeedbacks;
+
+  AdvisorModel? _selectedAdvisorDetail;
+  AdvisorModel? get selectedAdvisorDetail => _selectedAdvisorDetail;
+
+  bool _isFeedbackLoading = false;
+  bool get isFeedbackLoading => _isFeedbackLoading;
 
   StartupProfileDto? _profile;
 
@@ -107,17 +126,36 @@ class ConsultingViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  bool _isProfileInitialized = false;
+
   ConsultingViewModel() {
-    fetchAdvisors();
-    fetchMentorships();
-    fetchSubscriptionStatus();
+    _init();
+  }
+
+  Future<void> _init() async {
+    // Chạy song song cả 3 tay để tối ưu tốc độ load lần đầu
+    await Future.wait([
+      fetchAdvisors(),
+      fetchMentorships(),
+      fetchSubscriptionStatus(),
+    ]);
+  }
+
+  /// Bootstrapping: Nhận profile từ main.dart để tránh gọi lại API profile/me
+  void setInitialProfile(StartupProfileDto profile) {
+    _profile = profile;
+    _isProfileInitialized = true;
+    notifyListeners();
   }
 
   Future<void> fetchSubscriptionStatus() async {
+    if (_isProfileInitialized) return;
+    
     try {
       final response = await _startupService.getMyProfile();
       if (response.success && response.data != null) {
         _profile = response.data;
+        _isProfileInitialized = true;
         notifyListeners();
       }
     } catch (e) {
@@ -134,14 +172,47 @@ class ConsultingViewModel extends ChangeNotifier {
     try {
       _advisors = await _mentorshipService.searchAdvisors(
         q: _searchQuery.isEmpty ? null : _searchQuery,
-        expertise: _selectedExpertise == 'Tất cả' ? null : _selectedExpertise,
+        expertise: _selectedExpertise == 'Tất cả chuyên môn' ? null : _selectedExpertise,
       );
+      
+      // Post-fetch filtering (if service doesn't support all params yet)
+      _applyLocalFilters();
     } catch (e) {
       _advisorError = 'Không thể tải danh sách cố vấn: $e';
       _errorMessage = _advisorError; // Set for legacy views
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  void _applyLocalFilters() {
+    // Apply Rating filter
+    if (_selectedRating != 'Tất cả xếp hạng') {
+      double minRating = double.tryParse(_selectedRating.split('★').first) ?? 0;
+      _advisors = _advisors.where((a) => a.averageRating >= minRating).toList();
+    }
+
+    // Apply Experience filter
+    if (_selectedExperience != 'Tất cả kinh nghiệm') {
+       if (_selectedExperience == '1–3 năm') {
+         _advisors = _advisors.where((a) => a.yearsOfExperience >= 1 && a.yearsOfExperience <= 3).toList();
+       } else if (_selectedExperience == '3–7 năm') {
+         _advisors = _advisors.where((a) => a.yearsOfExperience >= 3 && a.yearsOfExperience <= 7).toList();
+       } else if (_selectedExperience == '7+ năm') {
+         _advisors = _advisors.where((a) => a.yearsOfExperience >= 7).toList();
+       } else if (_selectedExperience == '10+ năm') {
+         _advisors = _advisors.where((a) => a.yearsOfExperience >= 10).toList();
+       }
+    }
+
+    // Apply Sorting
+    if (_selectedSort == 'Đánh giá cao nhất') {
+      _advisors.sort((a, b) => b.averageRating.compareTo(a.averageRating));
+    } else if (_selectedSort == 'Nhiều kinh nghiệm nhất') {
+      _advisors.sort((a, b) => b.yearsOfExperience.compareTo(a.yearsOfExperience));
+    } else if (_selectedSort == 'Nhiều phiên nhất') {
+      _advisors.sort((a, b) => b.completedSessions.compareTo(a.completedSessions));
     }
   }
 
@@ -171,6 +242,21 @@ class ConsultingViewModel extends ChangeNotifier {
 
   void setSelectedExpertise(String expertise) {
     _selectedExpertise = expertise;
+    fetchAdvisors();
+  }
+
+  void setSelectedExperience(String experience) {
+    _selectedExperience = experience;
+    fetchAdvisors();
+  }
+
+  void setSelectedRating(String rating) {
+    _selectedRating = rating;
+    fetchAdvisors();
+  }
+
+  void setSelectedSort(String sort) {
+    _selectedSort = sort;
     fetchAdvisors();
   }
 
@@ -240,6 +326,7 @@ class ConsultingViewModel extends ChangeNotifier {
     final r = rating is double ? rating.toInt() : (rating as int);
     
     final request = CreateFeedbackRequest(
+      sessionId: id,
       rating: r,
       comment: comment,
     );
@@ -257,6 +344,30 @@ class ConsultingViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> fetchAdvisorDetail(int advisorId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final detail = await _mentorshipService.getAdvisorDetail(advisorId);
+      if (detail != null) {
+        _selectedAdvisorDetail = detail;
+      }
+    } catch (e) {
+      debugPrint('Error fetching advisor detail: $e');
+      _errorMessage = 'Không thể tải thông tin chi tiết cố vấn';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAdvisorFeedbacks(int advisorId) async {
+    // We now prefer fetchAdvisorDetail because it includes reviews
+    await fetchAdvisorDetail(advisorId);
   }
 
   Future<void> processPayment(dynamic mentorshipId, [String? txHash]) async {

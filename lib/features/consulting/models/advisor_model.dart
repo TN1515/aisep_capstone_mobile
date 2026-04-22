@@ -21,6 +21,7 @@ class AdvisorModel {
   final List<String> skills;
   final String? experiencesJson;
   final Map<String, dynamic>? availability;
+  final List<dynamic> reviews; // Added to match AdvisorDetailDto
   final Map<int, int> ratingDistribution;
   final AdvisorStatus status;
   final bool isBookmarked;
@@ -44,6 +45,7 @@ class AdvisorModel {
     this.skills = const [],
     this.experiencesJson,
     this.availability,
+    this.reviews = const [],
     this.ratingDistribution = const {5: 0, 4: 0, 3: 0, 2: 0, 1: 0},
     this.status = AdvisorStatus.active,
     this.isBookmarked = false,
@@ -74,8 +76,8 @@ class AdvisorModel {
       fullName: json['fullName'] ?? json['name'] ?? 'Unknown',
       title: json['title'] ?? 'Advisor',
       bio: json['bio'] ?? '',
-      profilePhotoURL: json['profilePhotoURL'] ?? json['avatarUrl'] ?? '',
-      expertise: List<String>.from(json['expertise'] ?? []),
+      profilePhotoURL: json['profilePhotoURL'] ?? json['ProfilePhotoURL'] ?? json['avatarUrl'] ?? json['AvatarUrl'] ?? json['imageUrl'] ?? json['ImageUrl'] ?? '',
+      expertise: List<String>.from(json['expertise'] ?? json['Expertise'] ?? []),
       industry: List<Map<String, dynamic>>.from(json['industry'] ?? []),
       averageRating: parseDouble(json['averageRating'] ?? json['rating']),
       reviewCount: parseInt(json['reviewCount'] ?? 0),
@@ -88,6 +90,7 @@ class AdvisorModel {
       skills: List<String>.from(json['skills'] ?? []),
       experiencesJson: json['experiencesJson'],
       availability: json['availability'],
+      reviews: json['reviews'] ?? [],
       ratingDistribution: json['ratingDistribution'] != null 
         ? Map<int, int>.from((json['ratingDistribution'] as Map).map((k, v) => MapEntry(parseInt(k), parseInt(v))))
         : {5: (parseInt(json['reviewCount'] ?? 0)) ~/ 2, 4: (parseInt(json['reviewCount'] ?? 0)) ~/ 4, 3: (parseInt(json['reviewCount'] ?? 0)) ~/ 4, 2: 0, 1: 0},
@@ -110,6 +113,9 @@ class AdvisorModel {
     double? hourlyRate,
     String? availabilityHint,
     bool? isVerified,
+    List<dynamic>? reviews,
+    String? mentorshipPhilosophy,
+    List<String>? skills,
   }) {
     return AdvisorModel(
       id: id,
@@ -126,10 +132,11 @@ class AdvisorModel {
       isVerified: isVerified ?? this.isVerified,
       availabilityHint: availabilityHint ?? this.availabilityHint,
       hourlyRate: hourlyRate ?? this.hourlyRate,
-      mentorshipPhilosophy: mentorshipPhilosophy,
-      skills: skills,
+      mentorshipPhilosophy: mentorshipPhilosophy ?? this.mentorshipPhilosophy,
+      skills: skills ?? this.skills,
       experiencesJson: experiencesJson,
       availability: availability,
+      reviews: reviews ?? this.reviews,
       status: status ?? this.status,
       isBookmarked: isBookmarked ?? this.isBookmarked,
     );
